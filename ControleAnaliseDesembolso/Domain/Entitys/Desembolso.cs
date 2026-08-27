@@ -20,6 +20,7 @@ namespace ControleAnaliseDesembolso.Domain.Entitys
         // ExecutarValidacaoDesembolso/ValidarDesembolso em ControleAnaliseDesembolsoService),
         // que busca no sistema externo e grava aqui. Fica null até a primeira validação.
         public string? ContratoAo { get; set; }
+        public string? ContratoAoDv { get; set; }
 
         public bool PrimeiroDesembolso { get; set; }
         public string AgenteFinanceiro { get; set; } = string.Empty;
@@ -55,7 +56,7 @@ namespace ControleAnaliseDesembolso.Domain.Entitys
         public decimal Contrapartida { get; set; }
         public decimal ValorEmprestimo { get; set; }
         public decimal Desembolsado { get; set; }
-        public decimal SaldoADesembolsar { get; set; }
+        public decimal SaldoDesembolsar { get; set; }
         public bool? Excepcionalizado { get; set; }
         public decimal ContrapartidaAtual { get; set; }
         public decimal Integralizado { get; set; }

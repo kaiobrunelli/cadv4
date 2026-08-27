@@ -66,6 +66,7 @@ public class DesembolsoDetalheDto
     public string CoContratoAf { get; set; } = "";
     public string CoContratoAfDv { get; set; } = "";
     public string? ContratoAo { get; set; }
+    public string? ContratoAoDv { get; set; }
     public string CoGigov { get; set; } = "";
     public string MutuarioFinal { get; set; } = "";
     public string CnpjMutuarioFinal { get; set; } = "";
@@ -99,7 +100,7 @@ public class DesembolsoDetalheDto
     public decimal GlossadoVi { get; set; }
     public decimal AceitoVi { get; set; }
     public decimal Desembolsado { get; set; }
-    public decimal SaldoADesembolsar { get; set; }
+    public decimal SaldoDesembolsar { get; set; }
     public bool? Excepcionalizado { get; set; }
     public decimal ContrapartidaAtual { get; set; }
     public decimal Integralizado { get; set; }

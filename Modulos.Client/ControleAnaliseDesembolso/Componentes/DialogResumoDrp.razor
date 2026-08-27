@@ -110,7 +110,7 @@
                             </div>
                             <div class="dfp-linha">
                                 <span class="dfp-rotulo">Contrato AO</span>
-                                <span class="dfp-valor dfp-mono @(string.IsNullOrWhiteSpace(_detalheReal.ContratoAo) ? "dfp-valor-vazio" : "")">@ExibirTexto(_detalheReal.ContratoAo)</span>
+                                <span class="dfp-valor dfp-mono @(string.IsNullOrWhiteSpace(_detalheReal.ContratoAo) ? "dfp-valor-vazio" : "")">@ExibirTexto(CombinarContrato(_detalheReal.ContratoAo, _detalheReal.ContratoAoDv))</span>
                             </div>
                             <div class="dfp-linha">
                                 <span class="dfp-rotulo">Agente Financeiro</span>
@@ -363,6 +363,8 @@
     private static string ClassePercComparado(decimal? valor, decimal? referencia) =>
         valor is null || referencia is null ? "" : valor <= referencia ? "dfp-perc-ok" : "dfp-perc-alerta";
     private static string ExibirTexto(string? valor) => string.IsNullOrWhiteSpace(valor) ? "Não informado" : valor;
+    private static string CombinarContrato(string? contrato, string? dv) =>
+        string.IsNullOrWhiteSpace(contrato) ? "" : string.IsNullOrWhiteSpace(dv) ? contrato : $"{contrato}-{dv}";
 
     private int IndiceAtual  => Todos.FindIndex(d => d.Id == Desembolso.Id);
     private bool TemAnterior => IndiceAtual > 0;

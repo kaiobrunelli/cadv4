@@ -18,7 +18,11 @@ namespace PlataformaOperacional.Service.Middleware
         private readonly SemaphoreSlim _mutexConexao = new(1, 1);
         private readonly object _lockConstrucao = new();
 
-        public string _baseAdress => _mockBlazor.MockarDados ? _httpLocal.BaseAddress.ToString() : _httpClient.BaseAddress.ToString();
+        // O chatHub só existe no backend real (ControleAnaliseDesembolso.Api, "Api" client —
+        // http://localhost:5079 em dev). "ApiLocal" aponta pra origem estática do próprio WASM
+        // (wwwroot), que não tem hub nenhum mapeado — por isso não pode depender de MockarDados
+        // aqui (isso é só pra escolher a origem dos dados de usuário mockado, não do SignalR).
+        public string _baseAdress => _httpClient.BaseAddress.ToString();
         public string HubUrlProd => _hubUrlProd;
         public string UsuarioAtual => _matricula;
         public bool Conectado => _hubConnection?.State == HubConnectionState.Connected;

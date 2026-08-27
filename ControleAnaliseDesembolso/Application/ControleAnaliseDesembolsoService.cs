@@ -149,6 +149,7 @@ namespace ControleAnaliseDesembolso.Application
                 CoContratoAf = fpd.CoContratoAf,
                 CoContratoAfDv = fpd.CoContratoAfDv,
                 ContratoAo = fpd.ContratoAo,
+                ContratoAoDv = fpd.ContratoAoDv,
                 CoGigov = fpd.CoGigov,
                 MutuarioFinal = fpd.MutuarioFinal,
                 CnpjMutuarioFinal = fpd.CnpjMutuarioFinal,
@@ -176,7 +177,7 @@ namespace ControleAnaliseDesembolso.Application
                 GlossadoVi = fpd.GlossadoVi,
                 AceitoVi = fpd.AceitoVi,
                 Desembolsado = fpd.Desembolsado,
-                SaldoADesembolsar = fpd.SaldoADesembolsar,
+                SaldoDesembolsar = fpd.SaldoDesembolsar,
                 Excepcionalizado = fpd.Excepcionalizado,
                 ContrapartidaAtual = fpd.ContrapartidaAtual,
                 Integralizado = fpd.Integralizado,
@@ -442,7 +443,7 @@ namespace ControleAnaliseDesembolso.Application
             fpd.Contrapartida = request.Contrapartida;
             fpd.ValorEmprestimo = request.ValorEmprestimo;
             fpd.Desembolsado = request.Desembolsado;
-            fpd.SaldoADesembolsar = request.SaldoADesembolsar;
+            fpd.SaldoDesembolsar = request.SaldoDesembolsar;
             fpd.Excepcionalizado = request.Excepcionalizado;
             fpd.ContrapartidaAtual = request.ContrapartidaAtual;
             fpd.Integralizado = request.Integralizado;
@@ -586,15 +587,18 @@ namespace ControleAnaliseDesembolso.Application
 
                 // Método para atualizar a tabela de desembolso com o Contrato AO
                 // TODO: implementar a busca real assim que o acesso ao sistema externo estiver disponível.
-                // var contratoAo = await _sistemaExterno.ConsultarContratoAoAsync(
+                // var (contratoAo, contratoAoDv) = await _sistemaExterno.ConsultarContratoAoAsync(
                 //     desembolso.Desembolso.CoContratoAf, desembolso.Desembolso.CoContratoAfDv, cancellationToken);
                 //
                 // -- consulta equivalente, caso a origem seja direto no banco do sistema externo:
-                // -- SELECT CONTRATO_AO FROM <TABELA_DO_SISTEMA_EXTERNO>
+                // -- SELECT CONTRATO_AO, CONTRATO_AO_DV FROM <TABELA_DO_SISTEMA_EXTERNO>
                 // -- WHERE CO_CONTRATO_AF = @CoContratoAf AND CO_CONTRATO_AF_DV = @CoContratoAfDv
                 //
                 // if (!string.IsNullOrWhiteSpace(contratoAo))
+                // {
                 //     desembolso.Desembolso.ContratoAo = contratoAo;
+                //     desembolso.Desembolso.ContratoAoDv = contratoAoDv;
+                // }
 
                 await ExecutarValidacaoDesembolso(desembolso);
 

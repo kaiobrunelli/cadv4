@@ -51,7 +51,7 @@ builder.Services.AddProjectHttpClientsPlataforma(builder.HostEnvironment);
 builder.Services.Configure<SimulacaoA>(builder.Configuration.GetSection("SimulacaoA"));
 builder.Services.Configure<SimulacaoB>(builder.Configuration.GetSection("SimulacaoB"));
 builder.Services.AddSingleton<MudThemeService>();
-builder.Services.AddSingleton(provider => new BlazorMockService(false));
+builder.Services.AddSingleton(provider => new BlazorMockService(true));
 builder.Services.AddSingleton<SignalRService>();
 builder.Services.AddScoped<DialogServicePlataformaOperacional>();
 builder.Services.AddScoped<ContabilidadeService>();

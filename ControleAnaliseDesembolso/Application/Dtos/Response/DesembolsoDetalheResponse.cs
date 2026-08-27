@@ -16,6 +16,7 @@ namespace ControleAnaliseDesembolso.Application.Dtos.Response
         public string CoContratoAf { get; set; } = string.Empty;
         public string CoContratoAfDv { get; set; } = string.Empty;
         public string? ContratoAo { get; set; }
+        public string? ContratoAoDv { get; set; }
         public string CoGigov { get; set; } = string.Empty;
         public string MutuarioFinal { get; set; } = string.Empty;
         public string CnpjMutuarioFinal { get; set; } = string.Empty;
@@ -49,7 +50,7 @@ namespace ControleAnaliseDesembolso.Application.Dtos.Response
         public decimal GlossadoVi { get; set; }
         public decimal AceitoVi { get; set; }
         public decimal Desembolsado { get; set; }
-        public decimal SaldoADesembolsar { get; set; }
+        public decimal SaldoDesembolsar { get; set; }
         public bool? Excepcionalizado { get; set; }
         public decimal ContrapartidaAtual { get; set; }
         public decimal Integralizado { get; set; }

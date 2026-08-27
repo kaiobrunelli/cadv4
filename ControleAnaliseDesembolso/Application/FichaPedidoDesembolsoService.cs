@@ -59,7 +59,7 @@ namespace ControleAnaliseDesembolso.Application
                 Contrapartida = request.Contrapartida,
                 ValorEmprestimo = request.ValorEmprestimo,
                 Desembolsado = request.Desembolsado,
-                SaldoADesembolsar = request.SaldoADesembolsar,
+                SaldoDesembolsar = request.SaldoDesembolsar,
                 Excepcionalizado = request.Excepcionalizado,
                 ContrapartidaAtual = request.ContrapartidaAtual,
                 Integralizado = request.Integralizado,

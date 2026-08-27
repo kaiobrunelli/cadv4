@@ -43,7 +43,7 @@ namespace ControleAnaliseDesembolso.Application.Dtos.Request
         public decimal Contrapartida { get; set; }
         public decimal ValorEmprestimo { get; set; }
         public decimal Desembolsado { get; set; }
-        public decimal SaldoADesembolsar { get; set; }
+        public decimal SaldoDesembolsar { get; set; }
         public bool? Excepcionalizado { get; set; }
         public decimal ContrapartidaAtual { get; set; }
         public decimal Integralizado { get; set; }
