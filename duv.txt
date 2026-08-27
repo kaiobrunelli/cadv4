@@ -19,11 +19,11 @@ VALUES
     'Caixa Econômica Federal', '00360305000104', 'Prefeitura Municipal Alfa', '11122233000101',
     NULL, NULL, 'Agente Promotor Alfa', '22233344000101',
     0, 0, NULL, NULL,
-    '2026-08-26', 0, NULL, 25.2300, 0,
-    NULL, NULL, NULL, NULL, NULL, NULL,
+    '2026-08-26', 1, NULL, 25.2300, 0,
+    1, 1, 1, 1, 1, 1,
     963274.97, 0.00, 963274.97, 49986278.10, 5992200.00, 49986278.10,
-    10962739.24, 39023538.86, NULL, 5992200.00, 2199300.00,
-    3792900.00, NULL, NULL, N'Primeiro solicitação de desembolso referente ao contrato presente. Favorável ao desembolso.', NULL
+    10962739.24, 39023538.86, 0, 5992200.00, 2199300.00,
+    3792900.00, 0, 0, N'Primeiro solicitação de desembolso referente ao contrato presente. Favorável ao desembolso.', NULL
 ),
 (
     2, 'c200102', '1201', 'c200105', '2026-08-26', 2,
@@ -32,10 +32,10 @@ VALUES
     NULL, NULL, 'Agente Promotor Beta', '22233344000102',
     1, 0, NULL, NULL,
     '2026-08-26', 1, NULL, 40.0000, 1,
-    NULL, NULL, NULL, NULL, NULL, NULL,
+    1, 1, 1, 1, 1, 1,
     500000.00, 0.00, 500000.00, 20000000.00, 2500000.00, 20000000.00,
-    7000000.00, 13000000.00, NULL, 2500000.00, 1000000.00,
-    1500000.00, NULL, NULL, NULL, NULL
+    7000000.00, 13000000.00, 0, 2500000.00, 1000000.00,
+    1500000.00, 0, 0, NULL, NULL
 );
 
 SET IDENTITY_INSERT CAD_TB001_DESEMBOLSO OFF;
