@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using MudBlazor;
 using PlataformaOperacional.Model.AplicacaoModel;
@@ -18,15 +18,6 @@ namespace PlataformaOperacional.Service.AplicacaoService
             _httpClient = httpClientFactory.CreateClient("Api");
             _httpLocal = httpClientFactory.CreateClient("ApiLocal");
         }
-        //public async Task<List<SaldoResidualContrato>> LocalizarContratosParaAnalise()
-        //{
-        //	var response = await _httpClient.GetFromJsonAsync<List<SaldoResidualContrato>>($"api/LocalizarContratosParaAnalise");
-        //	if (response == null)
-        //	{
-        //		throw new Exception($"Contratos para análise não localizados.");
-        //	}
-        //	return response;
-        //}
         public async Task<HttpResponseMessage> LocalizarContratosParaAnalise()
         {
 			var response = await _httpClient.GetAsync("api/LocalizarContratosParaAnalise");
@@ -42,24 +33,9 @@ namespace PlataformaOperacional.Service.AplicacaoService
             }
             return response;
         }
-		//public async Task<(List<SituacaoContrato>? lista,string problemDetail)> LocalizarSituacaoOperacoes2()
-		//{
-		//	var response = await _httpClient.GetAsync("api/LocalizarSituacaoOperacoes");        
 			
 
-		//	if (response.IsSuccessStatusCode)
-		//	{
-		//		var listaOperacoes = await response.Content.ReadFromJsonAsync<List<SituacaoContrato>>();
-		//		if (listaOperacoes == null) throw new Exception("Lista contratos nula.");
-  //              return (listaOperacoes, "");
-		//	}
-		//	else
-		//	{
-		//		var responseProblemDetail = await response.Content.ReadFromJsonAsync<ProblemDetails>();
-		//		return (null,responseProblemDetail.Detail);
-		//	}
 
-		//}
 		public async Task<HttpResponseMessage> LocalizarSituacaoOperacoes()
         {
 			var response = await _httpClient.GetAsync("api/LocalizarSituacaoOperacoes");
@@ -71,14 +47,6 @@ namespace PlataformaOperacional.Service.AplicacaoService
             var response = await _httpClient.PostAsJsonAsync($"api/RealizarOperacaoSaldoResidual", senha);         
             return response;
 		}
-        //public async Task ProcessarContratoManual(ProcessarContratoManual contratoManual)
-        //{
-        //    var response = await _httpClient.PostAsJsonAsync($"api/ProcessarContratoManual", contratoManual);
-        //    if (response == null)
-        //    {
-        //        throw new Exception($"Precesso de contrato manual inválido.");
-        //    }
-        //} 
         public async Task<HttpResponseMessage> ProcessarContratoManual(ProcessarContratoManual contratoManual)
         {
             var response = await _httpClient.PostAsJsonAsync($"api/ProcessarContratoManual", contratoManual);

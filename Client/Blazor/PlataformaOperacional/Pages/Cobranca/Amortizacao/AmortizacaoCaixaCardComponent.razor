@@ -1,4 +1,4 @@
-﻿
+
 
 <style>
 	.card-container {
@@ -15,14 +15,13 @@
 		width: 100%;
 		border-radius: 12px;
 		box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
-		transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out; /* Transição suave para transform e box-shadow */
-		cursor: pointer; /* Muda o cursor para indicar que é clicável */
+		transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+		cursor: pointer;
 	}
 
 		.custom-card:hover {
-			/* Efeito ao passar o mouse */
-			transform: translateY(-2px); /* Move o card 5px para cima */
-			box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.1); /* Aumenta a sombra para dar mais profundidade */
+			transform: translateY(-2px);
+			box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.1);
 		}
 
 	.card-header {
@@ -139,7 +138,6 @@ else
 					<MudText Class="card-subtitle"> @(QuantidadeContrato == null ? "Sem registros" : $"Quantidade {QuantidadeContrato}")</MudText>
 				}
 			}
-			@* <MudChip Class="my-0" T="string" Text="@ObterTextoDoStatus(FaseDaAnalise)" *@
 
 			@if (ObterCorDoStatus(FaseDaAnalise!) == Color.Warning)
 			{

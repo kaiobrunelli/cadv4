@@ -5,9 +5,6 @@ namespace PlataformaNotificacao.Application;
 
 public class EmpregadoService : IEmpregadoService
 {
-    // A matrícula (c123456) é a identidade única — a MESMA que o front envia no
-    // ?userId= e usa em ServicoUsuario. Sem esse alinhamento, notificações
-    // individuais persistem para uma matrícula que ninguém consulta.
     private static readonly List<Empregado> _todos =
     [
         new() { Matricula = "c123456", Nome = "Ana Lima",         Iniciais = "AL", Cargo = "Analista Sênior",     Cor = "#005CA9", Modulos = ["Sipub", "Cobranca"],                                  CodigoCoordenacao = "COORD-SIPUB" },

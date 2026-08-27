@@ -4,7 +4,6 @@
 
 <PageTitle>Apresentação — SIPUB</PageTitle>
 
-<!-- ══ HERO ══════════════════════════════════════════════════════ -->
 <section class="apres-hero reveal">
     <div class="apres-hero-inner">
 
@@ -27,7 +26,6 @@
             }
         </p>
 
-        <!-- Número principal -->
         <div class="apres-hero-valor-bloco">
             <span class="apres-hero-valor-label">Volume Total Consolidado</span>
             <span class="apres-hero-valor-num"
@@ -35,7 +33,6 @@
                   data-money="true">R$&nbsp;0</span>
         </div>
 
-        <!-- Mini linha de stats -->
         <div class="apres-hero-mini">
             <div class="apres-hero-mini-item">
                 <span class="apres-hero-mini-num" data-target="@_qtdAprovados">0</span>
@@ -67,7 +64,6 @@
     </div>
 </section>
 
-<!-- ══ DISTRIBUIÇÃO POR SITUAÇÃO ══════════════════════════════════ -->
 <section class="apres-secao">
     <div class="apres-container">
 
@@ -79,7 +75,6 @@
 
         <div class="apres-status-grid">
 
-            <!-- Aprovados -->
             <div class="apres-status-card reveal" style="--delay:0ms">
                 <div class="apres-status-card-topo">
                     <div class="apres-status-icone" style="background:#E0F2E7;color:#1A7A4A">
@@ -99,7 +94,6 @@
                 <div class="apres-status-pct">@FormatarPct(_valorAprovado) do volume total</div>
             </div>
 
-            <!-- Em Análise -->
             <div class="apres-status-card reveal" style="--delay:100ms">
                 <div class="apres-status-card-topo">
                     <div class="apres-status-icone" style="background:#FFEFD6;color:#D87B00">
@@ -119,7 +113,6 @@
                 <div class="apres-status-pct">@FormatarPct(_valorPendente) do volume total</div>
             </div>
 
-            <!-- Com Pendência -->
             <div class="apres-status-card reveal" style="--delay:200ms">
                 <div class="apres-status-card-topo">
                     <div class="apres-status-icone" style="background:#FCE6E3;color:#C0392B">
@@ -143,7 +136,6 @@
     </div>
 </section>
 
-<!-- ══ POR AGÊNCIA (GIGOV) ════════════════════════════════════════ -->
 <section class="apres-secao apres-secao-alt">
     <div class="apres-container">
 
@@ -186,7 +178,6 @@
     </div>
 </section>
 
-<!-- ══ POR PROGRAMA ═══════════════════════════════════════════════ -->
 @if (_porPrograma.Count > 0)
 {
     <section class="apres-secao">
@@ -230,7 +221,6 @@
     </section>
 }
 
-<!-- ══ INSIGHTS ══════════════════════════════════════════════════ -->
 <section class="apres-secao apres-secao-alt">
     <div class="apres-container">
 
@@ -299,7 +289,6 @@
     </div>
 </section>
 
-<!-- ══ CTA ════════════════════════════════════════════════════════ -->
 <section class="apres-cta reveal">
     <div class="apres-container" style="text-align:center">
         <div class="apres-cta-rotulo">Dados referentes ao ciclo de análise atual</div>
@@ -405,9 +394,6 @@
 
 
 <style>
-/* ══════════════════════════════════════════════
-   HERO
-   ══════════════════════════════════════════════ */
 .apres-hero {
     position: relative;
     background: linear-gradient(135deg, #002A4D 0%, #00437A 60%, #005CA9 100%);
@@ -421,7 +407,6 @@
     overflow: hidden;
 }
 
-/* Grid decorativo */
 .apres-hero::before {
     content: '';
     position: absolute;
@@ -492,7 +477,6 @@
     font-weight: 600;
 }
 
-/* Bloco do valor principal */
 .apres-hero-valor-bloco {
     background: rgba(255,255,255,.08);
     border: 1px solid rgba(255,255,255,.12);
@@ -522,7 +506,6 @@
     font-variant-numeric: tabular-nums;
 }
 
-/* Mini linha de números */
 .apres-hero-mini {
     display: flex;
     align-items: center;
@@ -558,7 +541,6 @@
     margin-top: 4px;
 }
 
-/* Indicador de scroll */
 .apres-scroll-hint {
     position: absolute;
     bottom: 28px;
@@ -574,9 +556,6 @@
     50%       { transform: translateX(-50%) translateY(8px); }
 }
 
-/* ══════════════════════════════════════════════
-   REVEAL ANIMATION
-   ══════════════════════════════════════════════ */
 .reveal {
     opacity: 0;
     transform: translateY(28px);
@@ -589,15 +568,11 @@
     transform: none;
 }
 
-/* Hero sempre visível (sem delay de scroll) */
 .apres-hero.reveal {
     opacity: 1;
     transform: none;
 }
 
-/* ══════════════════════════════════════════════
-   ESTRUTURA DE SEÇÕES
-   ══════════════════════════════════════════════ */
 .apres-secao {
     padding: 88px 0;
     background: #fff;
@@ -644,9 +619,6 @@
     line-height: 1.6;
 }
 
-/* ══════════════════════════════════════════════
-   BARRAS COMPARTILHADAS
-   ══════════════════════════════════════════════ */
 .apres-barra-track {
     height: 6px;
     background: var(--ink-100);
@@ -666,9 +638,6 @@
 .barra-err   { background: #C0392B; }
 .barra-brand { background: var(--brand-700); }
 
-/* ══════════════════════════════════════════════
-   CARDS DE STATUS
-   ══════════════════════════════════════════════ */
 .apres-status-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -731,9 +700,6 @@
     font-weight: 500;
 }
 
-/* ══════════════════════════════════════════════
-   LISTA GIGOV
-   ══════════════════════════════════════════════ */
 .apres-gigov-lista {
     display: flex;
     flex-direction: column;
@@ -787,9 +753,6 @@
     margin-top: 4px;
 }
 
-/* ══════════════════════════════════════════════
-   GRID DE PROGRAMAS
-   ══════════════════════════════════════════════ */
 .apres-prog-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -845,9 +808,6 @@
     color: var(--brand-700);
 }
 
-/* ══════════════════════════════════════════════
-   INSIGHTS
-   ══════════════════════════════════════════════ */
 .apres-insights-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -892,9 +852,6 @@
     line-height: 1.55;
 }
 
-/* ══════════════════════════════════════════════
-   CTA FINAL
-   ══════════════════════════════════════════════ */
 .apres-cta {
     background: var(--brand-900);
     padding: 72px 32px;

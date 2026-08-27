@@ -1,4 +1,4 @@
-﻿@page "/jornada2"
+@page "/jornada2"
 @layout EmptyLayout
 
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
@@ -7,7 +7,6 @@
 
 
 
-    /* === RESET & BASE === */
     *, *::before, *::after {
         box-sizing: border-box;
         margin: 0;
@@ -22,11 +21,9 @@
         display: flex;
         flex-direction: column;
         -webkit-font-smoothing: antialiased;
-        /* Resolve o problema da borda ao puxar a página */
         overscroll-behavior-y: none;
     }
 
-    /* === HEADER === */
     .wf-header {
         position: sticky;
         top: 0;
@@ -125,7 +122,6 @@
             object-fit: cover;
         }
 
-    /* === MAIN === */
     .wf-main {
         max-width: 56rem;
         margin: 0 auto;
@@ -134,7 +130,6 @@
         flex: 1;
     }
 
-    /* === HERO === */
     .wf-hero {
         display: flex;
         flex-direction: column;
@@ -166,7 +161,6 @@
         line-height: 1.75;
     }
 
-    /* === STEPS === */
     .wf-steps {
         display: flex;
         flex-direction: column;
@@ -226,7 +220,6 @@
         border: 2px solid var(--neutral-gray-300);
     }
 
-    /* === CARDS === */
     .wf-card {
         background-color: var(--card-dark);
         border-radius: 16px;
@@ -428,7 +421,6 @@
         margin-top: 0.75rem;
     }
 
-    /* === TECH STACK === */
     .wf-stack-section {
         margin-top: 6rem;
         padding-top: 3rem;
@@ -487,7 +479,6 @@
         color: var(--text-primary);
     }
 
-    /* === FOOTER === */
     .wf-footer {
         background-color: var(--card-dark);
         border-top: 1px solid var(--border-subtle);

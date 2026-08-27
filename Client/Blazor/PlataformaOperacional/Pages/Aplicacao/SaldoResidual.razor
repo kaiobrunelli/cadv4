@@ -1,4 +1,4 @@
-﻿@page "/saldoresidual"
+@page "/saldoresidual"
 @using Microsoft.AspNetCore.Mvc
 @inject ISnackbar Snackbar
 @inject IDialogService DialogServiceInject
@@ -26,26 +26,17 @@
 						  Square="true"
 						  Hover="true"
 						  Striped="true">
-				@*  	<ColGroup>
-						<col width="20%" /> 
-						<col width="20%" />
-						<col />						
-						<col width="15%" />
-					</ColGroup>  *@
 					<HeaderContent>
-						@* <MudTh><MudTableSortLabel InitialDirection="SortDirection.Descending" SortBy="new Func<SituacaoContrato, object>(x=>x.CoRegistro)">Registro</MudTableSortLabel></MudTh> *@
 						<MudTh>Operação</MudTh>
 						<MudTh><MudTableSortLabel  SortBy="new Func<SituacaoContrato, object>(x=>x.Situacao)">Situação</MudTableSortLabel></MudTh>				
 						<MudTh>Observação</MudTh>
 						<MudTh></MudTh>
 					</HeaderContent>
 					<RowTemplate>
-						@* <MudTd>@item.CoRegistro</MudTd> *@
 						<MudTd>@item.CoOperacao-@item.CoDvOperacao.ToString("D2")</MudTd>
 						<MudTd>
 							<MudStack Row="true" Justify="Justify.FlexStart" AlignItems="AlignItems.Center">
 								@item.Situacao
-								@* <MudIcon Icon="@GetStatusIcon(item.Situacao)" Style="color:#F39200" Class="align-self-center" Size="Size.Small" /> *@
 							</MudStack>
 						</MudTd>
 						<MudTd>@item.Observacao</MudTd>
@@ -120,7 +111,6 @@
 						<MudStack Row="true" Class="mt-3" Justify="Justify.Center" AlignItems="AlignItems.Center">
 							<MudText Typo="Typo.body1">Contratos </MudText>
 						</MudStack>
-						@* Style="color:#142C8E" *@
 
 
 						<MudStack Row="false" Justify="Justify.FlexStart" Class="mt-2">

@@ -1,4 +1,4 @@
-﻿@page "/cardcard"
+@page "/cardcard"
 @using MudBlazor
 
 <MudThemeProvider Theme="_customTheme" />
@@ -21,18 +21,14 @@
                     <div class="d-flex justify-content-between align-center">
 
                         <MudChip Text="purple" Variant="Variant.Outlined" Color="Color.Primary">@item.DtReferencia.ToString("dd/MM/yyyy")</MudChip>
-                        @* Ícone com cor condicional *@
                         <MudIcon Icon="Icons.Material.Filled.CheckCircle"
                                  Color="Color.Success"
                                  Size="Size.Small" />
-                      @*   <MudIcon Icon="@(item.IsLoaded ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.AccessTime)"
-                                 Color="@(item.IsLoaded ? Color.Success : Color.Error)"
-                                 Size="Size.Small" /> *@
                     </div>
                 </MudListItem>
                 @if (item != ControlePendentes.Last())
                 {
-                    <MudDivider DividerType="DividerType.Middle" /> @* Separador leve entre as datas *@
+                    <MudDivider DividerType="DividerType.Middle" />
                 }
             }
         </MudList>
@@ -49,12 +45,11 @@
         public bool IsLoaded { get; set; }
     }
 
-    // Lista de dados de exemplo para o card
     private List<PendingDate> Datasx = new List<PendingDate>
     {
-        new PendingDate { Date = new DateTime(2025, 10, 1), IsLoaded = true },     // Verde (Carregado)
-        new PendingDate { Date = new DateTime(2025, 10, 8), IsLoaded = false },    // Vermelho (Aguardando)
-        new PendingDate { Date = new DateTime(2025, 10, 15), IsLoaded = false }   // Vermelho (Aguardando)
+        new PendingDate { Date = new DateTime(2025, 10, 1), IsLoaded = true },
+        new PendingDate { Date = new DateTime(2025, 10, 8), IsLoaded = false },
+        new PendingDate { Date = new DateTime(2025, 10, 15), IsLoaded = false }
     };
     private MudTheme _customTheme = new()
         {
@@ -63,7 +58,6 @@
                 Primary = "#005ca9",
                 Secondary = "#D87B00",
                 Tertiary = "#FF0000",
-                // Background = "#FAF8F5" // cor cinza mais claro
                 Background = "#EDF2FF"
             }
         };

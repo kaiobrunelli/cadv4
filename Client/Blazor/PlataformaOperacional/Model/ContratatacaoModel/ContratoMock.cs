@@ -1,4 +1,4 @@
-﻿using PlataformaOperacional.Model.ContratacaoModel;
+using PlataformaOperacional.Model.ContratacaoModel;
 using System.Text.Json.Serialization;
 
 namespace PlataformaOperacional.Model.ContratatacaoModel
@@ -18,9 +18,6 @@ namespace PlataformaOperacional.Model.ContratatacaoModel
         public int TotalVerificacoes;         
         [JsonPropertyName("verificacoesConcluidas")]
         public int VerificacoesConcluidas;
-        /// <summary>
-        /// Tipo de verificação representa o "ETAPA/TOPICO" do checklist
-        /// </summary>
         [JsonPropertyName("tiposVerificacao")]
         public List<ContratacaoTipoDeVerificacao> ListaDeTipoDeVerificacoes { get; set; } = new List<ContratacaoTipoDeVerificacao>();
     }

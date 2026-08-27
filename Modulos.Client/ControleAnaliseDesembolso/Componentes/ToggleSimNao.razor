@@ -1,5 +1,3 @@
-@* Toggle Sim / Não (opcionalmente NSA) — check em pílula segmentada.
-   Uso:  <ToggleSimNao @bind-Value="_fpd.UltimoDesembolso" ComNsa="false" /> *@
 
 <div class="toggle-sn">
     <button type="button" class="toggle-sn-opc @(Value == "sim" ? "ativo sim" : "")"
@@ -22,11 +20,6 @@
 
     private async Task Definir(string valor)
     {
-        // Clicar de novo na opção já ativa não faz nada. IMPORTANTE: não escrevemos
-        // em `Value` aqui — é um [Parameter], e mutá-lo localmente desincroniza o
-        // componente do valor real (que mora no pai), deixando a UI "presa" mesmo
-        // com o clique sendo processado. O valor só muda quando o PAI reatribui o
-        // parâmetro na próxima renderização, via ValueChanged.
         if (Value == valor) return;
         await ValueChanged.InvokeAsync(valor);
         await AoAlterar.InvokeAsync();
@@ -56,6 +49,5 @@
 }
 .toggle-sn-opc:hover:not(:disabled):not(.ativo) { background: var(--ink-200); color: var(--ink-900); }
 .toggle-sn-opc:disabled { cursor: default; }
-/* Marcado = mesmo efeito de UI para Sim e Não (pedido: sem verde/vermelho) */
 .toggle-sn-opc.ativo { background: var(--brand-700); color: #fff; }
 </style>

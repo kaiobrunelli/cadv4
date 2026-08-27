@@ -3,9 +3,6 @@ using PlataformaNotificacao.Domain;
 
 namespace ControleAnaliseDesembolso.Hubs;
 
-// Espelha o SignalRService real (RedeCaixaUtilitario.Application) — mesmo
-// padrão de broadcast por grupo (Clients.Groups(destinatarios)), só que
-// hospedado aqui no nosso ChatHub local em vez do hub externo da plataforma.
 public class SignalRNotificacaoService
 {
     private readonly IHubContext<ChatHub> _hubContext;
@@ -29,11 +26,6 @@ public class SignalRNotificacaoService
             ? _hubContext.Clients.Groups(e.Destinatarios)
             : (IClientProxy)_hubContext.Clients.All;
 
-        // PlataformaNotificacao.Domain.Enum.TipoNotificacao/EscopoNotificacao
-        // foram alinhados (mesma ordem/valor) com
-        // Plataforma.UI.Shared.Enum.TipoNotificacao/EscopoNotificacao — não
-        // precisa mais remapear por nome. ChaveConexao/Destinatarios têm
-        // [JsonIgnore] em MensagemNotificacao, então não vazam no payload.
         await destino.SendAsync(e.ChaveConexao, e);
     }
 }

@@ -1,4 +1,4 @@
-﻿using PlataformaOperacional.Model.Contabilidade;
+using PlataformaOperacional.Model.Contabilidade;
 
 namespace PlataformaOperacional.Pages.Contabilidade
 {
@@ -8,7 +8,6 @@ namespace PlataformaOperacional.Pages.Contabilidade
 
         private string searchString1 = "";
 
-        //private ConsultaLotes selectedItem1 = null;
         public List<ConsultaLotes> ListaContabilidadeConsulta { get; set; } = new List<ConsultaLotes>();
         public ConsultaLotes? ContabilidadeConsultaPorNumero { get; set; }
         private DateTime? DataInicial { get; set; } = DateTime.Now.Date;
@@ -77,7 +76,6 @@ namespace PlataformaOperacional.Pages.Contabilidade
             return response;
         }
 
-        //#Metodos do filtro da tabela
         private bool FilterFunc1(ConsultaLotes element) => FilterFunc(element, searchString1);
         private bool FilterFunc(ConsultaLotes element, string searchString)
         {

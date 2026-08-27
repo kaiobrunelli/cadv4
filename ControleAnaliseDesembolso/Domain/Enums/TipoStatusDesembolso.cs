@@ -2,10 +2,10 @@ namespace ControleAnaliseDesembolso.Domain.Enums
 {
     public enum TipoStatusDesembolso
     {
-        Validar,
-        Analisar,
-        BaixarDRP,
-        Finalizado,
-        Negado,
+        PENDENTE = 1,
+        ANALISAR = 2,
+        DESEMBOLSAR = 3,
+        NEGAR = 4,
+        FINALIZAR = 5
     }
 }

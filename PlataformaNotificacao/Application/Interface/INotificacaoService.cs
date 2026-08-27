@@ -39,6 +39,20 @@ namespace PlataformaNotificacao.Application.Interface
             TipoNotificacao tipo = TipoNotificacao.Normal,
             CancellationToken cancellationToken = default);
 
+        Task EnviarParaGigovAsync(
+            string codigoGigov,
+            string titulo, string mensagem, CodigoAplicativo? codigoAplicativo = null,
+            string? link = null, int? dias = null, int? horas = null,
+            TipoNotificacao tipo = TipoNotificacao.Normal,
+            CancellationToken cancellationToken = default);
+
+        Task EnviarParaResponsavelEGestorAsync(
+            string? matriculaResponsavel, string codigoCoordenacao,
+            string titulo, string mensagem, CodigoAplicativo? codigoAplicativo = null,
+            string? link = null, int? dias = null, int? horas = null,
+            TipoNotificacao tipo = TipoNotificacao.Normal,
+            CancellationToken cancellationToken = default);
+
         Task<List<NotificacaoDto>> ObterNotificacaoPorMatriculaAsync(
             string codigoUsuario, int limite = 50, CancellationToken cancellationToken = default);
 

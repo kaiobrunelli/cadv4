@@ -1,11 +1,9 @@
-﻿@* \/  MudNavMenu para ambiente de PUBLICAÇÃO \/ *@
 @inject UsuarioService UsuarioService
 @inject NavigationManager Navigation 
 
 <MudPaper Width="250px" Class="d-inline-flex" Elevation="0">
 	<MudNavMenu Class="mud-width-full">
 		<MudNavLink Href="@($"{Navigation.BaseUri}")" Icon="@Icons.Material.Filled.Home">Página Inicial</MudNavLink>
-		@* <MudNavLink Href="/" Icon="@Icons.Material.Filled.Home">Página Inicial</MudNavLink> *@
 		@if (ConfiguracoesDeUsuario != null)
 		{
 			 @foreach (var area in ConfiguracoesDeUsuario.Areas)
@@ -17,19 +15,7 @@
 					}
 				</MudNavGroup>			
 			}
-			@* <MudNavLink Href="@($"{Navigation.BaseUri}EncontroDeContas")" Icon="@Icons.Material.Filled.AddCard" Class="pr-2">ECT Test</MudNavLink> *@
 
-		@* 	<MudNavGroup Title="Cobrança" Icon="@Icons.Material.Filled.CurrencyExchange" Expanded="false">
-
-				<MudNavLink Href="@($"{Navigation.BaseUri}amortizacaocaixa")" Icon="@Icons.Material.Filled.PriceCheck" Class="pr-2">Amortização Caixa</MudNavLink>
-				<MudNavLink Href="@($"{Navigation.BaseUri}crfhome")" Icon="@Icons.Material.Outlined.FiberNew" Class="pr-2">CRF Home</MudNavLink>
-
-			</MudNavGroup>
-			<MudNavGroup Title="Preditor" Icon="@Icons.Material.Outlined.DataArray" Expanded="false">
-
-				<MudNavLink Href="@($"{Navigation.BaseUri}comparativo")" Icon="@Icons.Material.Outlined.FileOpen" Class="pr-2">Preditor</MudNavLink>
-
-			</MudNavGroup> *@
 		}
 		else
 		{	
@@ -53,31 +39,4 @@
 
 
 
-@* \/  MudNavMenu para ambiente LOCAL \/ *@
 
-@*
-<MudPaper Width="250px" Class="d-inline-flex" Elevation="0">
-    <MudNavMenu Class="mud-width-full">
-        <MudNavLink Href="/plataforma-operacional/" Icon="@Icons.Material.Filled.Home">Página Inicial</MudNavLink>
-        <MudNavGroup Title="Contabilidade" Icon="@Icons.Material.Filled.Receipt" Expanded="false">
-            <MudNavLink Href="/ConsultarLoteContabil" Icon="@Icons.Material.Filled.Search" IconColor="Color.Success">Consultar Lote</MudNavLink>
-            <MudNavLink Href="/SolicitarLoteContabil" Icon="@Icons.Material.Filled.Download" IconColor="Color.Info">Solicitar Lote</MudNavLink>
-        </MudNavGroup>
-        <MudNavGroup Title="Contratar" Icon="@Icons.Material.Filled.AttachMoney" Expanded="false">
-            <MudNavLink Href="/checklist" Icon="@Icons.Material.Filled.AutoAwesomeMotion" IconColor="Color.Success">Checklist consultar</MudNavLink>
-
-        </MudNavGroup>
-        <MudNavGroup Title="Jurídico" Icon="@Icons.Material.Filled.Balance" Expanded="false">
-            <MudNavLink Href="/juridico" Icon="@Icons.Material.Filled.Search" IconColor="Color.Success">Parecer</MudNavLink>
-        </MudNavGroup>
-        <MudNavGroup Title="SAC" Icon="@Icons.Material.Filled.DataUsage" Expanded="false">
-            <MudNavLink Href="/CONSULTAATENDIMENTO" Icon="@Icons.Material.Filled.Search" IconColor="Color.Success">Consultar SAC</MudNavLink>
-            <MudNavLink Href="/CadastraAtendimento" Icon="@Icons.Material.Filled.Download" IconColor="Color.Info">Solicitar SAC</MudNavLink>
-            <MudNavLink Href="l/atendimentosac" Icon="@Icons.Material.Filled.Download" IconColor="Color.Info">Atendimento SAC</MudNavLink>
-        </MudNavGroup>
-    </MudNavMenu>
-</MudPaper>
-
-
-
- *@

@@ -1,4 +1,4 @@
-﻿@using MudBlazor
+@using MudBlazor
 @using System.Globalization
 @inject MudBlazor.IDialogService DialogService
 @inject MudBlazor.ISnackbar Snackbar
@@ -106,7 +106,6 @@
 	{
 		formatoManual = new NumberFormatInfo();
 
-		// Define os separadores manualmente
 		formatoManual.NumberGroupSeparator = ".";
 		formatoManual.NumberDecimalSeparator = ",";
 

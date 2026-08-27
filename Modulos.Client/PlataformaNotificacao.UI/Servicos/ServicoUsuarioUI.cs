@@ -1,11 +1,9 @@
+using Microsoft.JSInterop;
+
 namespace PlataformaNotificacao.UI.Servicos;
 
 public class ServicoUsuarioUI
 {
-    // Editável rápido: pra testar como GIGOV ou CEFGA com a SUA própria
-    // identidade (sem trocar pra outra matrícula da lista, que muda
-    // nome/cargo/cor junto), mude só o Unidade aqui. 7175 = CEFGA,
-    // qualquer outro valor = GIGOV.
     private class UsuarioMock
     {
         public string Nome { get; set; } = "";
@@ -20,8 +18,6 @@ public class ServicoUsuarioUI
         Unidade = 7175,
     };
 
-    // Identidade = matrícula (c123456), a MESMA que vai no ?matriculaUsuario= do
-    // SignalR e do REST, e que o EmpregadoService/banco usam. Não existe "id" separado.
     private string _matricula;
 
     public ServicoUsuarioUI()
@@ -62,19 +58,34 @@ public class ServicoUsuarioUI
         _         => ""
     };
 
-    // Unidade do usuário — mesma convenção já usada no servidor pra derivar a
-    // sigla dos comentários (ComentarioValidacaoResponse.Sigla): 7175 = CEFGA
-    // (quem analisa/aprova), qualquer outra = GIGOV (quem solicita/preenche a
-    // FPD e pode editá-la). Kaio e Carla simulam GIGOV; os demais, CEFGA.
-    public int UnidadeUsuario => _matricula == UsuarioTeste.Matricula
-        ? UsuarioTeste.Unidade
-        : _matricula switch
-        {
-            "c123457" => 7105, // Carla Mendes — GIGOV
-            _         => 7175, // Bruno Costa, Diego Santos, Elena Ferreira — CEFGA
-        };
+    public int UnidadeUsuario => ModoGigovForcado
+        ? CodigoGigovTeste
+        : _matricula == UsuarioTeste.Matricula
+            ? UsuarioTeste.Unidade
+            : _matricula switch
+            {
+                "c123457" => 7105,
+                _         => 7175,
+            };
 
     public bool EhGigov => UnidadeUsuario != 7175;
+
+    public const int CodigoGigovTeste = 1201;
+    private const string ChaveModoTeste = "cad_modo_teste_gigov";
+
+    public bool ModoGigovForcado { get; private set; }
+
+    public async Task CarregarModoTesteAsync(IJSRuntime js)
+    {
+        var valor = await js.InvokeAsync<string?>("localStorage.getItem", ChaveModoTeste);
+        ModoGigovForcado = valor == "1";
+    }
+
+    public async Task AlternarModoTesteAsync(IJSRuntime js)
+    {
+        ModoGigovForcado = !ModoGigovForcado;
+        await js.InvokeVoidAsync("localStorage.setItem", ChaveModoTeste, ModoGigovForcado ? "1" : "0");
+    }
 
     public string Cor => _matricula switch
     {

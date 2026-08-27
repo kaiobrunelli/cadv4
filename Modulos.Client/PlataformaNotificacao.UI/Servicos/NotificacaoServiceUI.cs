@@ -1,4 +1,4 @@
-﻿using Plataforma.UI.Shared.Model;
+using Plataforma.UI.Shared.Model;
 using System.Net.Http.Json;
 using static System.Net.WebRequestMethods;
 
@@ -16,7 +16,6 @@ namespace PlataformaNotificacao.UI.Servicos
         }
 
 
-        // ── API ───────────────────────────────────────────────────────────────────
         public async Task<int> CarregarContagemAsync(string matricula)
         {
             var response = await _httpClient.GetFromJsonAsync<int>($"api/notificacao/nao-lidas/total?usuarioId={matricula}");

@@ -2,10 +2,6 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace ControleAnaliseDesembolso.Hubs;
 
-// Hub próprio, local — o front conecta com ?userId={matricula} na URL (ver
-// SignalRServiceUI.IniciarHubConnection). Cada conexão entra num grupo com o
-// nome da própria matrícula, e é isso que permite mandar notificação só pra
-// quem deve receber via Clients.Groups(destinatarios).
 public class ChatHub : Hub
 {
     public override async Task OnConnectedAsync()

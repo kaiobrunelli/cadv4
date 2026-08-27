@@ -8,6 +8,33 @@ public class ControleAnaliseDesembolsoService(IHttpClientFactory httpClientFacto
 {
     private readonly HttpClient _httpClient = httpClientFactory.CreateClient("Api");
 
+    public static async Task<string> ExtrairMensagemDeErroAsync(HttpResponseMessage resposta)
+    {
+        var corpo = await resposta.Content.ReadAsStringAsync();
+        if (!string.IsNullOrWhiteSpace(corpo))
+        {
+            try
+            {
+                var problema = System.Text.Json.JsonSerializer.Deserialize<ProblemDetailsDto>(corpo,
+                    new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                if (!string.IsNullOrWhiteSpace(problema?.Detail)) return problema.Detail;
+                if (!string.IsNullOrWhiteSpace(problema?.Title)) return problema.Title;
+            }
+            catch (System.Text.Json.JsonException)
+            {
+            }
+        }
+
+        return $"Falha ao processar (código {(int)resposta.StatusCode}). Tente novamente.";
+    }
+
+    private class ProblemDetailsDto
+    {
+        public string? Title { get; set; }
+        public string? Detail { get; set; }
+    }
+
     public async Task<List<DesembolsoCAD>> ObterTodosAsync()
     {
         var lista = await _httpClient.GetFromJsonAsync<List<DesembolsoResponseDto>>("api/ObterTodosDesembolsos");
@@ -25,14 +52,14 @@ public class ControleAnaliseDesembolsoService(IHttpClientFactory httpClientFacto
 
     public static string MapearStatus(int statusServidor, bool dataAgendamento = false)
     {
-        if (dataAgendamento && statusServidor is 0 or 1) return "agendado";
+        if (dataAgendamento && statusServidor is 1 or 2) return "agendado";
 
         return statusServidor switch
         {
-            0 => "pendencia",
-            1 => "pendente",
-            2 => "aprovado",
-            3 => "baixado",
+            1 => "pendencia",
+            2 => "pendente",
+            3 => "aprovado",
+            5 => "baixado",
             4 => "negado",
             _ => "pendencia",
         };
@@ -40,12 +67,15 @@ public class ControleAnaliseDesembolsoService(IHttpClientFactory httpClientFacto
 
     private static DesembolsoCAD MapearParaDesembolsoCAD(DesembolsoResponseDto d) => new()
     {
-        Id = d.CoDesembolso.ToString(),
+        Id = d.CoControleDesembolso.ToString(),
         NumId = d.NumId,
         Contrato = d.Contrato,
         Mutuario = d.Mutuario,
         Gigov = d.Gigov,
         Valor = d.Valor,
+        AgenteFinanceiro = d.AgenteFinanceiro,
+        AgentePromotor = d.AgentePromotor,
+        MatriculaSolicitante = d.MatriculaSolicitante,
         Fase = "",
         ValidacoesOk = d.ValidacoesOk,
         ValidacoesTotal = d.ValidacoesTotal,
@@ -56,13 +86,27 @@ public class ControleAnaliseDesembolsoService(IHttpClientFactory httpClientFacto
         PrimeiroDesembolso = d.PrimeiroDesembolso,
         UltimoDesembolso = d.UltimoDesembolso,
         Adiantamento = d.Adiantamento,
+        ResponsavelAnalise = d.ResponsavelAnalise,
     };
 
-    public async Task<bool> AprovarAsync(string id, string matriculaUsuario, string usuarioNome)
+    public async Task<List<string>> ObterGigovDoUsuarioAsync(string matricula)
+    {
+        try
+        {
+            var lista = await _httpClient.GetFromJsonAsync<List<string>>($"api/ObterCodigosGigovPorMatricula?matricula={Uri.EscapeDataString(matricula)}");
+            return lista ?? [];
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[CAD] Falha ao obter GIGOV do usuário: {ex.Message}");
+            return [];
+        }
+    }
+
+    public async Task<HttpResponseMessage> AprovarAsync(string id, string matriculaUsuario, string usuarioNome)
     {
         var req = new { MatriculaUsuario = matriculaUsuario, UsuarioNome = usuarioNome };
-        var resposta = await _httpClient.PutAsJsonAsync($"api/Aprovar/{id}", req);
-        return resposta.IsSuccessStatusCode;
+        return await _httpClient.PutAsJsonAsync($"api/Aprovar/{id}", req);
     }
 
     public async Task<bool> RejeitarAsync(string id, string matriculaUsuario, string usuarioNome, string codigoCoordenacao, string justificativa = "")
@@ -72,29 +116,31 @@ public class ControleAnaliseDesembolsoService(IHttpClientFactory httpClientFacto
         return resposta.IsSuccessStatusCode;
     }
 
-    // public async Task<bool> VincularAnalistaAsync(string id, string matriculaAnalista)
-    // {
-    //     var req = new { MatriculaAnalista = matriculaAnalista };
-    //     var resposta = await _httpClient.PutAsJsonAsync($"api/VincularResponsavel/{id}", req);
-    //     return resposta.IsSuccessStatusCode;
-    // }
+    public async Task<bool> VincularAnalistaAsync(string id, string? matriculaAnalista)
+    {
+        var resposta = await _httpClient.PutAsJsonAsync($"api/VincularResponsavel/{id}", matriculaAnalista);
+        return resposta.IsSuccessStatusCode;
+    }
 
-    // public async Task<bool> RemoverVinculoAsync(string id)
-    // {
-    //     var resposta = await _httpClient.DeleteAsync($"api/RemoverResponsavel/{id}");
-    //     return resposta.IsSuccessStatusCode;
-    // }
+    public async Task<bool> RemoverVinculoAsync(string id)
+    {
+        var resposta = await _httpClient.PutAsync($"api/RemoverResponsavel/{id}", null);
+        return resposta.IsSuccessStatusCode;
+    }
 
-    // POST api/Validar/{id} só roda a validação automática e retorna 200 vazio
-    // — não devolve corpo nenhum pra ler.
+    public async Task<List<Funcionario>> ObterAnalistasAsync(string codigoCoordenacao)
+    {
+        var lista = await _httpClient.GetFromJsonAsync<List<Funcionario>>(
+            $"api/ObterEmpregadosPorCoordenacao?coordenacao={Uri.EscapeDataString(codigoCoordenacao)}");
+        return lista ?? [];
+    }
+
     public async Task<bool> ValidarAsync(string id)
     {
         var resposta = await _httpClient.PostAsync($"api/Validar/{id}", null);
         return resposta.IsSuccessStatusCode;
     }
 
-    // Macro geral da home: roda a validação em lote pra todo desembolso ainda
-    // no status inicial (pendência — acabou de ser inserido).
     public async Task<bool> ValidarTodosPendentesAsync()
     {
         var resposta = await _httpClient.PostAsync("api/ValidarTodosPendentes", null);
@@ -107,27 +153,23 @@ public class ControleAnaliseDesembolsoService(IHttpClientFactory httpClientFacto
         return lista ?? [];
     }
 
-    public async Task<bool> AdicionarComentarioAsync(string coDesembolso, int coValidacao, string texto, string tipoRegistro, string matriculaAutor, string nomeAutor, int unidadeAutor)
+    public async Task<HttpResponseMessage> AdicionarComentarioAsync(string coDesembolso, int coValidacao, string texto, string tipoRegistro, string matriculaAutor, string nomeAutor, int unidadeAutor)
     {
-        var req = new { DeRegistro = texto, TipoRegistro = tipoRegistro, MatriculaAutor = matriculaAutor, NomeAutor = nomeAutor, UnidadeAutor = unidadeAutor };
-        //var resposta = await _httpClient.PostAsJsonAsync($"api/AdicionarComentario/{coDesembolso}/validacoes/{coValidacao}/comentarios", req);
-        var resposta = await _httpClient.PostAsJsonAsync($"api/AdicionarComentario?coDesembolso={coDesembolso}&coValidacao={coValidacao}", req);
-        return resposta.IsSuccessStatusCode;
+        var req = new { DeMensagem = texto, TipoMensagem = tipoRegistro, MatriculaAutor = matriculaAutor, NomeAutor = nomeAutor, UnidadeAutor = unidadeAutor };
+        return await _httpClient.PostAsJsonAsync($"api/AdicionarComentario?coControleDesembolso={coDesembolso}&coValidacao={coValidacao}", req);
     }
 
 
-    public async Task<bool> EditarComentarioAsync(string coDesembolso, int coValidacao, int comentarioId, string novoTexto, string matriculaSolicitante)
+    public async Task<HttpResponseMessage> EditarComentarioAsync(string coDesembolso, int coValidacao, int comentarioId, string novoTexto, string matriculaSolicitante)
     {
-        var req = new { Texto = novoTexto, MatriculaSolicitante = matriculaSolicitante };
-        var resposta = await _httpClient.PutAsJsonAsync($"api/EditarComentario/{comentarioId}", req);
-        return resposta.IsSuccessStatusCode;
+        var req = new { DeMensagem = novoTexto, MatriculaSolicitante = matriculaSolicitante };
+        return await _httpClient.PutAsJsonAsync($"api/EditarComentario/{comentarioId}", req);
     }
 
-    public async Task<bool> RemoverComentarioAsync(string coDesembolso, int coValidacao, int coComentario, string matriculaSolicitante)
+    public async Task<HttpResponseMessage> RemoverComentarioAsync(string coDesembolso, int coValidacao, int coComentario, string matriculaSolicitante)
     {
-        var req = new { CoValidacao = coValidacao, CoDesembolso = coDesembolso, MatriculaSolicitante = matriculaSolicitante };
-        var resposta = await _httpClient.PutAsJsonAsync($"api/RemoverComentario/{coComentario}?matriculaSolicitante={Uri.EscapeDataString(matriculaSolicitante)}", req);
-        return resposta.IsSuccessStatusCode;
+        var req = new { CoValidacao = coValidacao, CoControleDesembolso = coDesembolso, MatriculaSolicitante = matriculaSolicitante };
+        return await _httpClient.PutAsJsonAsync($"api/RemoverComentario/{coComentario}?matriculaSolicitante={Uri.EscapeDataString(matriculaSolicitante)}", req);
     }
 
     public async Task<HttpResponseMessage> CriarFichaPedidoDesembolsoAsync(object request) =>
@@ -136,9 +178,6 @@ public class ControleAnaliseDesembolsoService(IHttpClientFactory httpClientFacto
     public async Task<HttpResponseMessage> ReenviarFichaAsync(int coFpd, object request) =>
         await _httpClient.PutAsJsonAsync($"api/ReenviarFicha/{coFpd}", request);
 
-    // Automação/macro — endpoint de um backend diferente (fora do módulo
-    // ControleAnaliseDesembolso), mas centralizado aqui pra nenhum componente
-    // precisar injetar HttpClient direto.
     public async Task<bool> ExecutarProcessamentoAsync()
     {
         var resposta = await _httpClient.PostAsync("api/processamento/executar", null);

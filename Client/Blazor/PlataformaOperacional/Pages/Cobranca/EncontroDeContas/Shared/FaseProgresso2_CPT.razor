@@ -1,4 +1,4 @@
-﻿@namespace Plataforma.Components.Shared
+@namespace Plataforma.Components.Shared
 
 <style>
     .fpl-phases {
@@ -135,7 +135,6 @@
         transition: color 240ms ease;
     }
 
-    /* Conector ─── (entre fases) */
     .fpl-connector {
         flex: 0 0 24px;
         height: 2px;
@@ -164,7 +163,6 @@
         background: #f39200;
     }
 
-    /* Concluída */
     .fpl-item.fpl-done .fpl-dot {
         background: var(--brand-600, #005ca9);
         color: #fff;
@@ -174,7 +172,6 @@
         color: var(--ink-900, #0f172a);
     }
 
-    /* Em execução */
     .fpl-item.fpl-active .fpl-dot {
         background: var(--brand-100, #dbeafe);
         color: var(--brand-700, #0a3d7a);
@@ -202,7 +199,6 @@
         50%      { transform: scale(1.45); opacity: 0.5; }
     }
 
-    /* Aguardando início */
     .fpl-item.fpl-waiting .fpl-dot {
         background: rgba(245, 158, 11, 0.10);
         color: #f39200;
@@ -217,7 +213,6 @@
         color: #f39200;
     }
 
-    /* Responsivo */
     @@media (max-width: 720px) {
         .fpl-phases {
             flex-direction: column;
@@ -331,9 +326,6 @@
         }
     </div>
 
-    @* debug — pode remover *@
-@*     <h5>Executando Status: @Executando</h5>
-    <h5>FaseAtual Status: @FaseAtual</h5> *@
 </div>
     
 }

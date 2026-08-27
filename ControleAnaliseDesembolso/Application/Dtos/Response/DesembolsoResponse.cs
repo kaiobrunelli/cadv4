@@ -4,7 +4,7 @@ namespace ControleAnaliseDesembolso.Application.Dtos.Response
 {
     public class DesembolsoResponse
     {
-        public int CoDesembolso { get; set; }
+        public int CoControleDesembolso { get; set; }
         public string Id { get; set; } = string.Empty;
         public string NumId { get; set; } = string.Empty;
         public DateTime DtSolicitado { get; set; }
@@ -13,6 +13,9 @@ namespace ControleAnaliseDesembolso.Application.Dtos.Response
         public string Mutuario { get; set; } = string.Empty;
         public string Gigov { get; set; } = string.Empty;
         public decimal Valor { get; set; }
+        public string AgenteFinanceiro { get; set; } = string.Empty;
+        public string AgentePromotor { get; set; } = string.Empty;
+        public string MatriculaSolicitante { get; set; } = string.Empty;
 
         public int ValidacoesOk { get; set; }
         public int ValidacoesTotal { get; set; }

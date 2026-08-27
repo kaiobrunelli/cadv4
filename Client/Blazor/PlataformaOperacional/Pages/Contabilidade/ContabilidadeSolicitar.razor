@@ -1,4 +1,4 @@
-﻿@page "/SolicitarLoteContabil"
+@page "/SolicitarLoteContabil"
 
 @inject DialogServicePlataformaOperacional DialogServicePlataformaOperacional
 
@@ -19,12 +19,6 @@
 <MudContainer>
 <MudGrid  Spacing="10">
     <MudItem xs="12"> 
-        @*<MudCard Class="d-flex flex-column pb-4 mt-2" Elevation="0">
-            <MudCard Class="d-flex flex-row mt-2 gap-1" Elevation="0">
-                <MudIcon Icon="@Icons.Material.Outlined.FileOpen" Size="Size.Large"></MudIcon>
-                <MudText Typo="Typo.h3" Color="Color.Secondary" Style="font-weight:400">Solicitar Lote</MudText>
-            </MudCard>
-             <MudDivider Class="mt-2 flex-grow-1" DividerType="DividerType.FullWidth"></MudDivider> *@
             @if (!string.IsNullOrEmpty(MensagemDeErro))
             {
                 <MudAlert Class="mt-4" Severity="Severity.Error">
@@ -32,7 +26,6 @@
                 </MudAlert>
             }
 
-        @* <MudBreadcrumbs Items="_items"></MudBreadcrumbs> *@
         <MudPaper Class="card-body" >
             <MudItem Class="d-flex justify-end gap-6 mb-6">
                 <MudTextField Label="Data Inicial"  @bind-Value="DataInicial" InputType="InputType.Date" FullWidth />
@@ -51,12 +44,6 @@
             <MudItem Class="d-flex justify-end gap-4 mt-6">    
                 <MudItem>
                     <MudFileUpload T="IBrowserFile" FilesChanged="OnFileSelect">
-@*                         <ActivatorContent>
-                            <MudButton Class="btn-caixa-small" Variant="Variant.Filled"
-                                       Color="Color.Primary">
-                                Carregar CSV/EXCEL
-                            </MudButton>
-                        </ActivatorContent> *@
                       
                         <SelectedTemplate >
                             @if (context != null)

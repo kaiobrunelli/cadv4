@@ -1,6 +1,4 @@
-﻿@page "/acessonegado"
-@* @inject AuthenticationStateProvider AuthenticationStateProvider
-@inject NavigationManager Navigation *@
+@page "/acessonegado"
 
  @inject UsuarioService UsuarioService
 <PageTitle>Acesso Negado</PageTitle>
@@ -40,9 +38,6 @@
 		var usuario = await UsuarioService.ConsultaConfiguracaoUsuario();
 		var item = usuario.Areas;
 
-		// listaVazia = usuario.ListaDeFuncionalidade.Any();
-		// nomeCOmpleto = usuario.NomeCompleto;
-		// quantidade = usuario.ListaDeFuncionalidade.Count();
 		
 		StateHasChanged();
 	}

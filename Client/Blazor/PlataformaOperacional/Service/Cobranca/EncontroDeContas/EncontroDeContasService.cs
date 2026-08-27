@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Options;
 using MudBlazor;
 using MudBlazor.Extensions;
 using PlataformaOperacional.Model.CentralPermissoes;
@@ -209,121 +209,22 @@ namespace PlataformaOperacional.Service.Cobranca.EncontroDeContas
             }
 
             await Task.Delay(4000);
-            //await OnProgressoSignalR(new ObservadorAutomacao
-            //{
-            //    ChaveConexao = _simulacaoB.ChaveConexao,
-            //    NomeProcesso = _simulacaoB.NomeProcesso,
-            //    Severity = Severity.Normal.ToString(),
-            //    PercentualProcessado = _simulacaoB.PercentualProcessado,
-            //    ExecutandoSP = _simulacaoB.ExecutandoSP,
-            //    NumeroFaseAtual = _simulacaoB.NumeroFaseAtual,
-            //    Mensagem = _simulacaoB.Mensagem,
-            //});
-            //await Task.Delay(4000);
-
-           // await OnProgressoSignalR(new ObservadorAutomacao
-           // {
-           //     ChaveConexao = ChaveSignalR,
-           //     NomeProcesso = "Carregando Relatórios Fase 1",
-           //     Severity = Severity.Normal.ToString(),
-           //     PercentualProcessado = 0,
-           //     ExecutandoSP = true,
-           //     NumeroFaseAtual = 3,
-           //     Mensagem = $"Verifica relatorios Fase 1..."
-           // });
-           //await Task.Delay(4000);
-           // await OnProgressoSignalR(new ObservadorAutomacao
-           // {
-           //     ChaveConexao = ChaveSignalR,
-           //     NomeProcesso = "Carregando Relatórios Fase 1",
-           //     Severity = Severity.Success.ToString(),
-           //     PercentualProcessado = 100,
-           //     NumeroFaseAtual = 11,
-           //     Mensagem = $"Relatórios fase 1 carregados"
-           // });
-           // await Task.Delay(4000);
-            //for (int i = 0; i < 101; i++)
-            //{
-            //    await Task.Delay(750);
-            //    await OnProgressoSignalR(new ObservadorAutomacao
-            //    {
-
-            //        NomeProcesso = "Carga Fase 1 (MOCK)",
-            //        NumeroFaseAtual = 3,
-            //        TotalProcessado= i,
-            //        TotalAProcessar=100,
-            //        Severity = Severity.Normal.ToString(),
-            //        Mensagem = "Aguardando execução no banco de dados..."
-            //    });
-            //}
-            //for (int i = 0; i < 101; i++)
-            //{
-            //    await Task.Delay(25);
-            //    await OnProgressoSignalR(new ObservadorAutomacao
-            //    {
-            //        ExecutandoSP = true,
-            //        NomeProcesso = "Carga Fase 1 (MOCK)",
-            //        NumeroFaseAtual = 3,
-            //        Severity = Severity.Normal.ToString(),
-            //        Mensagem = "Aguardando execução no banco de dados..."
-            //    });
-            //}
 
 
-            //await Task.Delay(4000);
 
 
-            //await OnProgressoSignalR(new ObservadorAutomacao
-            //{
-            //    ExecutandoSP = false,
-            //    NomeProcesso = "Carga Fase 1 (MOCK)",
-            //    NumeroFaseAtual = 3,
-            //    Severity = Severity.Error.ToString(),
-            //    Mensagem = "Timeout: stored procedure não respondeu"
-            //});
-
-            //await Task.Delay(3000);
 
 
-            //_execucaoFinalizada = false; 
-            //await OnProgressoSignalR(new ObservadorAutomacao
-            //{
-            //    ExecutandoSP = false,
-            //    NomeProcesso = "Gerar Relatório (MOCK)",
-            //    NumeroFaseAtual = 4,
-            //    TotalAProcessar = 10,
-            //    TotalProcessado = 5,
-            //    Severity = Severity.Normal.ToString(),
-            //    Mensagem = "Processando contratos..."
-            //});
-
-            //await Task.Delay(4000);
 
 
-            //await OnProgressoSignalR(new ObservadorAutomacao
-            //{
-            //    ExecutandoSP = true,
-            //    NomeProcesso = "Carga Fase 2 (MOCK)",
-            //    NumeroFaseAtual = 5,
-            //    Severity = Severity.Normal.ToString(),
-            //    Mensagem = "Aguardando execução no banco de dados..."
-            //});
-
-            //await Task.Delay(4000);
 
 
-            //await OnProgressoSignalR(new ObservadorAutomacao
-            //{
-            //    ExecutandoSP = false,
-            //    NomeProcesso = "Carga Fase 2 (MOCK)",
-            //    NumeroFaseAtual = 6,
-            //    TotalAProcessar = 8,
-            //    TotalProcessado = 8,
-            //    Severity = Severity.Success.ToString(),
-            //    Mensagem = "Fase 2 concluída com sucesso"
-            //});
+
+
+
+
+
         }
-        //private const string ChaveTesteSignalR = "TesteSignalR";
 
 
         public async Task IniciarEscutaSignalR()
@@ -384,21 +285,10 @@ namespace PlataformaOperacional.Service.Cobranca.EncontroDeContas
             DescricaoEtapa = string.IsNullOrWhiteSpace(obs.Mensagem)
                 ? $"Processando {obs.TotalProcessado} de {obs.TotalAProcessar}…"
                 : obs.Mensagem;
-            //if (obs.PercentualProcessado == 100)
-            //{
-            //    IsRunning = false;
-            //    MostrarProgressBar = false;
-            //    _execucaoFinalizada = true;
-            //    FaseAtual = FasesDeExecucao.Conclusao;
-            //    Notify();
-            //    return;
-            //}
             if (pct == 100)
             {
                 _execucaoFinalizada = true;
                 FaseAtual = FasesDeExecucao.Conclusao;
-                //AlertasSeverity(obs);
-                //PushAlert(TipoDeAlerta.Ok, "Processamento concluído", obs.Mensagem);
                 await Task.Delay(3000);
                 IsRunning = false;
                 MostrarProgressBar = false;
@@ -472,17 +362,14 @@ namespace PlataformaOperacional.Service.Cobranca.EncontroDeContas
         {
             if (obs.AlertaSeverity == Severity.Normal) return;
 
-            // Chave inclui Severity + NomeProcesso + Mensagem para evitar colisoes
             var chave = $"{obs.AlertaSeverity}:{obs.NomeProcesso}:{obs.Mensagem.Trim().ToLowerInvariant()}";
             var agora = DateTime.UtcNow;
 
-            // Dedup unificado para TODOS os tipos (Error, Success, Warning)
             if (_ultimoAlerta.TryGetValue(chave, out var ultimo) && agora - ultimo < _tempo)
                 return;
 
             _ultimoAlerta[chave] = agora;
 
-            // Limpa entradas expiradas
             foreach (var k in _ultimoAlerta
                 .Where(x => agora - x.Value > _tempo)
                 .Select(x => x.Key)
@@ -509,45 +396,11 @@ namespace PlataformaOperacional.Service.Cobranca.EncontroDeContas
             Notify();
         }
 
-        //public void AlertasSeverity(ObservadorAutomacao obs)
-        //{
-        //    if (obs.AlertaSeverity == Severity.Error)
-        //    {
-        //        PushAlert(TipoDeAlerta.Err, $"Processo: {obs.NomeProcesso} |{obs.Mensagem}");
-        //        DescricaoEtapa = "Atenção: verifique as notificações";
-        //        Notify();
-        //    }
-        //    if (obs.AlertaSeverity == Severity.Success)
-        //    {
-        //        var chave = obs.Mensagem.Trim().ToLowerInvariant();
-        //        var agora = DateTime.UtcNow;
-
-        //        if (_ultimoAlerta.TryGetValue(chave, out var ultimo)
-        //            && agora - ultimo < _tempo)
-        //        {
-        //            return;
-        //        }
-
-        //        _ultimoAlerta[chave] = agora;
 
 
-        //        var expiradas = _ultimoAlerta
-        //            .Where(chave => agora - chave.Value > _tempo)
-        //            .Select(chave => chave.Key)
-        //            .ToList();
 
-        //        foreach (var k in expiradas)
-        //            _ultimoAlerta.Remove(k);
-        //        PushAlert(TipoDeAlerta.Ok, $"Processo: {obs.NomeProcesso} | {obs.Mensagem}");
-        //        Notify();
-        //    }
-        //    if (obs.AlertaSeverity == Severity.Warning)
-        //    {
-        //        PushAlert(TipoDeAlerta.Warn, $"Processo: {obs.NomeProcesso} | {obs.Mensagem}");
-        //        DescricaoEtapa = "Atenção: verifique as notificações";
-        //        Notify();
-        //    }
-        //}
+
+
         public void AlertaControleGeral(List<PlataformaOperacionalAlerta> alertas)
         {
             foreach (PlataformaOperacionalAlerta alerta in alertas)

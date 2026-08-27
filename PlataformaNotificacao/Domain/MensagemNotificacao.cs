@@ -16,16 +16,9 @@ namespace PlataformaNotificacao.Domain
         public string? Link { get; set; }
         public DateTime? DataValidade { get; set; }
 
-        // Nome do método SignalR invocado (SendAsync). Fixo hoje, mas exposto
-        // como campo para permitir eventos diferentes no futuro sem quebrar
-        // os chamadores existentes (todos caem no default).
         [JsonIgnore]
         public string ChaveConexao { get; set; } = "ReceberNotificacao";
 
-        // Roteamento server-side (Clients.Groups(...)) — nunca deve ser
-        // serializado/enviado ao client, por isso [JsonIgnore]. Fica aqui só
-        // para o publicador (NotificacaoService) não precisar de um wrapper
-        // extra ao redor do conteúdo.
         [JsonIgnore]
         public List<string> Destinatarios { get; set; } = [];
     }

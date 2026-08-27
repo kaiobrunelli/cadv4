@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
 namespace PlataformaOperacional.Model.Cobranca.Amortizacao
@@ -39,33 +39,15 @@ namespace PlataformaOperacional.Model.Cobranca.Amortizacao
 		[JsonPropertyName("logApontamentos")]
 		public string? LogApontamentos { get; set; }
 
-		//[JsonPropertyName("logAnaliseCarga")]
-		//public string? LogAnaliseCarga { get; set; }
 
 
 
-		//public abstract  class Movimentacao
-		//{	
-		//	[JsonPropertyName("coMovimentacao")]
-		//	public int CoMovimentacao { get; set; }
 
-		//	[JsonPropertyName("coApontamento")]
-		//	public int? CoApontamento { get; set; }
 
-		//	[JsonPropertyName("coControle")]
-		//	public int? CoControle { get; set; }
 
-		//	[JsonPropertyName("nuContrato")]
-		//	public string? NuContrato { get; set; } = "";
 
-		//	[JsonPropertyName("nuContratoDv")]
-		//	public string? NuContratoDv { get; set; } = "";
 
-		//	[JsonPropertyName("tipoMovimentacao")]
-		//	public string? TipoMovimentacao { get; set; } = "";
 
-		//	[JsonPropertyName("dtCredito")]
-		//	public DateTime? DtCredito { get; set; }
 
 		[JsonPropertyName("vrTo01")]
        public decimal? VrTo01 { get; set; }
@@ -89,38 +71,16 @@ namespace PlataformaOperacional.Model.Cobranca.Amortizacao
        public decimal? VrTo07 { get; set; }
 
   
-        //	[JsonPropertyName("icStatus")]
-        //	public int? IcStatus { get; set; }
 
-        //	[JsonPropertyName("nmg")]
-        //	public string? Nmg { get; set; } = "";
 
-        //	[JsonPropertyName("nmgDv")]
-        //	public string? NmgDv { get; set; } = "";
 
-        //	[JsonPropertyName("coGifug")]
-        //	public string? CoGifug { get; set; } = "";
 
-        //	[JsonPropertyName("historicoMovimentacao")]
-        //	public string? HistoricoMovimentacao { get; set; } = "";
 
-        //	[JsonPropertyName("logInclusaoSiapf")]
-        //	public string? LogInclusaoSiapf { get; set; } = "";
 
-        //	[JsonPropertyName("saldoDevedorConsiderado")]
-        //	public decimal? SaldoDevedorConsiderado { get; set; }
 
-        //	[JsonPropertyName("criterioSelecao")]
-        //	public string? CriterioSelecao { get; set; } = "";
 
-        //	[JsonPropertyName("proporcaoApontamento")]
-        //	public string? ProporcaoApontamento { get; set; } = "";
 
-        //	[JsonPropertyName("drpNumero")]
-        //	public string? DrpNumero { get; set; } = "";
 
-        //	[JsonPropertyName("logAcaoUsuario")]
-        //	public string? LogAcaoUsuario { get; set; } = "";
 
         [NotMapped]
         public bool EmTratamento { get; set; } = false;
@@ -131,7 +91,6 @@ namespace PlataformaOperacional.Model.Cobranca.Amortizacao
         public ValoresCCIEditar ValoresCCIEditar { get; set; } = new();
 
 
-        //   }
 
     }
 }

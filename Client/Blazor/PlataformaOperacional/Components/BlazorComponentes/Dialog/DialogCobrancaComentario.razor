@@ -1,4 +1,4 @@
-﻿@using MudBlazor
+@using MudBlazor
 @inject MudBlazor.IDialogService DialogService
 @inject MudBlazor.ISnackbar Snackbar
 <style>
@@ -41,7 +41,6 @@
 @code {
 	[CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
 
-	// [Parameter] public int NumeroContrato { get; set; }
 
 
 	private string _observacao = "";

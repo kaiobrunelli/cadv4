@@ -1,4 +1,4 @@
-﻿@using MudBlazor
+@using MudBlazor
 @using System.Text.RegularExpressions
 @inject ISnackbar SnackBar
 @inject PreditorService PreditorService
@@ -106,7 +106,6 @@
 	.input-field {
 		flex: 1;
 		width: 100%;
-		/* height: 56px; */
 		border-radius: 0.75rem;
 		border: 1px solid var(--slate-200);
 		padding: 0 16px;
@@ -163,9 +162,6 @@
 			background-color: #eef2ff !important;
 		}
 
-	/* 	:root {
-																					--meu-gradiente-radial: radial-gradient(circle at top left, #e2e8f0, #cbd5e1);
-																				} */
 
 
 	.mud-layout {
@@ -269,7 +265,6 @@
 	<MudExpansionPanels Elevation="25" Outlined="false" Dense=true Square="true"  Style="border-radius:6px">
 		<MudExpansionPanel Text="Cadastrar Empregado" Class="pb-4"    Expanded="true" Style="color: #424242;  font-weight:500; ">
        <div>
-			@* Seção: Adicionar Empregado *@
 					<section class="pb-3">
 				<div class="card-adicionar-colaborador">
 					<MudGrid Spacing="3" Style="align-items:center">
@@ -328,7 +323,6 @@
 
 				</div>
 
-				@* Listagem de Usuários *@
 				<MudStack Spacing="3" Class="mt-4">
 					@if (_preditorAutorizados.Any())
 					{
@@ -377,7 +371,6 @@
 					else
 					{
 						<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-							@* <MudIcon Size="Size.Small" Color="Color.Secondary" Icon="@Icons.Material.Outlined.ErrorOutline"></MudIcon> *@
 							<MudAlert Severity="Severity.Warning" Class="flex-1 alerta-autorizados">
 								Nenhum empregado cadastrado.
 							</MudAlert>
@@ -388,7 +381,6 @@
 		</div>
     </MudExpansionPanel>
     <MudExpansionPanel Text="Cadastrar E-Mail" Class="mb-4 "   Style="color: #424242;  font-weight:500; ">
-				@* Seção: Cadastrar e remover E-mails *@
 				<section class="mb-4 pb-3">
 					<div class="d-flex align-center gap-3 mb-3 mt-6">
 						<div style="width: 4px; height: 24px; background-color: var(--mud-palette-primary); border-radius: 2px;"></div>
@@ -396,8 +388,6 @@
 					</div>
 					<MudGrid Spacing="3" Class="align-center " Justify="Justify.FlexStart">
 						<MudItem xs="6" sm="6" lg="6" md="6" Class="mb-2">
-							@* <MudText Typo="Typo.caption">Tipo cadastro:</MudText> *@
-							@* <MudRadioGroup @bind-Value="_tipoCadastroMatriculaOuUGC" > *@
 							<MudRadioGroup T="string" Value="_tipoCadastroMatriculaOuUGC" ValueChanged="OnTipoCadastroChanged">
 								<MudStack Row="true" AlignItems="AlignItems.Start" Justify="Justify.Center">
 									<MudRadio Color="Color.Primary" Value="@("matricula")">Matrícula</MudRadio>
@@ -451,7 +441,6 @@
 							</MudForm>
 						</MudItem>
 						<MudItem xs="7" sm="7">
-							@* <MudText Typo="Typo.caption">Tipo envio:</MudText> *@
 							<MudRadioGroup @bind-Value="_tipoDestinatario">
 								<MudStack Row="true" AlignItems="AlignItems.Start" Justify="Justify.Center">
 									<MudTooltip Duration="300" Delay="300" Text="Destinatário">
@@ -484,8 +473,6 @@
 						<div style="width: 4px; height: 24px; background-color: var(--mud-palette-secondary); border-radius: 2px;"></div>
 						<MudText Typo="Typo.subtitle1" Style="font-weight: 600; color: #0f172a;">Gerenciar E-mail</MudText>
 					</div>
-@* 					<MudGrid Spacing="3" Justify="Justify.Center" Class="align-center"> *@
-					@* 	<MudItem xs="12" sm="8"> *@
 				<MudStack Spacing="3" Class="mt-4">
 						@if (DestinatarioEmail.Any())
 					{
@@ -494,9 +481,6 @@
 							<MudPaper Elevation="0" Class="px-4 py-2 d-flex align-center justify-space-between user-card-hover"
 									  Style="border: 1px solid #E2E8F0; border-radius: 14px; width:100% !important">
 								<div class="d-flex align-center gap-4">
-							@* 		<MudAvatar Color="Color.Primary" Variant="Variant.Filled" Style="font-weight: 400;">
-										@GetInitials("EC")
-									</MudAvatar> *@
 										 <MudIcon Icon="@Icons.Material.Filled.Email" Color="Color.Success" Size="Size.Large"></MudIcon>
 									<div>
 										<div class="d-flex align-center gap-2" style="height:26px">
@@ -520,26 +504,12 @@
 					else
 					{
 						<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-							@* <MudIcon Size="Size.Small" Color="Color.Secondary" Icon="@Icons.Material.Outlined.ErrorOutline"></MudIcon> *@
 							<MudAlert Severity="Severity.Warning" Class="flex-1 alerta-autorizados">
 								Nenhum empregado cadastrado.
 							</MudAlert>
 						</MudStack>
 					}
 				</MudStack>
-						@* </MudItem> *@
-				@* 		<MudItem xs="12" sm="4">
-							<MudButton FullWidth="true"
-									   Variant="Variant.Text"
-									   Color="Color.Default"
-									   Size="Size.Small"
-									   StartIcon="@Icons.Material.Filled.Delete"
-									   OnClick="RemoverEmail"
-									   Class=" btn-match-input mud-border-radius-md mt-4">
-								Remover E-Mail
-							</MudButton>
-						</MudItem> *@
-					@* </MudGrid> *@
 
 
 				</section>
@@ -556,7 +526,7 @@
 @code {
 
 	[CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
-	[Parameter] public List<ReadDestinatarioEmail> DestinatarioEmail { get; set; }  //Lista para selecionar e remover e-mails
+	[Parameter] public List<ReadDestinatarioEmail> DestinatarioEmail { get; set; }
 	private bool teste_Avaliar = true;
 
 	#region Propriedades Gerais
@@ -567,9 +537,9 @@
 	private DateTime? _dataAutorizadoTemporario = DateTime.UtcNow.Date;
 	private bool _cadastrarAutorizadoTemporario = false;
 	private string _destinatarioEmailSelecionado = "";
-	private List<ReadPreditorAutorizados> _preditorAutorizados = new(); //Lista de empregados autorizados
+	private List<ReadPreditorAutorizados> _preditorAutorizados = new();
 	private string _matriculaCadastroEmpregadoAutorizado = "";
-	private string _tipoCadastroMatriculaOuUGC = "matricula"; //Define se o tipo será a partir da matrícual ou UGC
+	private string _tipoCadastroMatriculaOuUGC = "matricula";
 	private string _matriculaCadastroEmail = "";
 	private string _numeroUGCCadastroEmail = "";
 	private string _nomeEmpregadoOuNomeUGC = "";
@@ -655,9 +625,7 @@
 	}
 	private async Task RemoverEmail(int idEmail)
 	{
-		// if (!ValidarEmailDestinatarioSelecionado()) return;
 
-		// var idEmail = DestinatarioEmail.Where(e => e.EmailDestinatario == "_destinatarioEmailSelecionado").Select(e => e.CoDestinatario).FirstOrDefault();
 		var response = await PreditorService.RemoverEmailPreditor(idEmail);
 		await HttpResponseHandler.ResponseHandler(response, Snackbar);
 
@@ -693,7 +661,7 @@
 			return string.Empty;
 
 
-		string[] ignored = { "de", "da", "do", "das", "dos" /*, "e"*/ };
+		string[] ignored = { "de", "da", "do", "das", "dos" };
 
 		var initials = name
 			.Split(' ', StringSplitOptions.RemoveEmptyEntries)
@@ -746,7 +714,6 @@
 			SnackBar.Add($"Descritivo inválido", Severity.Warning);
 			return false;
 		}
-		// SnackBar.Add($"Preenchimento Correto - chamando API ", Severity.Success);
 		return true;
 
 	}
@@ -761,7 +728,6 @@
 
 		var input = value.Trim();
 
-		// Regex: 5 letras OU 5 letras + 2 números (números apenas no final)
 		var pattern = @"^[A-Za-z]{5}(\d{2})?$";
 
 		if (!Regex.IsMatch(input, pattern, RegexOptions.CultureInvariant))

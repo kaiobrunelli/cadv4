@@ -23,20 +23,10 @@
         else
         {
             <MudIcon Icon="@Icons.Material.Filled.PlayArrow"></MudIcon>
-            @* <svg width="12" height="12" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3" fill="currentColor" /></svg> *@
             <span>@ExecuteLabel</span>
         }
     </button>
 
-  @*   <div class="list-toggle" title="Ative para montar uma fila. Desative para execução direta.">
-        <span class="list-toggle-title">Execução Por Contrato</span>
-        <button class="switch @(EffectiveUseList ? "on" : "")"
-                @onclick="HandleToggle"
-                disabled="@Running"
-                role="switch"
-                aria-checked="@EffectiveUseList"
-                aria-label="Executar pela lista"></button>
-    </div> *@
 
     <button class="btn btn-secondary" @onclick="OnConfig">
         <MudIcon Icon="@Icons.Material.Filled.Settings"/> CONFIGURAÇÃO</button>
@@ -71,8 +61,6 @@ else
      private bool EffectiveUseList =>
          Controle?.PainelControle?.Botoes.Executar ?? UseList;
 
-    // private Task HandleToggle()
-    //     => Running ? Task.CompletedTask : OnToggleUseList.InvokeAsync(!EffectiveUseList);
 
     private bool ExecuteDisabled => !(Controle?.PainelControle?.Botoes.Executar ?? CanExecute) || Running;   
 

@@ -1,35 +1,23 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
-/// <summary>
-/// Espelha exatamente o retorno do SQL:
-/// uma linha por data, com os valores de Habitação, Infra/Sane e Total já presentes.
-/// O Total é a soma dos dois setores — calculado pelo backend, não pelo componente.
-/// </summary>
 public class ControleGeralPred
 {
 	public DateTime Data { get; set; }
 
-	// ── Habitação ────────────────────────────────────────────
 	public decimal CalculadoInicialHab { get; set; }
 	public decimal TotalPrevistoHab { get; set; }
 	public decimal TotalRealizadoHab { get; set; }
 
-	// ── Infra / Saneamento ───────────────────────────────────
 	public decimal CalculadoInicialInfra { get; set; }
 	public decimal TotalPrevistoInfra { get; set; }
 	public decimal TotalRealizadoInfra { get; set; }
 
-	// ── Total (soma dos dois setores) ────────────────────────
 	public decimal CalculadoInicialTotal { get; set; }
 	public decimal TotalPrevistoTotal { get; set; }
 	public decimal TotalRealizadoTotal { get; set; }
 }
 
-/// <summary>
-/// Dados mockados que simulam o retorno da API.
-/// Substitua por chamada real ao serviço quando disponível.
-/// </summary>
 public static class ControleGeralMock
 {
 	public static List<ControleGeralPred> ObterDados()
@@ -53,7 +41,6 @@ public static class ControleGeralMock
 				TotalPrevistoInfra = prevInfra,
 				TotalRealizadoInfra = realInfra,
 
-				// Total: soma — já calculado aqui como faria o backend
 				CalculadoInicialTotal = calcHab + calcInfra,
 				TotalPrevistoTotal = prevHab + prevInfra,
 				TotalRealizadoTotal = realHab + realInfra,

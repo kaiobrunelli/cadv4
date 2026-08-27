@@ -389,7 +389,6 @@
 
 
 	#region Metodos do Service - Amortização Caixa
-	//##CONSULTAS##//
 	private async Task ConsultarConfiguracoesGeraisHandle()
 	{
 		var response = await CobrancaService.ConsultarConfiguracoesGerais();
@@ -402,7 +401,6 @@
 		var responseData = await HttpResponseHandler.ResponseHandler<List<HistoricoDeTm>>(response, Snackbar);
 		_historicoDeTms = responseData!;
 	}
-	//##ALTERAÇÕES##//
 
 	#endregion
 

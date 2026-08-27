@@ -21,7 +21,7 @@ else if (_detalhe is null)
 }
 else
 {
-    <PainelPreencherFpdEtapas ModoEdicao="true" CoFpd="_detalhe.CoFpd" DadosParaEdicao="_detalhe"
+    <PainelPreencherFpdEtapas ModoEdicao="true" CoFpd="_detalhe.CoDesembolso" DadosParaEdicao="_detalhe"
                                AoVoltar="AoFechar" AoSolicitar="@(async (PreenchimentoFpd _) => await AoSalvar.InvokeAsync())" />
 }
 

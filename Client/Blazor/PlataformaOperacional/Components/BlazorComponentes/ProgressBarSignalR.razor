@@ -1,44 +1,32 @@
-﻿@implements IDisposable
+@implements IDisposable
 @inject SignalRService SignalRService
 
 
 <style>
-	/*
-											  Arquivo: app.css ou ProgressStatus.css
-											*/
 
-	/* 1. Estilo para o Alerta (Container) */
 	.mud-alert {
-		/* box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);  */
-		border: 1px solid var(--mud-palette-lines-default) !important; /* Borda mais fina e elegante */
+		border: 1px solid var(--mud-palette-lines-default) !important;
 	}
 
 	.mud-alert-message {
 		padding-top: 0px;
 		padding-bottom: 0px;
 	}
-	/* 2. Estilo para a Barra de Progresso com Degradê */
 
-	/* Seleciona o MudProgressLinear que tem a classe customizada */
 	.mud-progress-linear.mud-progress-linear-gradient {
-		border-radius: 8px; /* Cantos bem arredondados */
-		background-color: var(--mud-palette-background-grey); /* Fundo cinza claro */
+		border-radius: 8px;
+		background-color: var(--mud-palette-background-grey);
 	}
 
-		/* Seleciona a track interna (a parte que preenche) */
 		.mud-progress-linear.mud-progress-linear-gradient .mud-progress-linear-track {
-			border-radius: 8px; /* Mantém o arredondamento */
-			/* Remove a cor sólida padrão do MudBlazor */
+			border-radius: 8px;
 			background: transparent !important;
 		}
 
-		/* Aplica o degradê ao valor (o progresso em si) */
 		.mud-progress-linear.mud-progress-linear-gradient .mud-progress-linear-bar {
-			/* Gradiente moderno de ciano para azul */
-			/* background: linear-gradient(90deg, #10b981 0%, #06b6d4 90%) !important; */
 			background: linear-gradient(90deg, #12CA8D 15%, #1074C8 90%) !important;
-			border-radius: 8px; /* Mantém o arredondamento */
-			transition: transform 0.4s ease-out; /* Transição suave para o progresso */
+			border-radius: 8px;
+			transition: transform 0.4s ease-out;
 		}
 </style>
 
@@ -71,7 +59,7 @@
 										   Size="Size.Large"
 										   Rounded="true"
 										   Value="@_observerAutomacao.PercentualProcessado"
-										   Class="mud-progress-linear-gradient " /> @* <-- CLASSE CUSTOMIZADA AQUI *@
+										   Class="mud-progress-linear-gradient " />
 
 						<MudStack Row="true" Justify="Justify.SpaceBetween" Spacing="2" AlignItems="AlignItems.Center" Class="mt-2">
 							<MudText Typo="Typo.body2">
@@ -84,7 +72,6 @@
 
 					</MudStack>
 				}
-				// 3. Estado Final/Sucesso (100% Concluído)
 				else if (_observerAutomacao.TotalProcessado >= _observerAutomacao.TotalAProcessar)
 				{
 					<MudStack Row="false" Justify="Justify.FlexEnd" AlignItems="AlignItems.Center" Spacing="0">
@@ -124,7 +111,7 @@
 	[Parameter] public string FaseAtual { get; set; } = "";
 	private string _faseAtualCache { get; set; } = "";
 	[Parameter] public EventCallback AtualizarEstado { get; set; }
-	[Parameter] public EventCallback SenhaInvalidaEvent { get; set; } // Callback para o pai (ex: habilitar botões)
+	[Parameter] public EventCallback SenhaInvalidaEvent { get; set; }
 
 	private ObservadorAutomacao _observerAutomacao = new();
 	private bool _progressoIniciado = false;
@@ -155,17 +142,13 @@
 		return _observerAutomacao.AlertaSeverity;
 	}
 
-	/// <summary>
-	/// Este método é chamado pelo Service sempre que o SignalR recebe dados.
-	/// </summary>
 	private async Task HandleProgressUpdate(ObservadorAutomacao observer)
 	{
-		// Validação de segurança (embora o dictionary já filtre, é bom garantir)
 		if (!observer.ChaveConexao.Equals(HubConnectId, StringComparison.OrdinalIgnoreCase))
 			return;
 
 		_observerAutomacao = observer;
-		_progressoIniciado = true; // Assim que chega dados, tornamos visível
+		_progressoIniciado = true;
 	
 		_rotinaDeConclusaoExecutada = false;
 		await InvokeAsync(StateHasChanged);
@@ -181,7 +164,6 @@
 
 		if (trabalhoConcluido)
 		{
-			 // _observerAutomacao.Mensagem = "[TESTE] - Etapas concluídas com sucesso!";
 			
 			_rotinaDeConclusaoExecutada = true;	
 			if (AtualizarEstado.HasDelegate)
@@ -197,7 +179,6 @@
 			_progressoIniciado = false; ;
 			await InvokeAsync(StateHasChanged);
 		}
-		// Lógica de Erro
 		if (_observerAutomacao.AlertaSeverity == Severity.Error || _observerAutomacao.AlertaSeverity == Severity.Warning)
 		{
 			if (AtualizarEstado.HasDelegate)

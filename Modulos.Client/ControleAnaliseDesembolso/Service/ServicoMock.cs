@@ -7,37 +7,19 @@ public static class ServicoMock
 {
     private static readonly CultureInfo _culturaBR = new("pt-BR");
 
-    // ──────────────────────────────────────────────────────────────────────────
-    // FUNCIONÁRIOS
-    // ──────────────────────────────────────────────────────────────────────────
-    public static List<Funcionario> ObterFuncionarios() =>
-    [
-        new() { Id = 1, Nome = "Karina Souto",   Iniciais = "KS", Cor = "#005CA9" },
-        new() { Id = 2, Nome = "Rafael Mendes",  Iniciais = "RM", Cor = "#6D28D9" },
-        new() { Id = 3, Nome = "Ana Paula Lima", Iniciais = "AP", Cor = "#0E7490" },
-        new() { Id = 4, Nome = "Bruno Costa",    Iniciais = "BC", Cor = "#065F46" },
-        new() { Id = 5, Nome = "Tânia Ferreira", Iniciais = "TF", Cor = "#92400E" },
-    ];
-
-    // ──────────────────────────────────────────────────────────────────────────
-    // DRP — controle de baixa (simula consulta ao banco)
-    // ──────────────────────────────────────────────────────────────────────────
     public static List<RegistroDrp> ObterRegistrosDrp() =>
     [
         new() { Id = 1, Gigov = "7126", ContratoDv = "0512.345/2022-01-8", TipoDesembolso = "normal",
                 ValorFgts = 1_450_000m, DataSolicitacao = new DateTime(2026, 5, 12),
-                Responsavel = "c123456", Gestor = "c102944", Baixa = null },
+                ResponsavelBaixa = "c123456", Gestor = "c102944", ResponsavelDesembolso = null },
         new() { Id = 2, Gigov = "7105", ContratoDv = "0512.346/2022-02-6", TipoDesembolso = "adiantamento",
                 ValorFgts = 870_000m, DataSolicitacao = new DateTime(2026, 5, 20),
-                Responsavel = "c134872", Gestor = "c102944", Baixa = "c145097" },
+                ResponsavelBaixa = "c134872", Gestor = "c102944", ResponsavelDesembolso = "c145097" },
         new() { Id = 3, Gigov = "7164", ContratoDv = "0512.349/2022-05-1", TipoDesembolso = "normal",
                 ValorFgts = 1_230_000m, DataSolicitacao = new DateTime(2026, 5, 25),
-                Responsavel = "c123456", Gestor = "c110233", Baixa = null },
+                ResponsavelBaixa = "c123456", Gestor = "c110233", ResponsavelDesembolso = null },
     ];
 
-    // ──────────────────────────────────────────────────────────────────────────
-    // DESEMBOLSOS
-    // ──────────────────────────────────────────────────────────────────────────
     public static List<DesembolsoCAD> ObterDesembolsos() =>
     [
         new()
@@ -96,9 +78,6 @@ public static class ServicoMock
         },
     ];
 
-    // ──────────────────────────────────────────────────────────────────────────
-    // VALIDAÇÕES — dados distintos por desembolso
-    // ──────────────────────────────────────────────────────────────────────────
     public static List<Validacao> ObterValidacoes(string idDesembolso = "DSB-001") => idDesembolso switch
     {
         "DSB-002" => ObterValidacoesDSB002(),
@@ -109,11 +88,6 @@ public static class ServicoMock
         _         => ObterValidacoesDSB001(),
     };
 
-    // ──────────────────────────────────────────────────────────────────────────
-    // VALIDAÇÕES DO DESEMBOLSO — os MESMOS itens da árvore "Verificações" da
-    // FPD-AF (ver PainelPreencherFpd), agora como checklist de análise do
-    // desembolso: cada item é aprovado individualmente, com comentário.
-    // ──────────────────────────────────────────────────────────────────────────
     public static List<Validacao> ObterValidacoesFpd(string idDesembolso)
     {
         var itens = new (string Titulo, string Detalhe)[]
@@ -134,8 +108,6 @@ public static class ServicoMock
 
         return itens.Select((item, i) =>
         {
-            // Mantém alguma variação determinística por desembolso, sem exagerar
-            // em pendências — a maioria nasce "a analisar", poucas já inválidas.
             var status = rnd.NextDouble() switch
             {
                 < 0.15 => "invalido",
@@ -155,7 +127,6 @@ public static class ServicoMock
         }).ToList();
     }
 
-    // DSB-001 — pendencia: 6 válido, 4 inválido (3 deles com sub-itens)
     private static List<Validacao> ObterValidacoesDSB001() =>
     [
         new()
@@ -227,7 +198,7 @@ public static class ServicoMock
             Detalhe = "O prazo de execução contratual expirou em 30/03/2025. É necessário o aditamento do contrato antes da liberação do desembolso.",
             ComentarioPreenchido = new Comentario
             {
-                Tipo = "negativo",
+                Tipo = "parecer",
                 Texto = "Contrato vencido. Mutuário foi notificado para apresentar documentação de prorrogação até 25/05/2025.",
                 Autor = "Karina Souto",
                 Timestamp = new DateTime(2025, 4, 18, 9, 30, 0)
@@ -250,7 +221,6 @@ public static class ServicoMock
         },
     ];
 
-    // DSB-002 — pendente (em análise): 5 válido + 5 pendente, nenhum inválido
     private static List<Validacao> ObterValidacoesDSB002() =>
     [
         new()
@@ -337,7 +307,6 @@ public static class ServicoMock
         },
     ];
 
-    // DSB-003 / DSB-006 — aprovado: todos os 10 válidos
     private static List<Validacao> ObterValidacoesTodosValidos(string municipio) =>
     [
         new() { Numero = 1,  Titulo = "CND Municipal",                  Resultado = "Certidão válida",                              Status = "valido", Icone = "bi-building",          Detalhe = $"Certidão Negativa de Débitos do município de {municipio} válida e vigente." },
@@ -352,7 +321,6 @@ public static class ServicoMock
         new() { Numero = 10, Titulo = "Comunicação ao SCPO",            Resultado = "Comunicação realizada no prazo",               Status = "valido", Icone = "bi-send-check",        Detalhe = "Comunicação ao SCPO realizada dentro do prazo regulamentar." },
     ];
 
-    // DSB-004 — pendencia grave: 3 válido + 7 inválido
     private static List<Validacao> ObterValidacoesDSB004() =>
     [
         new()
@@ -397,7 +365,7 @@ public static class ServicoMock
             Detalhe = "O município possui parcelamento ativo de débitos do FGTS. A situação impede a emissão de certificado de regularidade.",
             ComentarioPreenchido = new Comentario
             {
-                Tipo = "negativo",
+                Tipo = "parecer",
                 Texto = "Município informou que parcelamento está em dia, mas a situação no sistema ainda não foi atualizada. Aguardando documentação.",
                 Autor = "Ana Paula Lima",
                 Timestamp = new DateTime(2025, 4, 25, 14, 0, 0)
@@ -431,7 +399,7 @@ public static class ServicoMock
             Detalhe = "O prazo de execução contratual expirou em 08/01/2025. O aditamento não foi formalizado.",
             ComentarioPreenchido = new Comentario
             {
-                Tipo = "negativo",
+                Tipo = "parecer",
                 Texto = "Prazo vencido há mais de 4 meses sem formalização de aditamento. Processo suspenso até regularização.",
                 Autor = "Bruno Costa",
                 Timestamp = new DateTime(2025, 5, 2, 10, 15, 0)
@@ -453,7 +421,6 @@ public static class ServicoMock
         },
     ];
 
-    // DSB-005 — pendente (em análise): 8 válido + 2 pendente, nenhum inválido
     private static List<Validacao> ObterValidacoesDSB005() =>
     [
         new()
@@ -540,9 +507,6 @@ public static class ServicoMock
         },
     ];
 
-    // ──────────────────────────────────────────────────────────────────────────
-    // DETALHE DO CONTRATO
-    // ──────────────────────────────────────────────────────────────────────────
     public static DetalheContrato ObterDetalheContrato(DesembolsoCAD row)
     {
         if (row.Id == "DSB-001")
@@ -575,7 +539,6 @@ public static class ServicoMock
             };
         }
 
-        // Gera dados plausíveis para os demais desembolsos
         var seed = row.Id.GetHashCode();
         var programas = new[] { "Pró-Moradia", "Saneamento", "Mobilidade Urbana", "Infraestrutura" };
         var afs = new[]
@@ -615,9 +578,6 @@ public static class ServicoMock
         };
     }
 
-    // ──────────────────────────────────────────────────────────────────────────
-    // UTILITÁRIOS DE FORMATAÇÃO
-    // ──────────────────────────────────────────────────────────────────────────
     public static string FormatarBRL(decimal valor) =>
         valor.ToString("C", _culturaBR);
 

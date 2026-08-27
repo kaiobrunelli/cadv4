@@ -1,4 +1,4 @@
-﻿@inject ISnackbar Snackbar
+@inject ISnackbar Snackbar
 @inject CobrancaService CobrancaService
 <style>
 	.mud-dialog .mud-dialog-title .mud-button-close {
@@ -24,64 +24,6 @@
 	</TitleContent>
 	<DialogContent>
 
-		@* @foreach (var propriedade in _listaPropriedadesEditaveis)
-		{
-			@* if (propriedade.NomePropriedade == "ImpressoraVirtualServer")
-			{
-				<MudGrid Class="pt-4">
-					<MudItem xs="12" md="8">
-						<MudSelect @bind-Value="_value"
-								   Variant="Variant.Outlined"
-								   Margin="Margin.Dense"
-								   Dense="true"
-								   T="string"
-								   >
-							@foreach (var state in _states)
-							{
-								<MudSelectItem T="string" Value="state">@state</MudSelectItem>
-							}
-						</MudSelect>
-					</MudItem>
-					<MudItem xs="12" md="4" Class="d-flex align-center">
-						<MudButton Variant="Variant.Outlined"
-								   Color="Color.Success"
-								   OnClick="@(() => SalvarAlteracao(propriedade))"
-								   Disabled="@( propriedade.ValorAtual == propriedade.ValorOriginal ||
-                                        string.IsNullOrWhiteSpace(propriedade.ValorAtual))"
-								   Class="w-100">
-
-							<MudIcon Icon="@Icons.Material.Filled.Check" Class="mr-2" />
-							<span>Salvar</span>
-						</MudButton>
-					</MudItem>
-				</MudGrid>
-			} 
-			if (propriedade.NomePropriedade != "ImpressoraVirtualServer")
-			{
-				<MudGrid Class="pt-4">
-					<MudItem xs="12" md="8">
-						<MudTextField @bind-Value="propriedade.ValorAtual"
-									  Label="@propriedade.Label"
-									  Variant="Variant.Outlined"
-									  Margin="Margin.Dense"
-									  Disabled="@propriedade.IsSaving"
-									  Immediate="true" />
-					</MudItem>
-					<MudItem xs="12" md="4" Class="d-flex align-center">
-						<MudButton Variant="Variant.Outlined"
-								   Color="Color.Success"
-								   OnClick="@(() => SalvarAlteracao(propriedade))"
-								   Disabled="@( propriedade.ValorAtual == propriedade.ValorOriginal ||
-                                            string.IsNullOrWhiteSpace(propriedade.ValorAtual))"
-								   Class="w-100">
-
-							<MudIcon Icon="@Icons.Material.Filled.Check" Class="mr-2" />
-							<span>Salvar</span>
-						</MudButton>
-					</MudItem>
-				</MudGrid>
-			}
-		} *@
 
 		<MudGrid Class="pt-4">
 			<MudItem xs="12" md="6">
@@ -224,7 +166,6 @@
 				Primary = "#005ca9",
 				Secondary = "#D87B00",
 				Success = "#00A645",
-				// Success = "#1ABD55",
 				DrawerIcon = "#ffffff",
 			},
 		};
@@ -281,7 +222,6 @@
 		{		
 			Snackbar.Add("Alteração salva com sucesso!", Severity.Success);
 		}	
-		// await HttpResponseHandler.ResponseHandler(response, Snackbar);
 	}
 	private async Task SalvarAlteracaoCCI(string nuContrato, string nuContratoDV)
 	{

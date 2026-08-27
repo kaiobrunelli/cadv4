@@ -1,4 +1,4 @@
-﻿@page "/cadcad"
+@page "/cad"
 @using System.Net.Http.Json
 
 @using ControleAnaliseDesembolso.Componentes
@@ -15,9 +15,7 @@
 @implements IDisposable
 <PageTitle>Análise de Desembolsos — SIPUB</PageTitle>
 <style>
-    ﻿ /* ══════════════════════════════════════════════
-       PÁGINA — wrapper geral
-       ══════════════════════════════════════════════ */
+    ﻿
     .mud-container{
         margin:0px;
     }
@@ -28,9 +26,6 @@
         background: #F4F7FB;
     }
 
-    /* ══════════════════════════════════════════════
-       SEÇÃO HEADER (fundo azul-acinzentado)
-       ══════════════════════════════════════════════ */
     .pagina-header-secao {
         background: #F4F7FB;
         border-bottom: 1px solid #E4EBF0;
@@ -38,11 +33,10 @@
 
     .pagina-header-container {
         max-width: 1200px;
-        margin: 0; /* alinhado à esquerda (junto ao menu), mas limitado em telas grandes */
+        margin: 0;
         padding: 32px;
     }
 
-    /* Título 40px extrabold — "Análise de Desembolsos" */
     .pagina-titulo {
         font-size: 40px;
         font-weight: 800;
@@ -55,7 +49,30 @@
         color: var(--brand-700);
     }
 
-    /* ── Stats Consolidado card ── */
+    .titulo-gigov-sufixo {
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--ink-500);
+        letter-spacing: 0;
+    }
+
+    .btn-toggle-modo-teste {
+        display: inline-flex; align-items: center; gap: 6px;
+        margin-top: 10px;
+        padding: 5px 12px;
+        border-radius: var(--radius-full);
+        border: 1px dashed #E0A711;
+        background: #FFFBEB;
+        color: #9A5B00;
+        font-size: 11.5px;
+        font-weight: 600;
+        font-family: inherit;
+        cursor: pointer;
+        transition: background .12s;
+    }
+    .btn-toggle-modo-teste:hover { background: #FEF3C7; }
+    .btn-toggle-modo-teste i { font-size: 12px; }
+
     .stats-consolidado {
         margin-top: 24px;
         overflow: hidden;
@@ -127,9 +144,6 @@
         margin-top: 4px;
     }
 
-    /* ══════════════════════════════════════════════
-       BARRA DE FILTROS + TOOLBAR
-       ══════════════════════════════════════════════ */
     .filtros-area {
         background: #F4F7FB;
     }
@@ -139,8 +153,6 @@
         margin: 0;
         padding: 12px 32px;
         display: flex;
-        /* Uma linha em telas largas; ao apertar, a toolbar quebra para a linha
-           de baixo (flex-wrap) e o margin-left:auto a mantém à direita. */
         flex-direction: row;
         flex-wrap: wrap;
         align-items: center;
@@ -148,7 +160,6 @@
         border-bottom: 1px solid var(--ink-100);
     }
 
-    /* Pill segmentado (alinhado à esquerda) */
     .filtro-pill {
         display: inline-flex;
         align-items: center;
@@ -209,8 +220,6 @@
         color: var(--ink-700);
     }
 
-    /* Grupo de consulta: pills + período + busca — tudo que estreita o que
-       aparece na lista. Fica à esquerda, agrupado visualmente. */
     .grupo-consulta {
         display: flex;
         align-items: center;
@@ -218,10 +227,6 @@
         flex-wrap: wrap;
     }
 
-    /* Grupo de ações: cria/processa — separado do grupo de consulta por uma
-       divisória fina, pra o olho distinguir "isso filtra" de "isso faz algo"
-       sem precisar ler o texto de cada botão. Encostado à direita; quebra
-       pra linha de baixo (mantendo-se à direita) quando não cabe. */
     .grupo-acoes {
         display: flex;
         align-items: center;
@@ -232,7 +237,6 @@
         flex-wrap: wrap;
     }
 
-    /* Chip "Última Atualização" */
     .chip-atualizacao {
         display: inline-flex;
         align-items: center;
@@ -259,7 +263,6 @@
         flex-shrink: 0;
     }
 
-    /* Busca inline */
     .busca-tabela {
         display: flex;
         align-items: center;
@@ -295,7 +298,6 @@
                 outline: none;
             }
 
-    /* Botão Apresentação */
     .btn-apresentacao {
         display: inline-flex;
         align-items: center;
@@ -323,7 +325,6 @@
             cursor: not-allowed;
         }
 
-    /* Botão Preencher FPD (laranja Caixa) */
     .btn-fpd {
         display: inline-flex;
         align-items: center;
@@ -345,7 +346,6 @@
             background: var(--amber-700);
         }
 
-    /* Botão Processar */
     .btn-processar {
         display: inline-flex;
         align-items: center;
@@ -377,9 +377,6 @@
         cursor: wait !important;
     }
 
-    /* ══════════════════════════════════════════════
-       ÁREA DE CONTRATOS
-       ══════════════════════════════════════════════ */
     .contratos-area {
         flex: 1;
         background: #F4F7FB;
@@ -387,25 +384,22 @@
 
     .contratos-container {
         max-width: 1200px;
-        margin: 0; /* alinhado à esquerda (junto ao menu), mas limitado em telas grandes */
-        padding: 24px 32px 64px; /* sobra maior embaixo — a última tabela não pode terminar colada no rodapé */
+        margin: 0;
+        padding: 24px 32px 64px;
     }
 
-    /* Skeletons */
     .skeletons {
         display: flex;
         flex-direction: column;
         gap: 8px;
     }
 
-    /* Lista de grupos */
     .grupos-lista {
         display: flex;
         flex-direction: column;
         gap: 16px;
     }
 
-    /* ── Card de grupo ── */
     .grupo-card {
         overflow: hidden;
         border-radius: var(--radius-xl);
@@ -414,7 +408,6 @@
         box-shadow: var(--shadow-card);
     }
 
-    /* Header do card de grupo */
     .grupo-card-header {
         display: flex;
         align-items: center;
@@ -426,7 +419,33 @@
             border-bottom: 1px solid var(--ink-100);
         }
 
-    /* ── Cabeçalho de colunas (dentro de cada card) ── */
+    .grupo-paginacao {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        padding: 12px 0 16px;
+        border-top: 1px solid var(--ink-50);
+    }
+
+    .grupo-btn-pagina {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        border-radius: var(--radius-md);
+        border: 1px solid var(--ink-100);
+        background: #fff;
+        color: var(--ink-700);
+        cursor: pointer;
+        transition: background .15s;
+    }
+    .grupo-btn-pagina:hover:not(:disabled) { background: var(--ink-50); }
+    .grupo-btn-pagina:disabled { opacity: .4; cursor: not-allowed; }
+
+    .grupo-paginacao-info { font-size: 11.5px; font-weight: 600; color: var(--ink-500); }
+
     .cols-header {
         display: flex;
         align-items: center;
@@ -444,7 +463,6 @@
         flex-shrink: 0;
     }
 
-    /* ── Empty state ── */
     .tabela-vazia {
         display: flex;
         flex-direction: column;
@@ -475,7 +493,6 @@
         color: var(--ink-500);
     }
 
-    /* ── Popover de atribuição da lista ── */
     .overlay-atrib {
         position: fixed;
         inset: 0;
@@ -515,6 +532,11 @@
         letter-spacing: .12em;
         color: var(--ink-400);
         border-bottom: 1px solid var(--ink-100);
+    }
+
+    .popover-atrib-lista {
+        max-height: 210px;
+        overflow-y: auto;
     }
 
     .popover-atrib-item {
@@ -560,6 +582,10 @@
 
     .popover-atrib-nome {
         flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     .popover-atrib-check {
@@ -592,174 +618,149 @@
     var totalOk         = todos.Sum(d => d.ValidacoesOk);
     var qtdPendencias   = todos.Count(d => d.Status == "pendencia");
     var qtdPendentes    = todos.Count(d => d.Status == "pendente");
-    // "Aprovado"/"Válidos" também mostra os finalizados (mesmo bucket lá na
-    // origem — ver ControleAnaliseDesembolsoService.MapearStatus) e os
-    // negados (senão desapareceriam da lista sem aparecer em nenhum grupo).
-    var qtdAprovados    = todos.Count(d => d.Status is "aprovado" or "negado");
     var qtdAgendados    = todos.Count(d => d.Status == "agendado");
+    var qtdAguardandoBaixa = todos.Count(d => d.Status == "aprovado");
+    var totalContratos  = qtdPendencias + qtdPendentes + qtdAguardandoBaixa + qtdAgendados;
 
     var filtrados = _filtroAtivo switch
     {
         "invalidos" => todos.Where(d => d.Status == "pendencia").ToList(),
         "pendentes" => todos.Where(d => d.Status == "pendente").ToList(),
-        "validos"   => todos.Where(d => d.Status is "aprovado" or "negado").ToList(),
         "agendado"  => todos.Where(d => d.Status == "agendado").ToList(),
-        // "rejeitado" => todos.Where(d => d.Status == "negado").ToList(), // filtro dedicado — descomentar pra habilitar a pill "Rejeitado"
         _           => todos
     };
-    // var podePresentar = filtrados.Count >= 2;   // usado pelo botão Apresentação (desabilitado)
 
-    // Busca aplicada antes do agrupamento: grupos, contagens e estado vazio
-    // reagem juntos ao que foi digitado. Nenhuma aba pagina aqui — a única
-    // lista que cresce sem limite é a de DRP (baixa de todos os desembolsos),
-    // que tem paginação e filtro de período próprios em TabelaBaixaDrp.
     var buscados = AplicarBusca(filtrados);
+
+    var buscadosNaoDrp = buscados.Where(d => d.Status is not ("aprovado" or "baixado" or "negado")).ToList();
 
     var grupoPendencias = buscados.Where(d => d.Status == "pendencia").ToList();
     var grupoPendentes  = buscados.Where(d => d.Status == "pendente").ToList();
     var grupoAprovados  = buscados.Where(d => d.Status == "aprovado").ToList();
     var grupoAgendados  = buscados.Where(d => d.Status == "agendado").ToList();
-    // Rejeitados têm grupo próprio (sempre por último) — só os dos últimos 15
-    // dias, senão a lista cresce pra sempre. Continuam contando dentro de
-    // "Válidos"/qtdAprovados lá em cima (comportamento de antes, não mexi).
-    var limiteRejeitados = DateTime.Today.AddDays(-15);
-    var grupoRejeitados = buscados.Where(d => d.Status == "negado" && d.DtConclusao >= limiteRejeitados).ToList();
+
+    var emAndamentoGigov = buscados.Where(d => d.Status is "pendencia" or "pendente" or "agendado").ToList();
+    var concluidosGigov = todos.Where(d => d.Status is "aprovado" or "baixado" or "negado").ToList();
 }
 
 <div class="pagina">
 
-    <!-- ══ Seção Header ══ -->
     <section class="pagina-header-secao">
         <div class="pagina-header-container">
            
             <h1 class="pagina-titulo">
                 Análise de <span class="titulo-destaque">Desembolsos</span>
+                @if (ServicoUsuario.EhGigov && _meusGigov.Count > 0)
+                {
+                    <span class="titulo-gigov-sufixo"> - GIGOV @string.Join(", ", _meusGigov)</span>
+                }
             </h1>
 
-            <!-- Stats Consolidado -->
-            <div class="stats-consolidado">
-                <div class="stats-consolidado-header">
-                    <span class="stats-consolidado-titulo">Relatório Consolidado</span>
+            <button class="btn-toggle-modo-teste" @onclick="AlternarModoTeste" title="Só pra teste — alterna a identidade simulada e recarrega a página">
+                <i class="bi bi-arrow-repeat"></i>
+                <span>Testando como: <strong>@(ServicoUsuario.ModoGigovForcado ? $"GIGOV {ServicoUsuarioUI.CodigoGigovTeste}" : "CEFGA 7175")</strong></span>
+            </button>
+
+            @if (!ServicoUsuario.EhGigov)
+            {
+                <div class="stats-consolidado">
+                    <div class="stats-consolidado-header">
+                        <span class="stats-consolidado-titulo">Relatório Consolidado</span>
+                    </div>
+                    <div class="stats-consolidado-cells">
+
+                        <div class="stats-cell">
+                            <div class="stats-cell-icon" style="background:#EBF5FF">
+                                <i class="bi bi-list-check" style="color:#005CA9;font-size:14px"></i>
+                            </div>
+                            <div>
+                                <div class="stats-cell-valor">@totalContratos</div>
+                                <div class="stats-cell-label">Total de contratos</div>
+                            </div>
+                        </div>
+
+                        <div class="stats-cell">
+                            <div class="stats-cell-icon" style="background:#FEF2F2">
+                                <i class="bi bi-exclamation-triangle" style="color:#C0392B;font-size:14px"></i>
+                            </div>
+                            <div>
+                                <div class="stats-cell-valor">@qtdPendencias</div>
+                                <div class="stats-cell-label">Com pendência</div>
+                            </div>
+                        </div>
+
+                        <div class="stats-cell">
+                            <div class="stats-cell-icon" style="background:#FFFBEB">
+                                <i class="bi bi-clock" style="color:#D87B00;font-size:14px"></i>
+                            </div>
+                            <div>
+                                <div class="stats-cell-valor">@qtdPendentes</div>
+                                <div class="stats-cell-label">Para analisar</div>
+                            </div>
+                        </div>
+
+                        <div class="stats-cell">
+                            <div class="stats-cell-icon" style="background:#F0FDF4">
+                                <i class="bi bi-check-circle" style="color:#1A7A4A;font-size:14px"></i>
+                            </div>
+                            <div>
+                                <div class="stats-cell-valor">@qtdAguardandoBaixa</div>
+                                <div class="stats-cell-label">Aguardando Baixa</div>
+                            </div>
+                        </div>
+
+                    </div>
                 </div>
-                <div class="stats-consolidado-cells">
-
-                    <div class="stats-cell">
-                        <div class="stats-cell-icon" style="background:#EBF5FF">
-                            <i class="bi bi-list-check" style="color:#005CA9;font-size:14px"></i>
-                        </div>
-                        <div>
-                            <div class="stats-cell-valor">@todos.Count</div>      
-                            <div class="stats-cell-label">Total de contratos</div>                      
-                        </div>
-                    </div>
-
-                    <div class="stats-cell">
-                        <div class="stats-cell-icon" style="background:#FEF2F2">
-                            <i class="bi bi-exclamation-triangle" style="color:#C0392B;font-size:14px"></i>
-                        </div>
-                        <div>
-                            <div class="stats-cell-valor">@qtdPendencias</div>
-                            <div class="stats-cell-label">Com pendência</div>
-                        </div>
-                    </div>
-
-                    <div class="stats-cell">
-                        <div class="stats-cell-icon" style="background:#FFFBEB">
-                            <i class="bi bi-clock" style="color:#D87B00;font-size:14px"></i>
-                        </div>
-                        <div>
-                            <div class="stats-cell-valor">@qtdPendentes</div>
-                            <div class="stats-cell-label">Para analisar</div>
-                        </div>
-                    </div>
-
-                    <div class="stats-cell">
-                        <div class="stats-cell-icon" style="background:#F0FDF4">
-                            <i class="bi bi-check-circle" style="color:#1A7A4A;font-size:14px"></i>
-                        </div>
-                        <div>
-                            <div class="stats-cell-valor">@qtdAprovados</div>
-                            <div class="stats-cell-label">Aprovados</div>
-                        </div>
-                    </div>
-
-                </div>
-            </div>
+            }
 
         </div>
     </section>
 
-    <!-- ══ Barra de filtros + toolbar ══
-         Dois grupos visuais, separados por função (não só por lado):
-         "grupo-consulta" = tudo que estreita o que aparece na lista (pills de
-         status, período, busca); "grupo-acoes" = tudo que faz alguma coisa
-         (criar FPD, processar) — com um separador fino entre os dois. ══ -->
     <div class="filtros-area">
         <div class="filtros-container">
 
             <div class="grupo-consulta">
-                <!-- Pill segmentado -->
                 <div class="filtro-pill">
                     <button class="filtro-btn @(_filtroAtivo == "geral"     ? "filtro-btn-ativo" : "")" @onclick='() => SelecionarFiltro("geral")'>
                         <span class="filtro-dot" style="background:#9EB2BB;opacity:@(_filtroAtivo=="geral"?"1":"0.5")"></span>
                         Geral
-                        <span class="filtro-badge @(_filtroAtivo == "geral" ? "filtro-badge-ativo" : "")">@todos.Count</span>
+                        <span class="filtro-badge @(_filtroAtivo == "geral" ? "filtro-badge-ativo" : "")">@(ServicoUsuario.EhGigov ? emAndamentoGigov.Count : totalContratos)</span>
                     </button>
 
-                    <button class="filtro-btn @(_filtroAtivo == "invalidos" ? "filtro-btn-ativo" : "")" @onclick='() => SelecionarFiltro("invalidos")' title="FPDs que acabaram de entrar, aguardando a 1ª validação da macro">
-                        <span class="filtro-dot" style="background:#C0392B;opacity:@(_filtroAtivo=="invalidos"?"1":"0.5")"></span>
-                        Aguardando
-                        @if (qtdPendencias > 0)
-                        {
-                            <span class="filtro-badge @(_filtroAtivo == "invalidos" ? "filtro-badge-ativo" : "")">@qtdPendencias</span>
-                        }
-                    </button>
+                    @if (!ServicoUsuario.EhGigov)
+                    {
+                        <button class="filtro-btn @(_filtroAtivo == "invalidos" ? "filtro-btn-ativo" : "")" @onclick='() => SelecionarFiltro("invalidos")' title="FPDs que acabaram de entrar, aguardando a 1ª validação da macro">
+                            <span class="filtro-dot" style="background:#C0392B;opacity:@(_filtroAtivo=="invalidos"?"1":"0.5")"></span>
+                            Pendente
+                            @if (qtdPendencias > 0)
+                            {
+                                <span class="filtro-badge @(_filtroAtivo == "invalidos" ? "filtro-badge-ativo" : "")">@qtdPendencias</span>
+                            }
+                        </button>
 
-                    <button class="filtro-btn @(_filtroAtivo == "pendentes" ? "filtro-btn-ativo" : "")" @onclick='() => SelecionarFiltro("pendentes")'>
-                        <span class="filtro-dot" style="background:#D87B00;opacity:@(_filtroAtivo=="pendentes"?"1":"0.5")"></span>
-                        Analisar
-                        @if (qtdPendentes > 0)
-                        {
-                            <span class="filtro-badge @(_filtroAtivo == "pendentes" ? "filtro-badge-ativo" : "")">@qtdPendentes</span>
-                        }
-                    </button>
+                        <button class="filtro-btn @(_filtroAtivo == "pendentes" ? "filtro-btn-ativo" : "")" @onclick='() => SelecionarFiltro("pendentes")'>
+                            <span class="filtro-dot" style="background:#D87B00;opacity:@(_filtroAtivo=="pendentes"?"1":"0.5")"></span>
+                            Analisar
+                            @if (qtdPendentes > 0)
+                            {
+                                <span class="filtro-badge @(_filtroAtivo == "pendentes" ? "filtro-badge-ativo" : "")">@qtdPendentes</span>
+                            }
+                        </button>
 
-                    <button class="filtro-btn @(_filtroAtivo == "validos"   ? "filtro-btn-ativo" : "")" @onclick='() => SelecionarFiltro("validos")'>
-                        <span class="filtro-dot" style="background:#1A7A4A;opacity:@(_filtroAtivo=="validos"?"1":"0.5")"></span>
-                        Válidos
-                        @if (qtdAprovados > 0)
-                        {
-                            <span class="filtro-badge @(_filtroAtivo == "validos" ? "filtro-badge-ativo" : "")">@qtdAprovados</span>
-                        }
-                    </button>
+                        <button class="filtro-btn @(_filtroAtivo == "agendado"  ? "filtro-btn-ativo" : "")" @onclick='() => SelecionarFiltro("agendado")' title="Desembolsos SANEPAR — aguardam a rotina do dia 20 pra entrar na fila normal">
+                            <span class="filtro-dot" style="background:#2D8AD8;opacity:@(_filtroAtivo=="agendado"?"1":"0.5")"></span>
+                            Agendado
+                            @if (qtdAgendados > 0)
+                            {
+                                <span class="filtro-badge @(_filtroAtivo == "agendado" ? "filtro-badge-ativo" : "")">@qtdAgendados</span>
+                            }
+                        </button>
+                    }
 
-                    <button class="filtro-btn @(_filtroAtivo == "agendado"  ? "filtro-btn-ativo" : "")" @onclick='() => SelecionarFiltro("agendado")' title="Desembolsos SANEPAR — aguardam a rotina do dia 20 pra entrar na fila normal">
-                        <span class="filtro-dot" style="background:#2D8AD8;opacity:@(_filtroAtivo=="agendado"?"1":"0.5")"></span>
-                        Agendado
-                        @if (qtdAgendados > 0)
-                        {
-                            <span class="filtro-badge @(_filtroAtivo == "agendado" ? "filtro-badge-ativo" : "")">@qtdAgendados</span>
-                        }
-                    </button>
-
-                    @* Filtro dedicado "Rejeitado" — comentado a pedido do usuário. Pra
-                       habilitar: descomenta aqui, descomenta o case "rejeitado" no switch
-                       de `filtrados` lá em cima, e adiciona uma var `qtdRejeitados` (ex.:
-                       `todos.Count(d => d.Status == "negado")`) se quiser o contador. *@
-                    @*
-                    <button class="filtro-btn @(_filtroAtivo == "rejeitado" ? "filtro-btn-ativo" : "")" @onclick='() => SelecionarFiltro("rejeitado")'>
-                        <span class="filtro-dot" style="background:#7A1F16;opacity:@(_filtroAtivo=="rejeitado"?"1":"0.5")"></span>
-                        Rejeitado
-                        @if (todos.Count(d => d.Status == "negado") > 0)
-                        {
-                            <span class="filtro-badge @(_filtroAtivo == "rejeitado" ? "filtro-badge-ativo" : "")">@todos.Count(d => d.Status == "negado")</span>
-                        }
-                    </button>
-                    *@
 
                     <button class="filtro-btn @(_filtroAtivo == "drp"  ? "filtro-btn-ativo" : "")" @onclick='() => SelecionarFiltro("drp")'>
                         <span class="filtro-dot" style="background:#1074C8;opacity:@(_filtroAtivo=="drp"?"1":"0.5")"></span>
-                        DRP
+                        @(ServicoUsuario.EhGigov ? "Concluídos" : "DRP")
                     </button>
                 </div>
 
@@ -767,27 +768,15 @@
                 {
                     <div class="busca-tabela">
                         <i class="bi bi-search"></i>
-                        <input type="text" placeholder="Buscar..." @bind="_textoBusca" @bind:event="oninput" />
+                        <input type="text" placeholder="Buscar..." @bind="_textoBusca" @bind:event="oninput" @bind:after="ResetarPaginasGrupos" />
                     </div>
                 }
             </div>
 
-            <!-- Ações (ocultas na aba DRP, que tem ação própria) -->
             @if (_filtroAtivo != "drp")
             {
             <div class="grupo-acoes">
-                @* "Preencher FPD" (versão sem etapas) desativado — DialogPreencherFpd
-                   está inteiro comentado (nunca foi ligado a nada real). O fluxo
-                   definitivo é o "Preencher FPD (Etapas)" logo abaixo. *@
-                @*
-                <button class="btn-fpd" @onclick="() => _fpdAberto = true" title="Registrar Ficha de Previsão de Desembolso">
-                    <i class="bi bi-clipboard-plus"></i>
-                    <span>Preencher FPD</span>
-                </button>
-                *@
 
-                @* Validar Pendentes é ação exclusiva de CEFGA (7175) — quem analisa,
-                   não quem solicita. *@
                 @if (!ServicoUsuario.EhGigov)
                 {
                     <button class="btn-processar @(_processando ? "btn-processando" : "")" @onclick="ExecutarMacro" disabled="@_processando"
@@ -797,7 +786,6 @@
                     </button>
                 }
 
-                @* Preencher FPD é ação exclusiva de GIGOV — quem solicita, não quem analisa. *@
                 @if (ServicoUsuario.EhGigov)
                 {
                     <button class="btn-fpd" @onclick="() => _fpdEtapasAberto = true" title="Registrar Ficha de Previsão de Desembolso em etapas">
@@ -806,25 +794,29 @@
                     </button>
                 }
 
-                @* Botão Apresentação ocultado — a página /apresentacao continua na
-                   aplicação (acessível pelo menu lateral) *@
             </div>
             }
 
         </div>
     </div>
 
-    <!-- ══ Barra de progresso do processamento ══ -->
     <BarraProgresso />
 
-    <!-- ══ Lista de contratos ══ -->
     <div class="contratos-area">
         <div class="contratos-container">
 
             @if (_filtroAtivo == "drp")
             {
-                <!-- Aba DRP: tabela de controle de baixa -->
-                <TabelaBaixaDrp />
+                @if (ServicoUsuario.EhGigov)
+                {
+                    <TabelaConcluidosGigov Desembolsos="@concluidosGigov"
+                                           Selecionado="@_idDialogAberto"
+                                           AoClicar="@(id => AbrirDialog(id))" />
+                }
+                else
+                {
+                    <TabelaBaixaDrp />
+                }
             }
             else if (_carregando)
             {
@@ -835,29 +827,28 @@
                     }
                 </div>
             }
-            else
+            else if (_filtroAtivo == "geral" && ServicoUsuario.EhGigov)
             {
                 <div class="grupos-lista">
-
-                    <!-- Grupo: Inválidos -->
-                    @if (grupoPendencias.Any())
+                    @if (emAndamentoGigov.Any())
                     {
                         <section class="grupo-card">
-                            <div class="grupo-card-header @(_grupoPendenciasAberto ? "com-borda" : "")">
-                                <CabecalhoGrupo Titulo="Aguardando Validação"
-                                                Contagem="@grupoPendencias.Count"
-                                                Tipo="pendencia"
-                                                Aberto="@_grupoPendenciasAberto"
-                                                AoAlternar="@(v => _grupoPendenciasAberto = v)" />
+                            <div class="grupo-card-header @(_grupoEmAndamentoAberto ? "com-borda" : "")">
+                                <CabecalhoGrupo Titulo="Em Andamento"
+                                                Contagem="@emAndamentoGigov.Count"
+                                                Tipo="geral"
+                                                Aberto="@_grupoEmAndamentoAberto"
+                                                AoAlternar="@(v => _grupoEmAndamentoAberto = v)" />
                             </div>
-                            <div class="acc-body @(_grupoPendenciasAberto ? "aberto" : "")">
+                            <div class="acc-body @(_grupoEmAndamentoAberto ? "aberto" : "")">
                                 <div class="acc-inner">
                                     @ColsHeader
-                                    @foreach (var d in grupoPendencias)
+                                    @foreach (var d in emAndamentoGigov)
                                     {
                                         <LinhaContrato Desembolso="d"
                                                       MostrarAguardando="false"
-                                                      MostrarMutuario="false"
+                                                      MostrarMutuario="true"
+                                                      MostrarResponsavel="false"
                                                       Analista="@ObterAnalista(d.Id)"
                                                       Selecionada="@(_idDialogAberto == d.Id)"
                                                       AoClicar="@(() => AbrirDialog(d.Id))"
@@ -868,7 +859,62 @@
                         </section>
                     }
 
-                    <!-- Grupo: Analisar -->
+                    @if (!emAndamentoGigov.Any())
+                    {
+                        <div class="tabela-vazia">
+                            <i class="bi bi-folder2-open"></i>
+                            <div class="tabela-vazia-titulo">Nenhum desembolso em andamento</div>
+                            <div class="tabela-vazia-sub">Seus desembolsos em análise aparecerão aqui.</div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="grupos-lista">
+
+                    @if (grupoPendencias.Any())
+                    {
+                        <section class="grupo-card">
+                            <div class="grupo-card-header @(_grupoPendenciasAberto ? "com-borda" : "")">
+                                <CabecalhoGrupo Titulo="Pendente"
+                                                Contagem="@grupoPendencias.Count"
+                                                Tipo="pendencia"
+                                                Aberto="@_grupoPendenciasAberto"
+                                                AoAlternar="@(v => _grupoPendenciasAberto = v)" />
+                            </div>
+                            <div class="acc-body @(_grupoPendenciasAberto ? "aberto" : "")">
+                                <div class="acc-inner">
+                                    @ColsHeader
+                                    @{ _paginaPendencias = PaginaValidaGrupo(_paginaPendencias, grupoPendencias.Count); }
+                                    @foreach (var d in Paginar(grupoPendencias, _paginaPendencias))
+                                    {
+                                        <LinhaContrato Desembolso="d"
+                                                      MostrarAguardando="false"
+                                                      MostrarMutuario="ServicoUsuario.EhGigov"
+                                                      MostrarResponsavel="!ServicoUsuario.EhGigov"
+                                                      Analista="@ObterAnalista(d.Id)"
+                                                      Selecionada="@(_idDialogAberto == d.Id)"
+                                                      AoClicar="@(() => AbrirDialog(d.Id))"
+                                                      AoAtribuir="@((MouseEventArgs e) => { _idAtribuicao = d.Id; _popoverX = e.ClientX; _popoverY = e.ClientY; })" />
+                                    }
+                                </div>
+                                @if (TotalPaginasGrupo(grupoPendencias.Count) > 1)
+                                {
+                                    <div class="grupo-paginacao">
+                                        <button class="grupo-btn-pagina" disabled="@(_paginaPendencias <= 1)" @onclick="() => _paginaPendencias--">
+                                            <i class="bi bi-chevron-left"></i>
+                                        </button>
+                                        <span class="grupo-paginacao-info">Página @_paginaPendencias de @TotalPaginasGrupo(grupoPendencias.Count)</span>
+                                        <button class="grupo-btn-pagina" disabled="@(_paginaPendencias >= TotalPaginasGrupo(grupoPendencias.Count))" @onclick="() => _paginaPendencias++">
+                                            <i class="bi bi-chevron-right"></i>
+                                        </button>
+                                    </div>
+                                }
+                            </div>
+                        </section>
+                    }
+
                     @if (grupoPendentes.Any())
                     {
                         <section class="grupo-card">
@@ -882,51 +928,36 @@
                             <div class="acc-body @(_grupoPendentesAberto ? "aberto" : "")">
                                 <div class="acc-inner">
                                     @ColsHeader
-                                    @foreach (var d in grupoPendentes)
+                                    @{ _paginaPendentes = PaginaValidaGrupo(_paginaPendentes, grupoPendentes.Count); }
+                                    @foreach (var d in Paginar(grupoPendentes, _paginaPendentes))
                                     {
                                         <LinhaContrato Desembolso="d"
                                                       MostrarAguardando="false"
-                                                      MostrarMutuario="false"
+                                                      MostrarMutuario="ServicoUsuario.EhGigov"
+                                                      MostrarResponsavel="!ServicoUsuario.EhGigov"
                                                       Analista="@ObterAnalista(d.Id)"
                                                       Selecionada="@(_idDialogAberto == d.Id)"
                                                       AoClicar="@(() => AbrirDialog(d.Id))"
                                                       AoAtribuir="@((MouseEventArgs e) => { _idAtribuicao = d.Id; _popoverX = e.ClientX; _popoverY = e.ClientY; })" />
                                     }
                                 </div>
+                                @if (TotalPaginasGrupo(grupoPendentes.Count) > 1)
+                                {
+                                    <div class="grupo-paginacao">
+                                        <button class="grupo-btn-pagina" disabled="@(_paginaPendentes <= 1)" @onclick="() => _paginaPendentes--">
+                                            <i class="bi bi-chevron-left"></i>
+                                        </button>
+                                        <span class="grupo-paginacao-info">Página @_paginaPendentes de @TotalPaginasGrupo(grupoPendentes.Count)</span>
+                                        <button class="grupo-btn-pagina" disabled="@(_paginaPendentes >= TotalPaginasGrupo(grupoPendentes.Count))" @onclick="() => _paginaPendentes++">
+                                            <i class="bi bi-chevron-right"></i>
+                                        </button>
+                                    </div>
+                                }
                             </div>
                         </section>
                     }
 
-                    <!-- Grupo: Aprovados -->
-                    @if (grupoAprovados.Any())
-                    {
-                        <section class="grupo-card">
-                            <div class="grupo-card-header @(_grupoAprovadosAberto ? "com-borda" : "")">
-                                <CabecalhoGrupo Titulo="Aprovado"
-                                                Contagem="@grupoAprovados.Count"
-                                                Tipo="aprovado"
-                                                Aberto="@_grupoAprovadosAberto"
-                                                AoAlternar="@(v => _grupoAprovadosAberto = v)" />
-                            </div>
-                            <div class="acc-body @(_grupoAprovadosAberto ? "aberto" : "")">
-                                <div class="acc-inner">
-                                    @ColsHeader
-                                    @foreach (var d in grupoAprovados)
-                                    {
-                                        <LinhaContrato Desembolso="d"
-                                                      MostrarAguardando="false"
-                                                      MostrarMutuario="false"
-                                                      Analista="@ObterAnalista(d.Id)"
-                                                      Selecionada="@(_idDialogAberto == d.Id)"
-                                                      AoClicar="@(() => AbrirDialog(d.Id))"
-                                                      AoAtribuir="@((MouseEventArgs e) => { _idAtribuicao = d.Id; _popoverX = e.ClientX; _popoverY = e.ClientY; })" />
-                                    }
-                                </div>
-                            </div>
-                        </section>
-                    }
 
-                    <!-- Grupo: Agendados (SANEPAR) -->
                     @if (grupoAgendados.Any())
                     {
                         <section class="grupo-card">
@@ -940,46 +971,31 @@
                             <div class="acc-body @(_grupoAgendadosAberto ? "aberto" : "")">
                                 <div class="acc-inner">
                                     @ColsHeader
-                                    @foreach (var d in grupoAgendados)
+                                    @{ _paginaAgendados = PaginaValidaGrupo(_paginaAgendados, grupoAgendados.Count); }
+                                    @foreach (var d in Paginar(grupoAgendados, _paginaAgendados))
                                     {
                                         <LinhaContrato Desembolso="d"
                                                       MostrarAguardando="false"
-                                                      MostrarMutuario="false"
+                                                      MostrarMutuario="ServicoUsuario.EhGigov"
+                                                      MostrarResponsavel="!ServicoUsuario.EhGigov"
                                                       Analista="@ObterAnalista(d.Id)"
                                                       Selecionada="@(_idDialogAberto == d.Id)"
                                                       AoClicar="@(() => AbrirDialog(d.Id))"
                                                       AoAtribuir="@((MouseEventArgs e) => { _idAtribuicao = d.Id; _popoverX = e.ClientX; _popoverY = e.ClientY; })" />
                                     }
                                 </div>
-                            </div>
-                        </section>
-                    }
-
-                    <!-- Grupo: Rejeitados (últimos 15 dias) — sempre por último -->
-                    @if (grupoRejeitados.Any())
-                    {
-                        <section class="grupo-card">
-                            <div class="grupo-card-header @(_grupoRejeitadosAberto ? "com-borda" : "")">
-                                <CabecalhoGrupo Titulo="Rejeitado (últimos 15 dias)"
-                                                Contagem="@grupoRejeitados.Count"
-                                                Tipo="rejeitado"
-                                                Aberto="@_grupoRejeitadosAberto"
-                                                AoAlternar="@(v => _grupoRejeitadosAberto = v)" />
-                            </div>
-                            <div class="acc-body @(_grupoRejeitadosAberto ? "aberto" : "")">
-                                <div class="acc-inner">
-                                    @ColsHeader
-                                    @foreach (var d in grupoRejeitados)
-                                    {
-                                        <LinhaContrato Desembolso="d"
-                                                      MostrarAguardando="false"
-                                                      MostrarMutuario="false"
-                                                      Analista="@ObterAnalista(d.Id)"
-                                                      Selecionada="@(_idDialogAberto == d.Id)"
-                                                      AoClicar="@(() => AbrirDialog(d.Id))"
-                                                      AoAtribuir="@((MouseEventArgs e) => { _idAtribuicao = d.Id; _popoverX = e.ClientX; _popoverY = e.ClientY; })" />
-                                    }
-                                </div>
+                                @if (TotalPaginasGrupo(grupoAgendados.Count) > 1)
+                                {
+                                    <div class="grupo-paginacao">
+                                        <button class="grupo-btn-pagina" disabled="@(_paginaAgendados <= 1)" @onclick="() => _paginaAgendados--">
+                                            <i class="bi bi-chevron-left"></i>
+                                        </button>
+                                        <span class="grupo-paginacao-info">Página @_paginaAgendados de @TotalPaginasGrupo(grupoAgendados.Count)</span>
+                                        <button class="grupo-btn-pagina" disabled="@(_paginaAgendados >= TotalPaginasGrupo(grupoAgendados.Count))" @onclick="() => _paginaAgendados++">
+                                            <i class="bi bi-chevron-right"></i>
+                                        </button>
+                                    </div>
+                                }
                             </div>
                         </section>
                     }
@@ -994,7 +1010,6 @@
                                 "agendado"  => ("bi-calendar2-x",  "Nenhum desembolso agendado",       "Não há contratos com agendamento pendente no momento."),
                                 "invalidos" => ("bi-x-circle",     "Nenhuma pendência encontrada",      "Não há contratos aguardando validação no momento."),
                                 "pendentes" => ("bi-clock",        "Nenhum contrato para analisar",     "Não há contratos aguardando análise no momento."),
-                                "validos"   => ("bi-check-circle", "Nenhum contrato aprovado",          "Nenhum contrato atingiu o status de aprovado ainda."),
                                 _           => ("bi-folder2-open", "Nenhum contrato encontrado",        "Tente outro filtro.")
                             };
                         <div class="tabela-vazia">
@@ -1012,27 +1027,29 @@
 
 </div>
 
-<!-- ── Popover de atribuição da lista ── -->
 @if (_idAtribuicao is not null)
 {
     <div class="overlay-atrib" @onclick="() => _idAtribuicao = null"></div>
     <div class="popover-atrib" style="left: @(Math.Max(4, _popoverX - 230))px; top: @(_popoverY + 6)px" @onclick:stopPropagation>
         <div class="popover-atrib-titulo">Vincular responsável</div>
-        @foreach (var f in ServicoMock.ObterFuncionarios())
-        {
-            var ativo = ObterAnalista(_idAtribuicao)?.Id == f.Id;
-            var fLocal = f;
-            <button class="popover-atrib-item @(ativo ? "popover-atrib-item-ativo" : "")"
-                    @onclick="() => { AtribuirAnalista(_idAtribuicao, fLocal); _idAtribuicao = null; }">
-                <span class="popover-atrib-avatar" style="background:@fLocal.Cor">@fLocal.Iniciais</span>
-                <span class="popover-atrib-nome">@fLocal.Nome</span>
-                @if (ativo) { <i class="bi bi-check2 popover-atrib-check"></i> }
-            </button>
-        }
+        <div class="popover-atrib-lista">
+            @foreach (var f in _analistas)
+            {
+                var ativo = ObterAnalista(_idAtribuicao)?.Matricula == f.Matricula;
+                var fLocal = f;
+                <button class="popover-atrib-item @(ativo ? "popover-atrib-item-ativo" : "")"
+                        @onclick="async () => { await AtribuirAnalista(_idAtribuicao, fLocal); _idAtribuicao = null; }"
+                        title="@fLocal.Nome">
+                    <span class="popover-atrib-avatar" style="background:@fLocal.Cor">@fLocal.Iniciais</span>
+                    <span class="popover-atrib-nome">@fLocal.Nome</span>
+                    @if (ativo) { <i class="bi bi-check2 popover-atrib-check"></i> }
+                </button>
+            }
+        </div>
         @if (ObterAnalista(_idAtribuicao) is not null)
         {
             <button class="popover-atrib-remover"
-                    @onclick="() => { AtribuirAnalista(_idAtribuicao, null); _idAtribuicao = null; }">
+                    @onclick="async () => { await AtribuirAnalista(_idAtribuicao, null); _idAtribuicao = null; }">
                 Remover atribuição
             </button>
         }
@@ -1041,21 +1058,20 @@
 
 
 
-<!-- Dialog Preencher FPD (versão em etapas) -->
 @if (_fpdEtapasAberto)
 {
     <PainelPreencherFpdEtapas AoVoltar="() => _fpdEtapasAberto = false" AoSolicitar="SolicitarDesembolso" />
 }
 
-<!-- Dialog de detalhes -->
 @if (_idDialogAberto is not null)
 {
     var desembolsoDialog = _todos.FirstOrDefault(d => d.Id == _idDialogAberto);
     if (desembolsoDialog is not null)
     {
         <DialogDesembolsoFpd Desembolso="@desembolsoDialog"
-                        Todos="@buscados"
+                        Todos="@buscadosNaoDrp"
                         Analista="@ObterAnalista(_idDialogAberto)"
+                        Analistas="@_analistas"
                         AoFechar="@FecharDialog"
                         AoNavegar="@AbrirDialog"
                         AoAtribuir="@(f => AtribuirAnalista(_idDialogAberto, f))" />
@@ -1073,31 +1089,61 @@
     private bool    _grupoPendentesAberto  = true;
     private bool    _grupoAprovadosAberto  = false;
     private bool    _grupoAgendadosAberto  = true;
-    private bool    _grupoRejeitadosAberto = true;
+    private bool    _grupoEmAndamentoAberto = true;
+    private List<string> _meusGigov          = [];
     private bool    _carregando            = true;
     private bool    _processando           = false;
     private bool    _fpdEtapasAberto       = false;
     private List<DesembolsoCAD> _todos     = [];
 
-    // Troca de filtro sai do modo Preencher FPD (voltar para a lista)
+    private const int ItensPorPaginaGrupo = 10;
+    private int _paginaPendencias = 1;
+    private int _paginaPendentes  = 1;
+    private int _paginaAprovados  = 1;
+    private int _paginaAgendados  = 1;
+
+    private static List<DesembolsoCAD> Paginar(List<DesembolsoCAD> lista, int pagina) =>
+        lista.Skip((pagina - 1) * ItensPorPaginaGrupo).Take(ItensPorPaginaGrupo).ToList();
+
+    private static int TotalPaginasGrupo(int totalItens) =>
+        Math.Max(1, (int)Math.Ceiling(totalItens / (double)ItensPorPaginaGrupo));
+
+    private static int PaginaValidaGrupo(int pagina, int totalItens) =>
+        Math.Min(pagina, TotalPaginasGrupo(totalItens));
+
+    private void ResetarPaginasGrupos()
+    {
+        _paginaPendencias = 1;
+        _paginaPendentes  = 1;
+        _paginaAprovados  = 1;
+        _paginaAgendados  = 1;
+    }
+
+    private async Task AlternarModoTeste()
+    {
+        await ServicoUsuario.AlternarModoTesteAsync(JS);
+        Nav.NavigateTo(Nav.Uri, forceLoad: true);
+    }
+
     private void SelecionarFiltro(string filtro)
     {
         _filtroAtivo = filtro;
         _fpdEtapasAberto = false;
+        ResetarPaginasGrupos();
     }
 
-    private Dictionary<string, Funcionario> _atribuicoes = new();
+    private List<Funcionario> _analistas = [];
 
-    // Cabeçalho de colunas reutilizado nos 3 grupos
     private RenderFragment ColsHeader =>
         @<div class="cols-header">
             <span class="col-h" style="width:144px">Contrato</span>
+            @if (ServicoUsuario.EhGigov) { <span class="col-h" style="width:208px">Mutuário</span> }
             <span class="col-h" style="width:80px;text-align:center">GIGOV</span>
             <span class="col-h" style="width:112px;text-align:right">Valor</span>
             <span class="col-h" style="width:128px;text-align:center">Situação</span>
             <span class="col-h" style="width:132px;text-align:center">Tipo</span>
             <span class="col-h" style="width:80px;text-align:center">Prazo</span>
-            <span class="col-h" style="width:176px;text-align:center">Responsável</span>
+            @if (!ServicoUsuario.EhGigov) { <span class="col-h" style="width:176px;text-align:center">Responsável</span> }
             <span class="col-h" style="width:20px"></span>
         </div>
     ;
@@ -1108,10 +1154,24 @@
     protected override async Task OnInitializedAsync()
     {
         Hub.AoReceberProgresso += OnProgresso;
-        await CarregarDesembolsosAsync();
-        _carregando = false;
 
-        if (!string.IsNullOrEmpty(ContratoIdQuery))
+        await ServicoUsuario.CarregarModoTesteAsync(JS);
+
+        if (ServicoUsuario.ModoGigovForcado)
+            _meusGigov = [ServicoUsuarioUI.CodigoGigovTeste.ToString()];
+        else if (ServicoUsuario.EhGigov)
+            _meusGigov = await Service.ObterGigovDoUsuarioAsync(ServicoUsuario.Matricula);
+
+        await CarregarDesembolsosAsync();
+
+        _analistas = await Service.ObterAnalistasAsync("CEFGA06");
+
+        _carregando = false;
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (!string.IsNullOrEmpty(ContratoIdQuery) && ContratoIdQuery != _idDialogAberto)
             AbrirDialog(ContratoIdQuery);
     }
 
@@ -1119,7 +1179,11 @@
     {
         try
         {
-            _todos = await Service.ObterTodosAsync();
+            var todos = await Service.ObterTodosAsync();
+
+            _todos = ServicoUsuario.EhGigov
+                ? todos.Where(d => _meusGigov.Contains(d.Gigov)).ToList()
+                : todos;
         }
         catch (Exception ex)
         {
@@ -1150,23 +1214,17 @@
         _ = JS.InvokeVoidAsync("layoutHelper.restaurarBackground");
     }
 
-    // Reflete o id na URL (?contratoId=) sem empilhar histórico — replace:true
-    // faz o botão Voltar do navegador não ficar preso abrindo/fechando o
-    // mesmo dialog a cada clique. Isso é o que faz a URL virar copiável: dá
-    // pra pegar o link da barra de endereço e mandar pra alguém analisar.
     private void AbrirDialog(string id)
     {
         _idDialogAberto = id;
         _idAtribuicao   = null;
-        Nav.NavigateTo($"/cadcad?contratoId={id}", replace: true);
+        Nav.NavigateTo($"/cad?contratoId={id}", replace: true);
     }
 
-    // Fecha e recarrega a lista — sem isso, depois de aprovar/rejeitar/editar
-    // a linha por trás do dialog ficava com o status antigo até dar F5.
     private async Task FecharDialog()
     {
         _idDialogAberto = null;
-        Nav.NavigateTo("/cadcad", replace: true);
+        Nav.NavigateTo("/cad", replace: true);
         await CarregarDesembolsosAsync();
         StateHasChanged();
     }
@@ -1178,9 +1236,6 @@
 
         StateHasChanged();
     }
-    // Macro geral da home: roda em lote pra todo desembolso ainda no status
-    // inicial (pendência) — chamada síncrona/rápida, sem progresso via SignalR
-    // (diferente do antigo Processar, que dependia do sistema externo).
     private async Task ExecutarMacro()
     {
         if (_processando) return;
@@ -1217,22 +1272,33 @@
         }
     }
 
-    // Solicita o desembolso e confirma pelo próprio sistema de notificações (toast + sino)
     private async Task SolicitarDesembolso(PreenchimentoFpd fpd)
     {
         _fpdEtapasAberto = false;
-        await CarregarDesembolsosAsync(); // sem isso, a FPD criava no banco mas a lista continuava com a contagem antiga
+        await CarregarDesembolsosAsync();
         StateHasChanged();
     }
 
-    private void AtribuirAnalista(string id, Funcionario? funcionario)
+    private async Task AtribuirAnalista(string id, Funcionario? funcionario)
     {
-        if (funcionario is null) _atribuicoes.Remove(id);
-        else _atribuicoes[id] = funcionario;
+        var ok = funcionario is null
+            ? await Service.RemoverVinculoAsync(id)
+            : await Service.VincularAnalistaAsync(id, funcionario.Matricula);
+
+        if (!ok) return;
+
+        var desembolso = _todos.FirstOrDefault(d => d.Id == id);
+        if (desembolso is not null)
+            desembolso.ResponsavelAnalise = funcionario?.Matricula;
+
+        StateHasChanged();
     }
 
-    private Funcionario? ObterAnalista(string id) =>
-        _atribuicoes.TryGetValue(id, out var f) ? f : null;
+    private Funcionario? ObterAnalista(string id)
+    {
+        var matricula = _todos.FirstOrDefault(d => d.Id == id)?.ResponsavelAnalise;
+        return string.IsNullOrEmpty(matricula) ? null : _analistas.FirstOrDefault(f => f.Matricula == matricula);
+    }
 
     private List<DesembolsoCAD> AplicarBusca(List<DesembolsoCAD> lista)
     {
@@ -1247,7 +1313,6 @@
         ).ToList();
     }
 
-    // Remove acentos e baixa a caixa: "municipio" encontra "Município"
     private static string Normalizar(string texto)
     {
         var decomposto = texto.Normalize(System.Text.NormalizationForm.FormD);

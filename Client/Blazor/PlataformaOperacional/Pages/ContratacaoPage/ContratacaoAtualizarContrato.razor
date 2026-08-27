@@ -1,4 +1,4 @@
-﻿@page "/contratacaoatualizarcontrato/{NumeroDoContrato}"
+@page "/contratacaoatualizarcontrato/{NumeroDoContrato}"
 
 @inject IDialogService DialogServiceInject
 @using PlataformaOperacional.Model.ContratacaoModel
@@ -39,11 +39,6 @@
 				<MudCard Elevation="1" Class="rounded-lg card-body">
 					<MudItem xs="12" Class="mb-4 d-flex justify-space-between flex-grow-1 gap-4">
 						<MudText Typo="Typo.body1"><b>Número do contrato:</b> @ContratoPreencher.Contrato</MudText>
-						@*      <MudButton @onclick="@(()=>DialogAdicionarRessalva())"
-					EndIcon="@Icons.Material.Filled.Add"
-					Class="btn-caixa-small align-self-center"
-					Variant="Variant.Filled"
-					Color="Color.Primary">Adicionar ressalva</MudButton> *@
 						@if (ContratoPreencher.CoSituacao == 3)
                         {
 							<MudTooltip Text="@(ContratoPreencher.podeReverterFinalizacao ? "" : "Necessário perfil gerencial.")" Delay="400">
@@ -88,18 +83,6 @@
 														</MudTooltip>
 													}
 												</MudText>
-												@*      @if (context.Resposta == 2 && context.TemObs)
-										{
-										<MudTooltip>
-										<ChildContent>
-										<MudIconButton OnClick="@(value=> DialogRessalva(2, context))" Icon="@Icons.Material.Filled.SdCardAlert" Size="Size.Small" Color="Color.Error" aria-label="Ressalvas" />
-										</ChildContent>
-										<TooltipContent>
-										<MudText>@context.Observacao</MudText>
-										<MudText Style="font-size:95%">(clique para editar)</MudText>
-										</TooltipContent>
-										</MudTooltip>
-										}   *@
 											</MudTd>
 											<MudTd Class="d-flex align-center">
 												<MudRadioGroup Class="d-flex align-center justify-center"
@@ -152,14 +135,6 @@
 											@context.UsuarioInclusao
 
 										}
-										@*@if (context.Tratado)
-									{
-									@context.UsuarioConclusao;
-									}
-									else
-									{
-									@context.DataInclusao;
-									} *@
 									</MudTd>
 									@if (context.IdChecklistVerificacao is not null)
 									{

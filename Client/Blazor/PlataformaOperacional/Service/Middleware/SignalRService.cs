@@ -4,20 +4,6 @@ using System.Collections.Concurrent;
 
 namespace PlataformaOperacional.Service.Middleware
 {
-    /// <summary>
-    /// Camada de TRANSPORTE SignalR — dona única da HubConnection.
-    ///
-    /// Responsabilidades:
-    ///   1. Ciclo de vida da conexão (start concorrente seguro, reconexão infinita,
-    ///      reconstrução ao trocar de usuário).
-    ///   2. Registro de escutas (.On) com deduplicação por nome de evento, tanto para
-    ///      as chaves dinâmicas da progress bar quanto para eventos fixos (EscutarEvento&lt;T&gt;).
-    ///   3. Distribuição do progresso das automações para múltiplos observers por chave
-    ///      (API pública original preservada — nenhum componente de progress bar muda).
-    ///
-    /// Este serviço NÃO conhece regra de domínio de notificação — quem escuta
-    /// "ReceberNotificacao" é o ServicoNotificacao, via EscutarEvento&lt;T&gt;.
-    /// </summary>
     public class SignalRService : IAsyncDisposable
     {
         private readonly HttpClient _httpClient;
@@ -29,10 +15,6 @@ namespace PlataformaOperacional.Service.Middleware
         private string _matricula;
         private bool _descartado;
 
-        // Serializa tentativas concorrentes de start/reconstrução da conexão.
-        // Substitui o esquema anterior de _startTask + Interlocked, que tinha um bug:
-        // uma task de start COMPLETADA era reaproveitada mesmo com a conexão caída,
-        // impedindo qualquer reconexão manual após o retry automático desistir.
         private readonly SemaphoreSlim _mutexConexao = new(1, 1);
         private readonly object _lockConstrucao = new();
 
@@ -45,10 +27,9 @@ namespace PlataformaOperacional.Service.Middleware
         private const string EventoProgresso = "ProgressoProcessamento";
         public event Action<ObservadorAutomacao> AoReceberProgresso;
 
-        // ── Eventos de estado da conexão (a UI decide o que exibir; o serviço só avisa) ──
-        public event Action AoConectar;                // primeira conexão estabelecida
-        public event Action<string> AoReconectar;      // reconexão automática concluída (ConnectionId novo)
-        public event Action AoDesconectar;             // conexão caiu / entrou em reconexão
+        public event Action AoConectar;
+        public event Action<string> AoReconectar;
+        public event Action AoDesconectar;
 
         public SignalRService(
        IHttpClientFactory httpClientFactory,
@@ -60,8 +41,6 @@ namespace PlataformaOperacional.Service.Middleware
 
             CriarHubUrl(_baseAdress);
 
-            // Compatibilidade com consumidores que utilizam
-            // Hub.AoReceberProgresso.
             _fabricasEscuta[EventoProgresso] = conexao =>
                 conexao.On<int, ObservadorAutomacao>(
                     EventoProgresso,
@@ -71,24 +50,15 @@ namespace PlataformaOperacional.Service.Middleware
                     });
         }
 
-        // ──────────────────────────────────────────────────────────────────────
-        // Escutas registradas
-        // ──────────────────────────────────────────────────────────────────────
 
-        // Assinaturas ativas no SignalR (o ".On") — dedup por nome de evento/chave
         private readonly ConcurrentDictionary<string, IDisposable> _registeredKeys = new();
 
-        // Fábrica de cada escuta: permite re-registrar tudo quando a conexão é
-        // reconstruída (ex.: troca de usuário), já que os ".On" morrem com a HubConnection
         private readonly ConcurrentDictionary<string, Func<HubConnection, IDisposable>> _fabricasEscuta = new();
 
-        // Último estado recebido por chave (cache) para entregar a novos observers imediatamente
         private readonly ConcurrentDictionary<string, ObservadorAutomacao> _progressoAtualPorHub = new();
 
-        // Callbacks de progresso: vários componentes/abas podem escutar a mesma chave
         private readonly ConcurrentDictionary<string, List<Func<ObservadorAutomacao, Task>>> _observersPorChave = new();
 
-        // Controle de conclusão por chave
         private readonly ConcurrentDictionary<string, bool> _flagCompletouPorHub = new();
 
         public event Action<bool> OnProgressUpdateCompleted;
@@ -99,17 +69,7 @@ namespace PlataformaOperacional.Service.Middleware
             _hubUrlProd = $"{url}chatHub";
         }
 
-        // ──────────────────────────────────────────────────────────────────────
-        // Identidade do usuário na conexão
-        // ──────────────────────────────────────────────────────────────────────
 
-        /// <summary>
-        /// Define a matrícula que identifica esta conexão no hub (vai como ?userId= na URL).
-        /// Chamar ANTES da primeira conexão (ex.: no bootstrap, assim que o serviço de
-        /// usuário resolver a matrícula). Se chamado com matrícula diferente após já
-        /// conectado, derruba a conexão, reconstrói com a nova identidade e re-registra
-        /// automaticamente todas as escutas ativas (progress bar e eventos fixos).
-        /// </summary>
         public async Task DefinirUsuarioAsync(string matricula)
         {
             if (string.Equals(_matricula, matricula, StringComparison.Ordinal))
@@ -121,9 +81,6 @@ namespace PlataformaOperacional.Service.Middleware
                 await ReconstruirConexaoAsync();
         }
 
-        // ──────────────────────────────────────────────────────────────────────
-        // Ciclo de vida da conexão
-        // ──────────────────────────────────────────────────────────────────────
 
         public async Task IniciarHubConnection()
         {
@@ -146,8 +103,6 @@ namespace PlataformaOperacional.Service.Middleware
             }
             catch
             {
-                // Servidor fora do ar no start inicial: o retry automático do SignalR só
-                // cobre conexões JÁ estabelecidas, então agendamos nossa própria tentativa.
                 AgendarNovaTentativa();
                 throw;
             }
@@ -168,9 +123,6 @@ namespace PlataformaOperacional.Service.Middleware
 
         private HubConnection ConstruirConexao()
         {
-            // A matrícula identifica a conexão no hub; o servidor a lê no OnConnectedAsync
-            // e agrupa a conexão por usuário (roteamento das notificações). A progress bar
-            // ignora essa identidade: ela é roteada pelo nome do evento (chave da operação).
             var url = string.IsNullOrWhiteSpace(_matricula)
                 ? _hubUrlProd
                 : $"{_hubUrlProd}?userId={Uri.EscapeDataString(_matricula)}";
@@ -214,15 +166,10 @@ namespace PlataformaOperacional.Service.Middleware
                 }
                 catch
                 {
-                    // IniciarHubConnection já agendou a próxima tentativa
                 }
             });
         }
 
-        /// <summary>
-        /// Derruba a conexão atual, reconstrói (URL nova) e re-registra todas as
-        /// escutas conhecidas a partir das fábricas guardadas.
-        /// </summary>
         private async Task ReconstruirConexaoAsync()
         {
             await _mutexConexao.WaitAsync();
@@ -252,16 +199,7 @@ namespace PlataformaOperacional.Service.Middleware
             await IniciarHubConnection();
         }
 
-        // ──────────────────────────────────────────────────────────────────────
-        // Registro genérico de escuta
-        // ──────────────────────────────────────────────────────────────────────
 
-        /// <summary>
-        /// Registra escuta para um evento de NOME FIXO do hub (ex.: "ReceberNotificacao"),
-        /// com payload tipado. Deduplicado: registrar duas vezes o mesmo evento é no-op.
-        /// A escuta é registrada mesmo se o servidor estiver fora do ar — passa a receber
-        /// assim que a conexão subir — e sobrevive à reconstrução da conexão.
-        /// </summary>
         public Task EscutarEvento<T>(string nomeEvento, Func<T, Task> handler)
             => RegistrarEscutaAsync(nomeEvento, conexao => conexao.On<T>(nomeEvento, handler));
 
@@ -272,21 +210,13 @@ namespace PlataformaOperacional.Service.Middleware
 
             _fabricasEscuta[nomeEvento] = fabrica;
 
-            // Registra o .On antes do start: o SignalR aceita registro com a conexão
-            // parada, e assim a escuta não se perde se o start falhar agora.
             GarantirConexaoConstruida();
             _registeredKeys.GetOrAdd(nomeEvento, _ => fabrica(_hubConnection));
 
             await IniciarHubConnection();
         }
 
-        // ──────────────────────────────────────────────────────────────────────
-        // Progress bar (API pública original — INALTERADA para os módulos)
-        // ──────────────────────────────────────────────────────────────────────
 
-        /// <summary>
-        /// Adiciona um componente interessado na lista de notificações dessa chave.
-        /// </summary>
         public void RegistrarObserver(string chave, Func<ObservadorAutomacao, Task> callback)
         {
             _observersPorChave.AddOrUpdate(chave,
@@ -303,17 +233,12 @@ namespace PlataformaOperacional.Service.Middleware
                     return list;
                 });
 
-            // Se já temos dados em cache para essa chave, entregamos imediatamente para a UI não ficar vazia
             if (_progressoAtualPorHub.TryGetValue(chave, out var ultimoEstado))
             {
                 _ = callback.Invoke(ultimoEstado);
             }
         }
 
-        /// <summary>
-        /// [IMPORTANTE] Remove um componente específico da lista de notificações.
-        /// Chamado no Dispose do componente Blazor.
-        /// </summary>
         public void RemoverObserver(string chave, Func<ObservadorAutomacao, Task> callback)
         {
             if (_observersPorChave.TryGetValue(chave, out var list))
@@ -325,37 +250,27 @@ namespace PlataformaOperacional.Service.Middleware
             }
         }
 
-        /// <summary>
-        /// Inicia a escuta real no SignalR (.On) para a chave dinâmica da operação.
-        /// Gerencia a distribuição das mensagens para todos os observers da lista.
-        /// </summary>
         public Task IniciarEscutaDaOperacao(string hubConnectId)
             => RegistrarEscutaAsync(hubConnectId, conexao =>
                 conexao.On<int, ObservadorAutomacao>(hubConnectId, async (progresso, observer) =>
                 {
-                    // 1. Atualiza o cache local
                     _progressoAtualPorHub[hubConnectId] = observer;
 
-                    // 2. Verifica se existem componentes ouvindo essa chave
                     if (_observersPorChave.TryGetValue(hubConnectId, out var callbacksList))
                     {
                         Func<ObservadorAutomacao, Task>[] callbacksSnapshot;
 
-                        // 3. Cópia segura da lista para iterar (evita "coleção modificada"
-                        //    se um componente der Dispose enquanto o loop roda)
                         lock (callbacksList)
                         {
                             callbacksSnapshot = callbacksList.ToArray();
                         }
 
-                        // 4. Dispara a atualização para todos os componentes (Aba 1, Aba 2, Componente X...)
                         if (callbacksSnapshot.Length > 0)
                         {
                             await Task.WhenAll(callbacksSnapshot.Select(cb => cb(observer)));
                         }
                     }
 
-                    // 5. Gerencia conclusão
                     if (observer.PercentualProcessado == 100 && !_flagCompletouPorHub.GetValueOrDefault(hubConnectId))
                     {
                         _flagCompletouPorHub[hubConnectId] = true;
@@ -366,15 +281,12 @@ namespace PlataformaOperacional.Service.Middleware
 
         public void InterromperEscutaDaOperacao(string hubConnectId)
         {
-            // Remove a escuta do SignalR (para de receber dados da rede para essa chave)
             if (_registeredKeys.TryRemove(hubConnectId, out var subscription))
             {
                 subscription.Dispose();
 
-                // Remove a fábrica para a escuta não ressuscitar numa reconstrução de conexão
                 _fabricasEscuta.TryRemove(hubConnectId, out _);
 
-                // Limpa caches
                 _progressoAtualPorHub.TryRemove(hubConnectId, out _);
                 _flagCompletouPorHub.TryRemove(hubConnectId, out _);
             }
@@ -395,9 +307,6 @@ namespace PlataformaOperacional.Service.Middleware
             return Task.FromResult<ObservadorAutomacao?>(null);
         }
 
-        // ──────────────────────────────────────────────────────────────────────
-        // Dispose
-        // ──────────────────────────────────────────────────────────────────────
 
         public async ValueTask DisposeAsync()
         {
@@ -421,11 +330,6 @@ namespace PlataformaOperacional.Service.Middleware
             _mutexConexao.Dispose();
         }
 
-        /// <summary>
-        /// Retry infinito: o padrão do WithAutomaticReconnect() desiste após 4 tentativas
-        /// (~30s) e mata a conexão — tolerável para progress bar, inaceitável para
-        /// notificação em tempo real, que exige conexão perene.
-        /// </summary>
         private sealed class RepetirSempreRetryPolicy : IRetryPolicy
         {
             public TimeSpan? NextRetryDelay(RetryContext retryContext)

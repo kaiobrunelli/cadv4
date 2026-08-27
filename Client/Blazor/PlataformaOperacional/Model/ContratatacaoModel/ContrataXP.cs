@@ -1,20 +1,9 @@
-﻿using System.Text.Json.Serialization;
+using System.Text.Json.Serialization;
 
 namespace PlataformaOperacional.Model.ContratatacaoModel
 {
     public class ContrataXP
     {
-        //public VerificacoesContratacao(int idChecklist, string deVerificacao,
-        //     string contrato, DateTime? dtAnalise, string? resposta, string? observacao, bool temObs = false)
-        //{
-        //    IdChecklist = idChecklist;
-        //    DeVerificacao = deVerificacao;
-        //    Contrato = contrato;
-        //    DtAnalise = dtAnalise;
-        //    Resposta = resposta;
-        //    Observacao = observacao;
-        //    TemObs = temObs;
-        //}
 
         [JsonPropertyName("idChecklist")]
         public int IdChecklist { get; set; }

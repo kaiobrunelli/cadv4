@@ -1,4 +1,4 @@
-﻿@page "/contratacao"
+@page "/contratacao"
 @using PlataformaOperacional.Model.ContratatacaoModel
 @using PlataformaOperacional.Service
 @inject ISnackbar Snackbar
@@ -30,7 +30,6 @@
                             <MudLink OnClick="@(() => ConsultarVerificacoes(""))" Class="card-hover" Underline="Underline.None">
                             <MudCard Class="pa-4 d-flex flex-column no-underline">
                                 <MudItem Class="gap-2 d-flex flex-row align-center">
-                                        @* <MudImage Src="imgs/IconFile.png" Height="60" Width="60" /> *@
                                         <div class="rounded-button">
                                             <MudIcon Icon="@Icons.Material.Filled.FileCopy" Style="fill:#005ca9" Size="Size.Large" />
                                         </div>
@@ -47,7 +46,6 @@
                             <MudLink OnClick="@(() => ConsultarVerificacoes("finalizado"))" Class="card-hover" Underline="Underline.None">
                             <MudCard Class="pa-4 d-flex flex-column no-underline" >
                                 <MudItem Class="gap-2 d-flex flex-row align-center">
-                                       @*  <MudImage Src="imgs/IconCheck.png" Height="60" Width="60" /> *@
                                         <div class="rounded-button">
                                             <MudIcon Icon="@Icons.Material.Filled.Check" Style="fill:#0BAe10" Size="Size.Large" />
                                         </div>
@@ -66,7 +64,6 @@
                             <MudLink OnClick="@(() => ConsultarVerificacoes("com pendência"))" Class="card-hover" Underline="Underline.None">
                             <MudCard Class="pa-4 d-flex flex-column no-underline">
                                 <MudItem Class="gap-2 d-flex flex-row align-center">
-                                    @* <MudImage Src="imgs/IconAtention.png" Height="55" Width="55" />                        *@
                                         <div class="rounded-button">
                                             <MudIcon Icon="@Icons.Material.Filled.FmdBad" Style="fill:#F39200" Size="Size.Large" />
                                         </div>

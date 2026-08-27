@@ -1,48 +1,3 @@
-﻿@* ================================================================
-   ConfirmacaoEmailDialog.razor  —  MudBlazor Dialog Component
-   
-   DEPENDÊNCIAS no .csproj:
-     <PackageReference Include="MudBlazor" Version="6.*" />
-   
-   No Program.cs:
-     builder.Services.AddMudServices();
-   
-   No MainLayout.razor ou App.razor:
-     <MudDialogProvider />
-     <MudSnackbarProvider />
-     <MudThemeProvider />
-   
-   USO na página:
-     @inject IDialogService DialogService
-     
-     private async Task AbrirDialog()
-     {
-         var parametros = new DialogParameters
-         {
-             ["Email"]        = "kaio@empresa.com",
-             ["Destinatario"] = "Kaio Brunelli"
-         };
-         
-         var opcoes = new DialogOptions
-         {
-             CloseOnEscapeKey = true,
-             BackdropClick    = false,
-             MaxWidth         = MaxWidth.Small,
-             FullWidth        = true,
-             Position         = DialogPosition.Center,
-             NoHeader         = true
-         };
-         
-         var dialog    = await DialogService.ShowAsync<ConfirmacaoEmailDialog>(
-                             string.Empty, parametros, opcoes);
-         var resultado = await dialog.Result;
-         
-         if (!resultado.Canceled)
-         {
-             await EnviarEmail();
-         }
-     }
-================================================================ *@
 
 @using MudBlazor
 
@@ -379,7 +334,6 @@
 
         try
         {
-            // substitua pelo seu serviço real
             await Task.Delay(1500);
             MudDialog.Close(DialogResult.Ok(true));
         }

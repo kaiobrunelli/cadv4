@@ -1,0 +1,310 @@
+@using ControleAnaliseDesembolso.Modelos
+
+
+<div class="hist">
+    <div class="hist-topo">
+        <div class="hist-topo-info">
+            <span class="hist-topo-titulo">Concluídos</span>
+            <span class="hist-topo-sub">@Filtrados.Count de @Desembolsos.Count @(Desembolsos.Count == 1 ? "desembolso" : "desembolsos")</span>
+        </div>
+
+        <div class="busca-tabela">
+            <i class="bi bi-search"></i>
+            <input type="text" placeholder="Buscar..." @bind="_textoBusca" @bind:event="oninput" @bind:after="() => _paginaAtual = 1" />
+        </div>
+    </div>
+
+    @if (!Desembolsos.Any())
+    {
+        <div class="hist-vazio">
+            <i class="bi bi-inbox"></i>
+            <span>Nenhum desembolso concluído ainda.</span>
+        </div>
+    }
+    else
+    {
+        <div class="hist-scroll">
+            <table class="hist-tabela">
+                <thead>
+                    <tr>
+                        @Cabecalho("Contrato", "contrato")
+                        <th>Tipo</th>
+                        @Cabecalho("Agente Financeiro", "financeiro")
+                        @Cabecalho("Agente Promotor", "promotor")
+                        @Cabecalho("Solicitação", "solicitacao")
+                        <th>Data Solicitação</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var d in Paginados)
+                    {
+                        <tr class="@(Selecionado == d.Id ? "hist-linha-sel" : "")" @onclick="() => AoClicar.InvokeAsync(d.Id)">
+                            <td class="hist-mono">@d.Contrato</td>
+                            <td>
+                                <span class="hist-tipo @(d.Adiantamento ? "hist-tipo-adiantamento" : "")">@TipoLabel(d)</span>
+                            </td>
+                            <td class="hist-truncar" title="@d.AgenteFinanceiro">@Truncar(d.AgenteFinanceiro)</td>
+                            <td class="hist-truncar" title="@d.AgentePromotor">@Truncar(d.AgentePromotor)</td>
+                            <td class="hist-matricula">@d.MatriculaSolicitante</td>
+                            <td class="hist-mono-dim">@d.DtSolicitado.ToString("dd/MM/yyyy")</td>
+                            <td><PilulhaStatus Status="@d.Status" Tamanho="sm" /></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (!Filtrados.Any())
+        {
+            <div class="hist-vazio">
+                <i class="bi bi-search"></i>
+                <span>Nenhum resultado para "@_textoBusca.Trim()".</span>
+            </div>
+        }
+
+        @if (Filtrados.Any() && TotalPaginas > 1)
+        {
+            <div class="paginacao">
+                <button class="btn-pagina" disabled="@(PaginaAtualValidada <= 1)" @onclick="() => _paginaAtual--">
+                    <i class="bi bi-chevron-left"></i>
+                </button>
+                <span class="paginacao-info">Página @PaginaAtualValidada de @TotalPaginas (@Filtrados.Count no total)</span>
+                <button class="btn-pagina" disabled="@(PaginaAtualValidada >= TotalPaginas)" @onclick="() => _paginaAtual++">
+                    <i class="bi bi-chevron-right"></i>
+                </button>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public List<DesembolsoCAD> Desembolsos { get; set; } = [];
+    [Parameter] public EventCallback<string> AoClicar { get; set; }
+    [Parameter] public string? Selecionado { get; set; }
+
+    private const int ItensPorPagina = 10;
+    private int    _paginaAtual  = 1;
+    private string _textoBusca   = "";
+    private string? _sortColuna  = null;
+    private bool   _sortAscendente = true;
+
+    private List<DesembolsoCAD> Filtrados => AplicarBusca(Desembolsos);
+    private List<DesembolsoCAD> Ordenados => AplicarOrdenacao(Filtrados);
+
+    private int PaginaAtualValidada => Math.Min(_paginaAtual, TotalPaginas);
+    private int TotalPaginas => Math.Max(1, (int)Math.Ceiling(Ordenados.Count / (double)ItensPorPagina));
+
+    private List<DesembolsoCAD> Paginados =>
+        Ordenados.Skip((PaginaAtualValidada - 1) * ItensPorPagina).Take(ItensPorPagina).ToList();
+
+    private List<DesembolsoCAD> AplicarBusca(List<DesembolsoCAD> lista)
+    {
+        if (string.IsNullOrWhiteSpace(_textoBusca)) return lista;
+        var t = _textoBusca.Trim();
+        return lista.Where(d =>
+            d.Contrato.Contains(t, StringComparison.OrdinalIgnoreCase)             ||
+            d.AgenteFinanceiro.Contains(t, StringComparison.OrdinalIgnoreCase)     ||
+            d.AgentePromotor.Contains(t, StringComparison.OrdinalIgnoreCase)       ||
+            d.MatriculaSolicitante.Contains(t, StringComparison.OrdinalIgnoreCase)
+        ).ToList();
+    }
+
+    private List<DesembolsoCAD> AplicarOrdenacao(List<DesembolsoCAD> lista)
+    {
+        if (_sortColuna is null) return lista;
+
+        Func<DesembolsoCAD, string> chave = _sortColuna switch
+        {
+            "contrato"     => d => d.Contrato,
+            "financeiro"   => d => d.AgenteFinanceiro,
+            "promotor"     => d => d.AgentePromotor,
+            "solicitacao"  => d => d.MatriculaSolicitante,
+            _              => d => d.Contrato,
+        };
+
+        return _sortAscendente
+            ? lista.OrderBy(chave, StringComparer.OrdinalIgnoreCase).ToList()
+            : lista.OrderByDescending(chave, StringComparer.OrdinalIgnoreCase).ToList();
+    }
+
+    private RenderFragment Cabecalho(string titulo, string coluna) =>
+        @<th class="hist-th-ordenavel" @onclick="() => AlternarOrdenacao(coluna)">
+            @titulo
+            @if (_sortColuna == coluna)
+            {
+                <i class="bi bi-caret-@(_sortAscendente ? "up" : "down")-fill hist-th-seta"></i>
+            }
+            else
+            {
+                <i class="bi bi-caret-down hist-th-seta hist-th-seta-inativa"></i>
+            }
+        </th>
+    ;
+
+    private void AlternarOrdenacao(string coluna)
+    {
+        if (_sortColuna == coluna)
+        {
+            _sortAscendente = !_sortAscendente;
+        }
+        else
+        {
+            _sortColuna = coluna;
+            _sortAscendente = true;
+        }
+        _paginaAtual = 1;
+    }
+
+    private const int LimiteCaracteres = 15;
+    private static string Truncar(string texto) =>
+        texto.Length > LimiteCaracteres ? texto[..LimiteCaracteres] + "…" : texto;
+
+    private static string TipoLabel(DesembolsoCAD d) => d switch
+    {
+        { Adiantamento: true }       => "Adiantamento",
+        { PrimeiroDesembolso: true } => "1º Desembolso",
+        { UltimoDesembolso: true }   => "Último Desembolso",
+        _                            => "Normal",
+    };
+}
+
+<style>
+.hist {
+    background: #fff;
+    border: 1px solid var(--ink-100);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+}
+
+.hist-topo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--ink-100);
+    background: #FAFBFC;
+}
+.hist-topo-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.hist-topo-titulo {
+    font-size: 12.5px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .1em; color: var(--ink-500);
+}
+.hist-topo-sub { font-size: 11.5px; color: var(--ink-400, var(--ink-300)); }
+
+.busca-tabela {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--ink-100);
+    background: #fff;
+    padding: 6px 10px;
+    box-shadow: var(--shadow-card);
+    flex-shrink: 0;
+}
+.busca-tabela i { font-size: 12px; color: var(--ink-400, var(--ink-300)); }
+.busca-tabela input {
+    border: none;
+    outline: none;
+    font-size: 11.5px;
+    font-family: inherit;
+    color: var(--ink-900);
+    width: 160px;
+}
+
+.hist-vazio {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 40px 0;
+    color: var(--ink-400, var(--ink-300));
+    font-size: 12.5px;
+}
+.hist-vazio i { font-size: 18px; }
+
+.hist-scroll { overflow-x: auto; }
+
+.hist-tabela {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+    min-width: 820px;
+}
+.hist-tabela thead th {
+    text-align: left;
+    padding: 10px 12px;
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .06em; color: var(--ink-500);
+    background: #fff;
+    border-bottom: 1px solid var(--ink-200);
+    white-space: nowrap;
+}
+.hist-th-ordenavel { cursor: pointer; user-select: none; transition: color .12s; }
+.hist-th-ordenavel:hover { color: var(--brand-700); }
+.hist-th-seta { font-size: 8px; margin-left: 4px; color: var(--brand-700); }
+.hist-th-seta-inativa { color: var(--ink-200); }
+.hist-tabela tbody td {
+    padding: 11px 12px;
+    border-bottom: 1px solid var(--ink-50);
+    color: var(--ink-900);
+    white-space: nowrap;
+}
+.hist-tabela tbody tr { cursor: pointer; }
+.hist-tabela tbody tr:hover { background: var(--brand-50); }
+.hist-tabela tbody tr.hist-linha-sel { background: var(--brand-50); }
+.hist-tabela tbody tr.hist-linha-sel:hover { background: var(--brand-100); }
+
+.hist-mono { font-family: var(--font-mono, monospace); font-variant-numeric: tabular-nums; }
+.hist-mono-dim { font-variant-numeric: tabular-nums; color: var(--ink-700); }
+.hist-matricula {
+    font-family: var(--font-mono, monospace);
+    color: var(--ink-700);
+    letter-spacing: .02em;
+}
+
+.hist-truncar {
+    white-space: nowrap;
+    cursor: default;
+}
+
+.hist-tipo {
+    font-size: 10.5px; font-weight: 600;
+    padding: 2px 8px; border-radius: var(--radius-full);
+    background: var(--ink-100); color: var(--ink-700);
+    white-space: nowrap;
+}
+.hist-tipo-adiantamento { background: var(--warn-bg); color: #9A5B00; }
+
+.paginacao {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    padding: 16px 0 4px;
+}
+.btn-pagina {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--ink-100);
+    background: #fff;
+    color: var(--ink-700);
+    cursor: pointer;
+    transition: background .15s;
+}
+.btn-pagina:hover:not(:disabled) { background: var(--ink-50); }
+.btn-pagina:disabled { opacity: .4; cursor: not-allowed; }
+.paginacao-info { font-size: 11.5px; font-weight: 600; color: var(--ink-500); }
+
+@@media (max-width: 900px) {
+    .hist-topo { flex-wrap: wrap; }
+    .hist-tabela thead th, .hist-tabela tbody td { padding: 9px 10px; }
+}
+</style>

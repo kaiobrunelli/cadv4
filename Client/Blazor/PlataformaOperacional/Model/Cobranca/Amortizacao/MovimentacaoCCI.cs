@@ -1,4 +1,4 @@
-﻿using System.Text.Json.Serialization;
+using System.Text.Json.Serialization;
 
 namespace PlataformaOperacional.Model.Cobranca.Amortizacao
 {
@@ -12,7 +12,5 @@ namespace PlataformaOperacional.Model.Cobranca.Amortizacao
         [JsonPropertyName("nuContratoOrigemDv")]
         public string? NuContratoOrigemDv { get; set; }
 
-        //[JsonPropertyName("logApontamentos")]
-        //public string? LogApontamentos { get; set; }
     }
 }

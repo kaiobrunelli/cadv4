@@ -1,4 +1,4 @@
-﻿
+
 <MudDialog Class="blur dialog-background"
 		   TitleClass="dialog-background-title"
 		   ContentClass="dialog-background-surface py-10 mt-0 mb-0 rounded-0"
@@ -78,37 +78,3 @@
 
 
 
-@* <MudDialog Style="min-width:400px;">
-	<TitleContent>
-		<MudStack Row="true" Spacing="2">
-			<MudText Typo="Typo.body2" Style="font-weight:600">
-				Inserir descrição da tratativa manual:
-			</MudText>
-		</MudStack>
-	</TitleContent>
-	<DialogContent>
-		<MudForm @bind-IsValid="FormularioValido">
-			<MudTextField Lines="3"
-						  Variant="Variant.Outlined"
-						  Immediate
-						  Required
-						  RequiredError="Campo de preenchimento obrigatório."
-						  Adornment="Adornment.End" @bind-Value="DescricacaoTratativa"></MudTextField>
-		</MudForm>
-	</DialogContent>
-	<DialogActions>
-		<MudButton OnClick="Cancel">Cancelar</MudButton>
-		<MudButton Class="btn-caixa-secondary" Disabled="!FormularioValido" Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">OK</MudButton>
-	</DialogActions>
-</MudDialog> *@
-@*
-@code {
-	[CascadingParameter]
-	private MudDialogInstance MudDialog { get; set; }
-	private bool FormularioValido;
-	private string DescricacaoTratativa { get; set; } = string.Empty;
-
-	private void Submit() => MudDialog.Close(DialogResult.Ok(DescricacaoTratativa));
-
-	private void Cancel() => MudDialog.Cancel();
-} *@

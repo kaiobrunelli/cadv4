@@ -3,12 +3,10 @@
      role="button" @onclick="AoClicarLinha" tabindex="0"
      @onkeydown="TratarTecla">
 
-    <!-- Contrato -->
     <div class="col-contrato">
         <span class="contrato-mono">@Desembolso.Contrato</span>
     </div>
 
-    <!-- Mutuário (opcional — a PaginaAnalise oculta; a /2 mantém) -->
     @if (MostrarMutuario)
     {
     <div class="col-mutuario">
@@ -16,15 +14,12 @@
     </div>
     }
 
-    <!-- GIGOV -->
     <div class="col-gigov">
         <span class="gigov-badge">@Desembolso.Gigov</span>
     </div>
 
-    <!-- Valor -->
     <div class="col-valor">@ServicoMock.FormatarBRL(Desembolso.Valor)</div>
 
-    <!-- Aguardando (opcional — a PaginaAnalise oculta; a /2 mantém) -->
     @if (MostrarAguardando)
     {
     <div class="col-aguardando">
@@ -49,17 +44,14 @@
     </div>
     }
 
-    <!-- Situação -->
     <div class="col-situacao">
         <PilulhaStatus Status="@Desembolso.Status" />
     </div>
 
-    <!-- Tipo (Primeiro/Último/Adiantamento — mutuamente exclusivos; nenhum = Normal) -->
     <div class="col-tipo">
         <span class="tipo-badge @(Desembolso.Adiantamento ? "tipo-adiantamento" : "")">@TipoLabel</span>
     </div>
 
-    <!-- Prazo -->
     <div class="col-prazo">
         <span class="prazo-chip">
             <i class="bi bi-calendar3"></i>
@@ -67,27 +59,28 @@
         </span>
     </div>
 
-    <!-- Responsável -->
-    <div class="col-responsavel" @onclick:stopPropagation>
-        @if (Analista is not null)
-        {
-            <button class="btn-responsavel btn-atribuido" @onclick="@((MouseEventArgs e) => AbrirAtribuicao(e))" title="@Analista.Nome">
-                <span class="resp-avatar" style="background:@Analista.Cor">@Analista.Iniciais</span>
-                <span class="resp-nome">@Analista.Nome</span>
-                <i class="bi bi-chevron-down resp-chevron"></i>
-            </button>
-        }
-        else
-        {
-            <button class="btn-responsavel btn-nao-atribuido" @onclick="@((MouseEventArgs e) => AbrirAtribuicao(e))">
-                <i class="bi bi-person resp-icone"></i>
-                Não atribuído
-                <i class="bi bi-chevron-down resp-chevron"></i>
-            </button>
-        }
-    </div>
+    @if (MostrarResponsavel)
+    {
+        <div class="col-responsavel" @onclick:stopPropagation>
+            @if (Analista is not null)
+            {
+                <button class="btn-responsavel btn-atribuido" @onclick="@((MouseEventArgs e) => AbrirAtribuicao(e))" title="@Analista.Nome">
+                    <span class="resp-avatar" style="background:@Analista.Cor">@Analista.Iniciais</span>
+                    <span class="resp-nome">@Analista.Nome</span>
+                    <i class="bi bi-chevron-down resp-chevron"></i>
+                </button>
+            }
+            else
+            {
+                <button class="btn-responsavel btn-nao-atribuido" @onclick="@((MouseEventArgs e) => AbrirAtribuicao(e))">
+                    <i class="bi bi-person resp-icone"></i>
+                    Não atribuído
+                    <i class="bi bi-chevron-down resp-chevron"></i>
+                </button>
+            }
+        </div>
+    }
 
-    <!-- Arrow (aparece no hover) -->
     <div class="col-arrow">
         <i class="bi bi-arrow-right linha-arrow"></i>
     </div>
@@ -98,14 +91,13 @@
     [Parameter] public Funcionario? Analista    { get; set; }
     [Parameter] public bool         MostrarAguardando { get; set; } = true;
     [Parameter] public bool         MostrarMutuario   { get; set; } = true;
+    [Parameter] public bool         MostrarResponsavel { get; set; }
     [Parameter] public bool         Selecionada { get; set; }
     [Parameter] public EventCallback AoClicar   { get; set; }
     [Parameter] public EventCallback<MouseEventArgs> AoAtribuir { get; set; }
 
     private int PendentesCount => Desembolso.ValidacoesTotal - Desembolso.ValidacoesOk;
 
-    // Mutuamente exclusivos na origem (ver PreenchimentoFpd.OpcaoExclusiva) —
-    // nunca mais de um marcado ao mesmo tempo. Nenhum marcado = desembolso comum.
     private string TipoLabel => Desembolso switch
     {
         { Adiantamento: true }       => "Adiantamento",
@@ -128,7 +120,6 @@
 
 
 <style>
-/* ─ Linha base ─ */
 .linha {
     display: flex;
     align-items: center;
@@ -141,13 +132,13 @@
     min-width: 0;
 }
 .linha:first-child { border-top: none; }
-.linha:hover { background: #F4F8FD; }
+
+.linha:hover { background: var(--brand-50); }
+
 .linha:hover .linha-arrow { opacity: 1; }
 .linha-selecionada { background: var(--brand-50) !important; box-shadow: inset 2px 0 0 var(--brand-500); }
 
-/* ─ Colunas (larguras espelham o React: w-36 w-52 w-20 w-28 w-32 w-32 w-20 w-44 w-5) ─ */
 
-/* Contrato — 144px, mono, brand-800 */
 .col-contrato { width: 144px; flex-shrink: 0; overflow: hidden; }
 .contrato-mono {
     font-family: 'Courier New', Courier, monospace;
@@ -156,7 +147,6 @@
     color: var(--brand-800);
 }
 
-/* Mutuário — 208px, truncate */
 .col-mutuario { width: 208px; flex-shrink: 0; min-width: 0; overflow: hidden; }
 .mutuario-nome {
     display: block;
@@ -168,7 +158,6 @@
     text-overflow: ellipsis;
 }
 
-/* GIGOV — 80px, badge centralizado */
 .col-gigov { width: 80px; flex-shrink: 0; display: flex; justify-content: center; }
 .gigov-badge {
     display: inline-flex;
@@ -177,14 +166,13 @@
     border: 1px solid var(--ink-100);
     background: var(--ink-50);
     padding: 2px 8px;
-    font-family: ui-monospace, 'Cascadia Code', 'Roboto Mono', Menlo, Consolas, monospace;
+    font-family: 'CAIXA Std',ui-monospace, 'Cascadia Code', 'Roboto Mono', Menlo, Consolas, monospace;
     font-size: 11px;
     font-weight: 600;
     letter-spacing: 0.03em;
     color: var(--ink-700);
 }
 
-/* Valor — 112px, alinhado à direita */
 .col-valor {
     width: 112px;
     flex-shrink: 0;
@@ -195,7 +183,6 @@
     color: var(--ink-900);
 }
 
-/* Aguardando — 128px, centralizado */
 .col-aguardando {
     width: 128px;
     flex-shrink: 0;
@@ -234,11 +221,8 @@
 .aguardando-num   { font-size: 13px; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; }
 .aguardando-label { font-size: 10px; font-weight: 500; opacity: .7; }
 
-/* Situação — 128px, centralizado (chip alinhado com o rótulo "Situação"
-   do cabeçalho, que também é centralizado). */
 .col-situacao { width: 128px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
 
-/* Tipo — Adiantamento/1º Desembolso/Último Desembolso/Normal, mutuamente exclusivos */
 .col-tipo { width: 132px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
 .tipo-badge {
     display: inline-flex;
@@ -254,7 +238,6 @@
 }
 .tipo-adiantamento { background: var(--warn-bg, #FFEFD6); border-color: #F5D0A0; color: #9A5B00; }
 
-/* Prazo — 80px, chip centralizado */
 .col-prazo { width: 80px; flex-shrink: 0; display: flex; justify-content: center; }
 .prazo-chip {
     display: inline-flex;
@@ -272,7 +255,6 @@
 }
 .prazo-chip i { font-size: 10px; color: var(--brand-700); }
 
-/* Responsável — 176px, centralizado */
 .col-responsavel { width: 176px; flex-shrink: 0; display: flex; justify-content: center; }
 .btn-responsavel {
     display: inline-flex;
@@ -319,7 +301,6 @@
 .resp-icone  { font-size: 11px; }
 .resp-chevron { font-size: 10px; color: var(--ink-300); margin-left: auto; }
 
-/* Arrow (aparece no hover via .linha:hover .linha-arrow) */
 .col-arrow { width: 20px; flex-shrink: 0; display: flex; align-items: center; }
 .linha-arrow {
     font-size: 14px;

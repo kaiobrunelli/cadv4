@@ -1,4 +1,4 @@
-﻿@page "/amortizacaocaixa"
+@page "/amortizacaocaixa"
 @using System.Globalization
 
 @inject IDialogService DialogService
@@ -119,7 +119,6 @@
 				</MudStack>
 			</MudItem>
 
-			@*### 	Cards ###*@
 			<MudItem xs="12" sm="9" lg="9" md="9" Class="mt-n3">
 				<MudGrid>
 					<MudItem xs="12" lg="4" md="4">
@@ -180,7 +179,6 @@
 				</MudGrid>
 			</MudItem>
 
-			@*### 	Painel Botões ###*@
 			<MudItem lg="3" md="3" Class="mt-n3">
 				<MudPaper Class="pa-4" Elevation="0" Style="border: 1px solid #e0e6ed; border-radius:10px;">
 					@if (_desabilatarBotao)
@@ -227,7 +225,6 @@
 										   OnClick="CancelarAutomacao"
 										   StartIcon="@Icons.Material.Filled.Cancel">
 									Cancelar
-									@* @_movimentacaoControleGeral.DescBotaoCancelar *@
 								</MudButton>
 							}
 							<MudStack Spacing="1" Class="mt-1" Justify="Justify.Center" AlignItems="AlignItems.Start">
@@ -284,7 +281,6 @@
 			}
 		}
 
-		@*### 	Tabelas ###*@
 		<MudItem xs="12" lg="12" md="12" Class="@(_mostrarTabelaMovimentacoes ? "d-block" : "d-none")">
 			<TabelaMovimentacaoGeral Items="_movimentacaoesGeraisData"
 									 Loading="_processandoMovimentacao" />
@@ -538,7 +534,6 @@
 		PaletteLight = new PaletteLight()
 			{
 				Primary = "#005ca9",
-			// Secondary = "#D87B00",
 				Secondary = "#f39200",
 
 			Background = "#EDF2FF",
@@ -546,9 +541,6 @@
 	};
 	private string _senhaCriptografada = "";
 	private ProgressBar progressBarRef;
-	// public string severityError = "Severity.Error";
-	// private string _statusAtual = "";
-	// private string resposta = "";
 	private string _connectHubId { get; set; } = "";
 	private bool _statusProgressBar { get; set; } = false;
 	private bool _pageIsLoading = true;
@@ -580,7 +572,6 @@
 	private List<ControlePendente> _controlesPentens = [];
 	private ControlePendente _controlePendenteTratar = new();
 
-	// CONTROLE DE ESTADO DE EXIBIÇÃO
 	private TipoDeMovimentacaoAmortizacaoCaixa _controleTabela = TipoDeMovimentacaoAmortizacaoCaixa.OUTRO;
 	private bool _mostrarTabelaMovimentacoes = false;
 	private bool _mostrarTabelaDrp = false;
@@ -634,10 +625,6 @@
 
 	#region Métodos Gerenciar Movimentações (Service e Tabelas)
 
-	/// <summary>
-	/// Fluxo de controle UI/Service: Gerencia a exibição/alternância das tabelas a serem exibidas ao clicar no cards.
-	///
-	/// <param name="tipoMovimentacao">O tipo de movimentação/tabela a ser exibida.</param>
 	public async Task MostrarTabelaMovimentacao(TipoDeMovimentacaoAmortizacaoCaixa tipoMovimentacao)
 	{
 		if (_controleTabela == tipoMovimentacao)
@@ -651,7 +638,6 @@
 			return;
 		}
 
-		//Armazena qual tabela está aberta.
 		_controleTabela = tipoMovimentacao;
 		_processandoMovimentacao = true;
 
@@ -684,11 +670,6 @@
 		_processandoMovimentacao = false;
 		StateHasChanged();
 	}
-	/// <summary>
-	/// Controle dos dados e mapeamento para cache. Caso a tabela já tenha sido carregada inicialmente,
-	///  evita nova chamada ao endpoint ao  buscar os registros no cache.//.
-	/// </summary>
-	/// <param name="tipoMovimentacao">O tipo de movimentação a ser carregado.</param>
 	private async Task CarregarMovimentacaoGeral(TipoDeMovimentacaoAmortizacaoCaixa tipoMovimentacao)
 	{
 		_tabelaIsLoading = true;
@@ -747,7 +728,6 @@
 		}
 		_tabelaIsLoading = false;
 	}
-	//Metodos que invocam o Service da Amortização para carregar dados nas tabelas ao clicar nos cards
 	private async Task CarregarMovimentacaoParaAnalisar()
 	{
 		_tabelaIsLoading = true;
@@ -798,10 +778,6 @@
 		}
 		_tabelaIsLoading = false;
 	}
-	/// <summary>
-	/// Método que formula a lista de Controles Pendentes (datas a serem tratadas) consultando via API.
-	/// </summary>
-	/// <returns></returns>
 	private async Task ConsultaControlesPendentesHandle()
 	{
 		var response = await CobrancaService.ConsultaControlesPendentes();
@@ -861,14 +837,6 @@
 	}
 
 
-	/// <summary>
-	/// Método para tratar manualmente as movimentações de CCI. Chamado ao clicar em uma das três ações existente na tabela Analisar.
-	/// A partir do tipo de movimentação, poderá reprocessar (icStatus volta para 0), lançar total em CCI ou tratar manualmente cada valor de CCI.
-	/// </summary>
-	/// <param name="context">Movimentação a ser tratada. Informar contexto.</param>
-	/// <param name="tipoProcessametno">Tipo: reprocessar (resetar icStatus para 0), manual ou total em CCI.</param>
-	/// <param name="conjuntoTO">Conjunto de valores de TO a serem alterados</param>
-	/// <returns></returns>
 	private async Task LancarMovimentacaoDialog(MovimentacaoParaAnalise context, TiposDeProcessamentoAmortizacaoCaixaAmortizacaoCaixa tipoProcessametno, ConjuntoTo conjuntoTOParametro = null)
 	{
 
@@ -882,7 +850,6 @@
 			var observacaoPreenchidaPeloEmpregado = result.Data as string;
 			if (TiposDeProcessamentoAmortizacaoCaixaAmortizacaoCaixa.REPROCESSAR == tipoProcessametno)
 			{
-				// var conjuntoTOReprocessar = new ConjuntoTo(0, 0, 0, 0, 0, 0, 0);
 				var resetarMovimentacaoFinanceira = new AlteracaoMovimentacaoFinanceira(context.CoMovimentacao, observacaoPreenchidaPeloEmpregado!, conjuntoTO);
 				var response = await CobrancaService.ResetarMovimentacaoFinanceira(resetarMovimentacaoFinanceira);
 				await HttpResponseHandler.ResponseHandler(response, Snackbar);
@@ -891,7 +858,6 @@
 			{
 				if (conjuntoTO == null)
 				{
-					// verificar se funciona?
 					return;
 				}
 				var resetarMovimentacaoFinanceira = new AlteracaoMovimentacaoFinanceira(context.CoMovimentacao, observacaoPreenchidaPeloEmpregado!, conjuntoTO);
@@ -924,12 +890,6 @@
 		}
 	}
 
-	/// <summary>
-	/// Valida valor de CCI para não superar valor total, pois CCI não poderá ser superior ao valor total.
-	/// </summary>
-	/// <param name="total"></param>
-	/// <param name="cci"></param>
-	/// <returns></returns>
 	private string ValidaValorCCI(decimal? total, decimal? cci)
 	{
 		if (cci > total)
@@ -941,10 +901,6 @@
 		return string.Empty;
 	}
 
-	/// <summary>
-	/// Expande a tabela para mostrar a tabela com as movimentações para edição manual (valores de CCI).
-	/// </summary>
-	/// <param name="nr"></param>
 	private void EditarMovimentacao(int? nr, MovimentacaoParaAnalise contexto)
 	{
 		if(nr is null){
@@ -960,16 +916,10 @@
 			return;
 		}
 		contrato.EmTratamento = !contrato.EmTratamento;
-		// ZerarValoresTO();
 	}
 
 
 
-	/// <summary>
-	/// Controle pendentes são as datas a serem tratadas.
-	///  //Este método busca a primeira data da lista para ser exibida ao empregado na página inicial.
-	/// </summary>
-	/// <returns></returns>
 	private ControlePendente ConsultarControlePendenteATratar()
 	{
 		_controlePendenteTratar = _controlesPentens.OrderBy(d => d.DtReferencia).FirstOrDefault();
@@ -1009,7 +959,6 @@
 			if (_senhaCriptografada == null) return;
 			var usuario = new SenhaUsuario(_senhaCriptografada);
 
-			// await progressBarRef.ExibirProgressBar();
 			var response = await CobrancaService.ProcessarAmortizacaoCaixa(usuario);
 			if (response.IsSuccessStatusCode)
 			{
@@ -1031,7 +980,6 @@
 	{
 		await SignalRService.ReiniciarEscutaDaOperacao("TesteSignalR");
 		_isProcessing = true;
-		// await progressBarRef.ExibirProgressBar();
 		var response = await CobrancaService.TesteSignalR();
 		await HttpResponseHandler.ResponseHandler(response!, Snackbar);
 		StateHasChanged();
@@ -1056,13 +1004,11 @@
 			var usuario = new SenhaUsuario(_senhaCriptografada);
 			var response = await CobrancaService.CancelarOperacaoAmortizacaoCaixa(usuario);
 			await HttpResponseHandler.ResponseHandler(response!, Snackbar);
-			// await progressBarRef.ForcarAtualizacao();
 			await ControleGeralAmortizacaoCaixaHandle();
 			_isProcessing = false;
 			StateHasChanged();
 			await InvokeAsync(StateHasChanged);
 		}
-		// await progressBarRef.ForcarAtualizacao();
 
 	}
 	#endregion

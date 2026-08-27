@@ -1,4 +1,4 @@
-﻿using Plataforma.UI.Shared.Enum;
+using Plataforma.UI.Shared.Enum;
 using PlataformaOperacional.Model.AplicacaoModel.ConsultaAnaliseDesembolso;
 
 namespace Plataforma.UI.Shared.Model

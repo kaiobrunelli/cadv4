@@ -1,4 +1,4 @@
-﻿@page "/encontrodecontasconfiguracoes"
+@page "/encontrodecontasconfiguracoes"
 @using MudBlazor
 @using System.Collections.Generic
 @using System.Linq
@@ -120,7 +120,6 @@
     <main class="page">
 
 
-	@* <MudContainer Class="mb-6 mt-4"> *@
 	<div class="card-container pb-2">
 		<MudGrid>
 			<MudItem xs="12" lg="12" md="12" Class="d-flex justify-space-between">
@@ -145,7 +144,6 @@
 
 							@if (_configuracoesGerais.UnidadeMovimento == null)
 							{
-								@* <MudSkeleton t Width="100px" Height="24px" /> *@
 									 <MudSkeleton Animation="Animation.Wave" Width="100%" />
 
 							}
@@ -326,7 +324,6 @@
 			}
 		</MudGrid>
 	</div>
-@* </MudContainer> *@
 	</main>
 </div>
 	
@@ -344,7 +341,6 @@
 
 	private async Task VoltarPagina()
 	{
-		/* Navigation.NavigateTo($"{Navigation.BaseUri}EncontroDeContas"); */
 		await JS.InvokeVoidAsync("history.back");
 	}
 	private MudTheme _customTheme = new()
@@ -354,7 +350,6 @@
 				Primary = "#005ca9",
 				Secondary = "#f39200",
 				Tertiary = "#FF0000",
-				// Background = "#FAF8F5" // cor cinza mais claro
 				Background = "#EDF2FF"
 			}
 		};
@@ -388,7 +383,6 @@
 
 
 	#region Metodos do Service - Amortização Caixa
-	//##CONSULTAS##//
 	private async Task ConsultarConfiguracoesGeraisHandle()
 	{
 		var response = await CobrancaService.ConsultarConfiguracoesGerais();
@@ -401,7 +395,6 @@
 		var responseData = await HttpResponseHandler.ResponseHandler<List<HistoricoDeTm>>(response, Snackbar);
 		_historicoDeTms = responseData!;
 	}
-	//##ALTERAÇÕES##//	
 
 	#endregion
 
@@ -420,7 +413,6 @@
 	private async Task AlterarHistoricoDeTmsHandle(int idModelo, string historicoTm)
 	{
 		var response = await CobrancaService.AlterarHistoricoTms(idModelo, historicoTm);
-		// var responseData = await HttpResponseHandler.ResponseHandler<ConfiguracoesGerais>(response, Snackbar);
 		 await HttpResponseHandler.ResponseHandler(response, Snackbar);		
 		await ConsultarHistoricoDeTmsHandle();
 		StateHasChanged();
@@ -437,7 +429,6 @@
 			var tmParaReverter = _historicoDeTms.FirstOrDefault(m => m.IdModelo == _idEditacao);
 			if (tmParaReverter != null)
 			{
-				// Restaura o valor original
 				tmParaReverter.ModeloHistorico = _historicoOriginal;
 			}
 		}
@@ -475,29 +466,7 @@
 	}
 
 
-	// public static class ColorMapper
-	// {
-	// 	/// <summary>
-	// 	/// Retorna a cor do MudBlazor baseada no texto passado como parametro.
-	// 	/// </summary>
-	// 	/// <param name="tipoTM"></param>
-	// 	/// <returns></returns>
-	// 	public static Color GetColorStatusMudChip(string tipoTM)
-	// 	{
-	// 		if (string.IsNullOrEmpty(tipoTM))
-	// 		{
-	// 			return Color.Default;
-	// 		}
 
-	// 		var tipoNormalizado = tipoTM.ToUpperInvariant();
 
-	// 		return tipoNormalizado switch
-	// 		{
-	// 			"AMORTIZACAO" => Color.Primary,
-	// 			"DEVOLUCAO" => Color.Info,
-	// 			_ => Color.Default,
-	// 		};
 
-	// 	}
-	// }
 }

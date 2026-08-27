@@ -1,20 +1,6 @@
-@*
-    ToolbarSkeleton
-    ---------------------------------------------------------------
-    Placeholder visual da Toolbar + ProgressBar enquanto o Controle
-    está em estado Idle/Loading (primeira carga, sem valor anterior).
-
-    Altura e silhueta mimetizam os componentes reais para evitar
-    "layout shift" (CLS) quando os dados chegam.
-
-    Uso:
-        <ToolbarSkeleton />
-        <ToolbarSkeleton ButtonCount="3" />
-*@
 
 <div class="tb-skel" role="status" aria-busy="true" aria-label="Carregando barra de ferramentas">
 
-    @* ----- progress bar fake ----- *@
     <div class="tb-skel__progress">
         <div class="tb-skel__progress-track">
             <div class="tb-skel__progress-bar"></div>
@@ -22,7 +8,6 @@
         <div class="tb-skel__progress-label shimmer"></div>
     </div>
 
-    @* ----- toolbar fake (título + botões) ----- *@
     <div class="tb-skel__toolbar">
         <div class="tb-skel__title-group">
             <div class="tb-skel__title shimmer"></div>
@@ -117,6 +102,5 @@
 </style>
 
 @code {
-    /// <summary>Quantos botões fake desenhar. Default 4 (Executar, Cancelar, Config, extra).</summary>
     [Parameter] public int ButtonCount { get; set; } = 4;
 }

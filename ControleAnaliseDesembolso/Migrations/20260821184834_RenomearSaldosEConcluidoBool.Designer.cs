@@ -1,0 +1,541 @@
+using System;
+using ControleAnaliseDesembolso.Infra.Datas.Context;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+
+#nullable disable
+
+namespace ControleAnaliseDesembolso.Migrations
+{
+    [DbContext(typeof(ControleAnaliseDesembolsoContext))]
+    [Migration("20260821184834_RenomearSaldosEConcluidoBool")]
+    partial class RenomearSaldosEConcluidoBool
+    {
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        {
+#pragma warning disable 612, 618
+            modelBuilder
+                .HasAnnotation("ProductVersion", "8.0.28")
+                .HasAnnotation("Relational:MaxIdentifierLength", 128);
+
+            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+
+            modelBuilder.Entity("ControleAnaliseDesembolso.Domain.Entitys.ControleDesembolso", b =>
+                {
+                    b.Property<int>("CoControleDesembolso")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("CO_CONTROLE_DESEMBOLSO");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CoControleDesembolso"));
+
+                    b.Property<int>("CoDesembolso")
+                        .HasColumnType("int")
+                        .HasColumnName("CO_DESEMBOLSO");
+
+                    b.Property<DateTime?>("DtConclusao")
+                        .HasColumnType("date")
+                        .HasColumnName("DT_CONCLUSAO");
+
+                    b.Property<DateTime>("DtPrazo")
+                        .HasColumnType("date")
+                        .HasColumnName("DT_PRAZO");
+
+                    b.Property<string>("Gestor")
+                        .HasMaxLength(7)
+                        .HasColumnType("nvarchar(7)")
+                        .HasColumnName("GESTOR");
+
+                    b.Property<string>("MatriculaBaixa")
+                        .HasMaxLength(7)
+                        .HasColumnType("nvarchar(7)")
+                        .HasColumnName("MATRICULA_BAIXA");
+
+                    b.Property<string>("ResponsavelAnalise")
+                        .HasMaxLength(7)
+                        .HasColumnType("nvarchar(7)")
+                        .HasColumnName("RESPONSAVEL_ANALISE");
+
+                    b.Property<string>("ResponsavelDesembolso")
+                        .HasMaxLength(7)
+                        .HasColumnType("nvarchar(7)")
+                        .HasColumnName("RESPONSAVEL_DESEMBOLSO");
+
+                    b.Property<int>("StatusDesembolso")
+                        .HasColumnType("int")
+                        .HasColumnName("CO_STATUS_DESEMBOLSO");
+
+                    b.HasKey("CoControleDesembolso")
+                        .HasName("PK_CAD_TB002_CONTROLE_DESEMBOLSO");
+
+                    b.HasIndex("CoDesembolso")
+                        .IsUnique();
+
+                    b.ToTable("CAD_TB002_CONTROLE_DESEMBOLSO", (string)null);
+                });
+
+            modelBuilder.Entity("ControleAnaliseDesembolso.Domain.Entitys.Desembolso", b =>
+                {
+                    b.Property<int>("CoDesembolso")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("CO_DESEMBOLSO");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CoDesembolso"));
+
+                    b.Property<decimal>("AceitoVi")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("ACEITO_VI");
+
+                    b.Property<string>("AgenteFinanceiro")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("AGENTE_FINANCEIRO");
+
+                    b.Property<string>("AgentePromotor")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("AGENTE_PROMOTOR");
+
+                    b.Property<string>("AgenteTecnicoOperador")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("AGENTE_TECNICO_OPERADOR");
+
+                    b.Property<bool?>("Amortizacao")
+                        .HasColumnType("bit")
+                        .HasColumnName("AMORTIZACAO");
+
+                    b.Property<bool?>("CndValido")
+                        .HasColumnType("bit")
+                        .HasColumnName("CND_VALIDO");
+
+                    b.Property<string>("CnpjAf")
+                        .IsRequired()
+                        .HasMaxLength(14)
+                        .HasColumnType("nchar(14)")
+                        .HasColumnName("CNPJ_AF")
+                        .IsFixedLength();
+
+                    b.Property<string>("CnpjAgentePromotor")
+                        .IsRequired()
+                        .HasMaxLength(14)
+                        .HasColumnType("nchar(14)")
+                        .HasColumnName("CNPJ_AGENTE_PROMOTOR")
+                        .IsFixedLength();
+
+                    b.Property<string>("CnpjAgenteTecnicoOperador")
+                        .HasMaxLength(14)
+                        .HasColumnType("nchar(14)")
+                        .HasColumnName("CNPJ_AGENTE_TECNICO_OPERADOR")
+                        .IsFixedLength();
+
+                    b.Property<string>("CnpjMutuarioFinal")
+                        .IsRequired()
+                        .HasMaxLength(14)
+                        .HasColumnType("nchar(14)")
+                        .HasColumnName("CNPJ_MUTUARIO_FINAL")
+                        .IsFixedLength();
+
+                    b.Property<string>("CoContratoAf")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasColumnName("CO_CONTRATO_AF");
+
+                    b.Property<string>("CoContratoAfDv")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)")
+                        .HasColumnName("CO_CONTRATO_AF_DV");
+
+                    b.Property<string>("CoGigov")
+                        .IsRequired()
+                        .HasMaxLength(4)
+                        .HasColumnType("nchar(4)")
+                        .HasColumnName("CO_GIGOV")
+                        .IsFixedLength();
+
+                    b.Property<bool?>("Concluido")
+                        .HasColumnType("bit")
+                        .HasColumnName("CONCLUIDO");
+
+                    b.Property<decimal>("Contrapartida")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("CONTRAPARTIDA");
+
+                    b.Property<bool?>("ContrapartidaAlterada")
+                        .HasColumnType("bit")
+                        .HasColumnName("CONTRAPARTIDA_ALTERADA");
+
+                    b.Property<decimal>("ContrapartidaAtual")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("CONTRAPARTIDA_ATUAL");
+
+                    b.Property<bool?>("CrpValido")
+                        .HasColumnType("bit")
+                        .HasColumnName("CRP_VALIDO");
+
+                    b.Property<decimal>("Desembolsado")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("DESEMBOLSADO");
+
+                    b.Property<DateTime>("DtEngenharia")
+                        .HasColumnType("date")
+                        .HasColumnName("DT_ENGENHARIA");
+
+                    b.Property<DateTime?>("DtSocioAmbiental")
+                        .HasColumnType("date")
+                        .HasColumnName("DT_SOCIO_AMBIENTAL");
+
+                    b.Property<DateTime>("DtSolicitado")
+                        .HasColumnType("date")
+                        .HasColumnName("DT_SOLICITADO");
+
+                    b.Property<bool?>("Excepcionalizado")
+                        .HasColumnType("bit")
+                        .HasColumnName("EXCEPCIONALIZADO");
+
+                    b.Property<bool?>("Funcionalidade")
+                        .HasColumnType("bit")
+                        .HasColumnName("FUNCIONALIDADE");
+
+                    b.Property<decimal>("GlossadoVi")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("GLOSSADO_VI");
+
+                    b.Property<decimal>("Integralizado")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("INTEGRALIZADO");
+
+                    b.Property<bool?>("LicensaInstalacao")
+                        .HasColumnType("bit")
+                        .HasColumnName("LICENSA_INSTALACAO");
+
+                    b.Property<bool?>("LicensaOperacao")
+                        .HasColumnType("bit")
+                        .HasColumnName("LICENSA_OPERACAO");
+
+                    b.Property<string>("MatriculaGestor")
+                        .IsRequired()
+                        .HasMaxLength(7)
+                        .HasColumnType("nvarchar(7)")
+                        .HasColumnName("MATRICULA_GESTOR");
+
+                    b.Property<string>("MatriculaSolicitante")
+                        .IsRequired()
+                        .HasMaxLength(7)
+                        .HasColumnType("nvarchar(7)")
+                        .HasColumnName("MATRICULA_SOLICITANTE");
+
+                    b.Property<string>("Mensagem")
+                        .HasMaxLength(3000)
+                        .HasColumnType("nvarchar(3000)")
+                        .HasColumnName("MENSAGEM");
+
+                    b.Property<string>("MutuarioFinal")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("MUTUARIO_FINAL");
+
+                    b.Property<int>("NuDesembolso")
+                        .HasColumnType("int")
+                        .HasColumnName("NU_DESEMBOLSO");
+
+                    b.Property<decimal>("ParticipacaoFgts")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("PARTICIPACAO_FGTS");
+
+                    b.Property<decimal>("PercentualObra")
+                        .HasColumnType("decimal(18,4)")
+                        .HasColumnName("PERCENTUAL_OBRA");
+
+                    b.Property<bool?>("PlacaLocal")
+                        .HasColumnType("bit")
+                        .HasColumnName("PLACA_LOCAL");
+
+                    b.Property<bool>("PrimeiroDesembolso")
+                        .HasColumnType("bit")
+                        .HasColumnName("PRIMEIRO_DESEMBOLSO");
+
+                    b.Property<int>("Programa")
+                        .HasColumnType("int")
+                        .HasColumnName("CO_PROGRAMA");
+
+                    b.Property<bool?>("RetornoParcial")
+                        .HasColumnType("bit")
+                        .HasColumnName("RETORNO_PARCIAL");
+
+                    b.Property<decimal>("SaldoADesembolsar")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("SALDO_DESEMBOLSAR");
+
+                    b.Property<decimal>("SaldoAIntegralizar")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("SALDO_INTEGRALIZAR");
+
+                    b.Property<bool?>("Sanepar")
+                        .HasColumnType("bit")
+                        .HasColumnName("SANEPAR");
+
+                    b.Property<int?>("SituacaoObra")
+                        .HasColumnType("int")
+                        .HasColumnName("CO_SITUACAO_OBRA");
+
+                    b.Property<decimal>("SolicitadoVi")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("SOLICITADO_VI");
+
+                    b.Property<int>("TipoDesembolso")
+                        .HasColumnType("int")
+                        .HasColumnName("CO_TIPO_DESEMBOLSO");
+
+                    b.Property<bool>("UltimoDesembolso")
+                        .HasColumnType("bit")
+                        .HasColumnName("ULTIMO_DESEMBOLSO");
+
+                    b.Property<decimal>("ValorEmprestimo")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("VALOR_EMPRESTIMO");
+
+                    b.HasKey("CoDesembolso")
+                        .HasName("PK_CAD_TB001_DESEMBOLSO");
+
+                    b.ToTable("CAD_TB001_DESEMBOLSO", (string)null);
+                });
+
+            modelBuilder.Entity("ControleAnaliseDesembolso.Domain.Entitys.Mensagem", b =>
+                {
+                    b.Property<int>("CoMensagem")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("CO_MENSAGEM");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CoMensagem"));
+
+                    b.Property<bool>("Ativo")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true)
+                        .HasColumnName("ATIVO");
+
+                    b.Property<int>("CoControleDesembolso")
+                        .HasColumnType("int")
+                        .HasColumnName("CO_CONTROLE_DESEMBOLSO");
+
+                    b.Property<string>("CoUsuario")
+                        .HasMaxLength(7)
+                        .HasColumnType("nvarchar(7)")
+                        .HasColumnName("CO_USUARIO");
+
+                    b.Property<int>("CoValidacao")
+                        .HasColumnType("int")
+                        .HasColumnName("CO_VALIDACAO");
+
+                    b.Property<string>("DeMensagem")
+                        .HasMaxLength(3000)
+                        .HasColumnType("nvarchar(3000)")
+                        .HasColumnName("DE_MENSAGEM");
+
+                    b.Property<string>("DeUsuario")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("DE_USUARIO");
+
+                    b.Property<DateTime>("DtCriacao")
+                        .HasColumnType("datetime")
+                        .HasColumnName("DT_CRIACAO");
+
+                    b.Property<int>("TipoMensagem")
+                        .HasColumnType("int")
+                        .HasColumnName("CO_TIPO_MENSAGEM");
+
+                    b.Property<int>("UnidadeUsuario")
+                        .HasColumnType("int")
+                        .HasColumnName("UNIDADE_USUARIO");
+
+                    b.HasKey("CoMensagem")
+                        .HasName("PK_CAD_TB005_MENSAGEM");
+
+                    b.ToTable("CAD_TB005_MENSAGEM", (string)null);
+                });
+
+            modelBuilder.Entity("ControleAnaliseDesembolso.Domain.Entitys.TrilhaAuditoria", b =>
+                {
+                    b.Property<int>("CoTrilhaAuditoria")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("ID_SOLICITACAO");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CoTrilhaAuditoria"));
+
+                    b.Property<DateTime>("DataSolicitacao")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("DT_SOLICITACAO");
+
+                    b.Property<string>("DescEvento")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)")
+                        .HasColumnName("DESC_EVENTO");
+
+                    b.Property<string>("EnderecoLogicoSolicitante")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasColumnName("ENDERECO_LOGICO");
+
+                    b.Property<string>("Evento")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("EVENTO");
+
+                    b.Property<string>("Resposta")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasColumnName("RESPOSTA");
+
+                    b.Property<string>("Usuario")
+                        .IsRequired()
+                        .HasMaxLength(7)
+                        .HasColumnType("nvarchar(7)")
+                        .HasColumnName("USUARIO");
+
+                    b.HasKey("CoTrilhaAuditoria")
+                        .HasName("PK_CAD_TB000_TRILHA_AUDITORIA");
+
+                    b.ToTable("CAD_TB000_TRILHA_AUDITORIA", (string)null);
+                });
+
+            modelBuilder.Entity("ControleAnaliseDesembolso.Domain.Entitys.Validacao", b =>
+                {
+                    b.Property<int>("CoValidacao")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("CO_VALIDACAO");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CoValidacao"));
+
+                    b.Property<string>("CampoVinculado")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("CAMPO_VINCULADO");
+
+                    b.Property<string>("DeValidacao")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)")
+                        .HasColumnName("DE_VALIDACAO");
+
+                    b.Property<bool>("Desativado")
+                        .HasColumnType("bit")
+                        .HasColumnName("DESATIVADO");
+
+                    b.Property<DateTime>("DtCriacao")
+                        .HasColumnType("datetime")
+                        .HasColumnName("DT_CRIACAO");
+
+                    b.Property<DateTime?>("DtExclusao")
+                        .HasColumnType("datetime")
+                        .HasColumnName("DT_EXCLUSAO");
+
+                    b.Property<string>("UsuarioExclusao")
+                        .HasMaxLength(7)
+                        .HasColumnType("nvarchar(7)")
+                        .HasColumnName("USUARIO_EXCLUSAO");
+
+                    b.HasKey("CoValidacao")
+                        .HasName("PK_CAD_TB003_VALIDACAO");
+
+                    b.ToTable("CAD_TB003_VALIDACAO", (string)null);
+                });
+
+            modelBuilder.Entity("ControleAnaliseDesembolso.Domain.Entitys.ValidacaoControleDesembolso", b =>
+                {
+                    b.Property<int>("CoValidacao")
+                        .HasColumnType("int")
+                        .HasColumnName("CO_VALIDACAO");
+
+                    b.Property<int>("CoControleDesembolso")
+                        .HasColumnType("int")
+                        .HasColumnName("CO_CONTROLE_DESEMBOLSO");
+
+                    b.Property<string>("CampoVinculado")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("CAMPO_VINCULADO");
+
+                    b.Property<string>("DeValidacao")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)")
+                        .HasColumnName("DE_VALIDACAO");
+
+                    b.Property<int>("Situacao")
+                        .HasColumnType("int")
+                        .HasColumnName("SITUACAO");
+
+                    b.HasKey("CoValidacao", "CoControleDesembolso");
+
+                    b.HasIndex("CoControleDesembolso");
+
+                    b.ToTable("CAD_TB004_VALIDACAO_CONTROLE_DESEMBOLSO", (string)null);
+                });
+
+            modelBuilder.Entity("ControleAnaliseDesembolso.Domain.Entitys.ControleDesembolso", b =>
+                {
+                    b.HasOne("ControleAnaliseDesembolso.Domain.Entitys.Desembolso", "Desembolso")
+                        .WithOne("ControleDesembolso")
+                        .HasForeignKey("ControleAnaliseDesembolso.Domain.Entitys.ControleDesembolso", "CoDesembolso")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_CAD_TB001_DESEMBOLSO");
+
+                    b.Navigation("Desembolso");
+                });
+
+            modelBuilder.Entity("ControleAnaliseDesembolso.Domain.Entitys.ValidacaoControleDesembolso", b =>
+                {
+                    b.HasOne("ControleAnaliseDesembolso.Domain.Entitys.ControleDesembolso", "ControleDesembolso")
+                        .WithMany("ValidacaoControleDesembolso")
+                        .HasForeignKey("CoControleDesembolso")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_CAD_TB002_CONTROLE_DESEMBOLSO");
+
+                    b.HasOne("ControleAnaliseDesembolso.Domain.Entitys.Validacao", "Validacao")
+                        .WithMany("ValidacaoControleDesembolso")
+                        .HasForeignKey("CoValidacao")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_CAD_TB003_VALIDACAO");
+
+                    b.Navigation("ControleDesembolso");
+
+                    b.Navigation("Validacao");
+                });
+
+            modelBuilder.Entity("ControleAnaliseDesembolso.Domain.Entitys.ControleDesembolso", b =>
+                {
+                    b.Navigation("ValidacaoControleDesembolso");
+                });
+
+            modelBuilder.Entity("ControleAnaliseDesembolso.Domain.Entitys.Desembolso", b =>
+                {
+                    b.Navigation("ControleDesembolso")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ControleAnaliseDesembolso.Domain.Entitys.Validacao", b =>
+                {
+                    b.Navigation("ValidacaoControleDesembolso");
+                });
+#pragma warning restore 612, 618
+        }
+    }
+}

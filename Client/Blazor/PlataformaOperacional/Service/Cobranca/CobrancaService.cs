@@ -1,4 +1,4 @@
-﻿using PlataformaOperacional.Model.CentralPermissoes;
+using PlataformaOperacional.Model.CentralPermissoes;
 using PlataformaOperacional.Model.Cobranca;
 using PlataformaOperacional.Model.Cobranca.Amortizacao;
 using PlataformaOperacional.Service.Middleware;
@@ -15,7 +15,6 @@ namespace PlataformaOperacional.Service.Cobranca
 		private DownloadService _downloadService;
 		public CobrancaService(IHttpClientFactory httpClientFactory, BlazorMockService blazorMockService, DownloadService downloadService)
 		{
-			//_httpClient = httpClientFactory.CreateClient(ClientName);
 			_httpClient = httpClientFactory.CreateClient("Api");
 			_downloadService = downloadService;
 			_httpLocal = httpClientFactory.CreateClient("ApiLocal");
@@ -152,8 +151,6 @@ namespace PlataformaOperacional.Service.Cobranca
 			var response = await _httpClient.PostAsync($"api/DownloadArquivosAmortizacaoCaixa?data={data}", null);
 			if (!response.IsSuccessStatusCode) return false;
 			var fileBytes = await response.Content.ReadAsByteArrayAsync();
-			//var fileName = response.Content.Headers.ContentDisposition?.FileName?.Trim('"') ?? "DRP.zip";
-			//var nomeCodificadoParaJS = System.Net.WebUtility.UrlEncode(fileName);
 			var fileName = "Arquivos.zip";
 			return await _downloadService.DownloadJS(fileBytes, fileName);		
 		}

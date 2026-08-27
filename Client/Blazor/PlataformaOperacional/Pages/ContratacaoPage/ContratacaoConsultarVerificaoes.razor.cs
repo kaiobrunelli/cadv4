@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components;
 using MudBlazor;
 using PlataformaOperacional.Model.ContratatacaoModel;
 using PlataformaOperacional.Service.Middleware;
@@ -19,7 +19,6 @@ namespace PlataformaOperacional.Pages.ContratacaoPage
         private DateTime? DataFinal { get; set; } = DateTime.Now.Date;
         public string FiltroRota = "";
         private ContratacaoConsultarResumoTodosContratos selectedItem1 = null;
-        //private HashSet<ContratacaoConsultarResumoTodosContratos> selectedItems = new HashSet<ContratacaoConsultarResumoTodosContratos>();
         public List<ContratacaoConsultarResumoTodosContratos> ListaResumoTodosContratos = new();
         public List<ContratacaoConsultarResumoTodosContratos> datasFiltradas = new();
 

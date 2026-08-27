@@ -1,4 +1,4 @@
-﻿using Microsoft.JSInterop;
+using Microsoft.JSInterop;
 using PlataformaOperacional.Model.Encrip;
 using System.Net.Http;
 using System.Net.Http.Json;
@@ -20,7 +20,6 @@ public class EncryptionService
 		string resultado = await _js.InvokeAsync<string>(
 					"criptografiaInterop.criptografarComChavePublica",
 					senha,
-					//response.Key.Replace("\n", "").Replace("\r", "")
 					chavePublica.Key.Replace("\n", "").Replace("\r", "")
                 );
 

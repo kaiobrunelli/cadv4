@@ -1,4 +1,4 @@
-﻿@using MudBlazor
+@using MudBlazor
 @using System.Collections.Generic
 @using System.Linq
 @using System.Threading.Tasks
@@ -31,7 +31,6 @@
 		  Hover="true"
 		  Loading="@Loading"
 		  Striped="true">
-	@* <-- Liga a tabela à função de leitura de estado *@
 	<ToolBarContent >
 		<MudItem Class="d-flex  justify-end flex-grow-1 ">
 			<MudSpacer />
@@ -171,12 +170,10 @@
 
 	private async Task ExibirDetalhesContrato(MovimentacaoCCI contexto)
 	{
-		// Primeiro tenta encontrar na lista atual
 		var resultado = MovimentaoGeral.FirstOrDefault(apontamento => apontamento.CoApontamento == contexto.CoApontamento);
 
 		if (resultado == null)
 		{
-			// Consulta no endpoint
 			var response = await CobrancaService.ConsultarTodasMovimentacoesDoControle(_ultimoCoControle);
 			var data = await HttpResponseHandler.ResponseHandler<List<MovimentacaoGeral>>(response!, Snackbar);
 
@@ -184,7 +181,6 @@
 			{
 				_movimentaoGeralData = data;
 
-				// Tenta novamente encontrar o objeto na nova lista
 				resultado = _movimentaoGeralData.FirstOrDefault(apontamento => apontamento.CoApontamento == contexto.CoApontamento);
 			}
 
@@ -195,7 +191,6 @@
 			}
 		}
 
-		// Se chegou aqui, temos um resultado válido
 		var parameters = new DialogParameters<DialogConfiguracao>
 	{
 		{ nameof(DetalhesContratoComponente.ContratoMovimentacaoGeral), resultado }

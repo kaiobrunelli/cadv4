@@ -245,8 +245,6 @@
 	private decimal _percentualSac;
 	private decimal _percentualPrice;
 
-	// Casas decimais exibidas em cada campo — sempre espelhando quantas o
-	// usuário digitou no OUTRO campo, pra não aparecer zero que ninguém digitou.
 	private int _casasDecimaisSac = 4;
 	private int _casasDecimaisPrice = 4;
 
@@ -255,9 +253,6 @@
 	private bool _sacPreenchido => !string.IsNullOrWhiteSpace(_contratoSacValorAtual) && !string.IsNullOrWhiteSpace(_dVSacValorAtual);
 	private bool _pricePreenchido => !string.IsNullOrWhiteSpace(_contratoPriceValorAtual) && !string.IsNullOrWhiteSpace(_dVPriceValorAtual);
 
-	// Quando um lado fecha em 100%, o contrato do outro lado é opcional — só existe
-	// contrato onde de fato há percentual alocado. Só exige os dois preenchidos
-	// quando o percentual está dividido entre SAC e Price.
 	private bool _camposObrigatoriosOk
 	{
 		get
@@ -306,8 +301,6 @@
 		_contratoPriceValorAtual = ConfiguracoesGeraisData.ContratoCciPrice;
 		_dVPriceValorAtual = ConfiguracoesGeraisData.ContratoCciPriceDv;
 
-		// A soma SAC + Price precisa fechar em exatamente 100% — recalcula o Price
-		// a partir do SAC recebido, em vez de confiar nos dois valores persistidos.
 		_percentualSac = ClampPercentual(ConfiguracoesGeraisData.PercentualSac);
 		_percentualPrice = Math.Round(100m - _percentualSac, 4);
 	}
@@ -336,8 +329,6 @@
 		return valor;
 	}
 
-	// DV tem 2 dígitos fixos — se o usuário digitou só 1 (ex.: "2"), completa
-	// com zero à esquerda ao sair do campo, em vez de exigir que ele digite "02".
 	private static string CompletarDvComZero(string dv)
 	{
 		return dv.Length == 1 ? "0" + dv : dv;
@@ -355,9 +346,6 @@
 
 	private async Task SalvarAlteracaoContratosSacPrice()
 	{
-		// O botão já fica desabilitado fora dessa regra (PodeSalvarContratosSacPrice),
-		// mas trava aqui também — não depende só do estado do botão nem do round-trip
-		// pro servidor pra dar o feedback.
 		if (!_percentuaisSomam100)
 		{
 			Snackbar.Add("A soma de SAC + Price precisa ser exatamente 100% para salvar.", Severity.Warning);

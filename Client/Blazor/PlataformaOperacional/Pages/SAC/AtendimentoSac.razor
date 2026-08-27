@@ -1,4 +1,4 @@
-﻿@page "/atendimentosac"
+@page "/atendimentosac"
 
 <MudContainer  MaxWidth="MaxWidth.False">
     <MudGrid>
@@ -33,12 +33,6 @@
                                 </MudItem>
                                 <MudItem class="d-flex align-center justify-space-between">
                                     <MudFileUpload T="IBrowserFile" FilesChanged="OnFileSelect">
-@*                                         <ActivatorContent>
-                                            <MudButton Class="btn-caixa-small" Variant="Variant.Filled"
-                                                       Color="Color.Primary">
-                                                Anexar Arquivo
-                                            </MudButton>
-                                        </ActivatorContent> *@
                                         <SelectedTemplate>
                                             @if (context != null)
                                             {
@@ -64,7 +58,6 @@
     private MudTextField<string> multilineReference;
     bool success;
     string[] errors = { };
-    // MudTextField<string> pwField1 = "";
     MudForm form;
     string sampleText = "Escreva aqui a sua solicitação...";
     public IBrowserFile InputArquivoCarregado;
@@ -75,9 +68,6 @@
     }
     private string PasswordMatch(string arg)
     {
-        // if (pwField1.Value != arg)
-        //     return "Passwords don't match";
-        // return null;
         string teste = "nova";
         return teste;
     }

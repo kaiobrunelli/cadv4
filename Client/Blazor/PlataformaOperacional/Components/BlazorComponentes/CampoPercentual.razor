@@ -1,20 +1,6 @@
 @inject IJSRuntime JS
 @using System.Globalization
 
-@* Campo percentual pt-BR: digita da esquerda pra direita e a vírgula entra
-   sozinha a partir do 3º dígito (2 casas inteiras fixas + até 4 decimais).
-   Ex.: digitar 9,9,9,9,1,5 mostra 9 → 99 → 99,9 → 99,99 → 99,991 → 99,9915.
-   CSS 100% próprio (sem depender de classes internas do MudBlazor, que exigem
-   JS interno pra medir o "recorte" do label e não funcionam só copiando a marcação).
-   O label usa position:absolute, então não empurra a caixa — ela fica com a
-   mesma altura/posição top dos MudTextField vizinhos na mesma linha.
-
-   ValueChanged manda valor + quantas casas decimais foram digitadas num único
-   evento (tupla) — mandar em dois EventCallback separados (um pro valor, outro
-   pras casas decimais) causa dois re-renders intercalados, e o segundo lê o
-   estado do primeiro ainda não propagado, resultando em formatação errada.
-
-   Uso:  <CampoPercentual Value="_percentualSac" ValueChanged="OnSacChanged" CasasDecimais="_casasDecimaisSac" Label="% SAC" /> *@
 
 <style>
 	.cp-container {
@@ -96,9 +82,6 @@
 	[Parameter] public decimal Max { get; set; } = 100m;
 	[Parameter] public string? Class { get; set; }
 
-	// Quantas casas decimais mostrar quando Value muda de fora (ex.: recálculo
-	// automático do lado complementar) — pra ele espelhar a mesma quantidade de
-	// casas que o usuário digitou no outro campo, em vez de sempre 4 fixas.
 	[Parameter] public int CasasDecimais { get; set; } = 4;
 
 	private static readonly CultureInfo _br = new("pt-BR");
@@ -110,10 +93,6 @@
 
 	protected override void OnParametersSet()
 	{
-		// Reflete mudanças externas (ex.: recálculo automático do lado complementar).
-		// Enquanto o próprio usuário está digitando, Value já foi atualizado por
-		// AoDigitar antes do re-render (fica igual a _ultimoValor), então essa
-		// reformatação não sobrescreve o que ele acabou de digitar.
 		if (Value != _ultimoValor)
 		{
 			_ultimoValor = Value;
@@ -129,7 +108,7 @@
 	private async Task AoDigitar(ChangeEventArgs e)
 	{
 		var digitos = new string((e.Value?.ToString() ?? "").Where(char.IsDigit).ToArray());
-		if (digitos.Length > 6) digitos = digitos[..6]; // 2 casas inteiras + 4 decimais
+		if (digitos.Length > 6) digitos = digitos[..6];
 
 		string texto;
 		decimal valor;
@@ -137,8 +116,6 @@
 
 		if (digitos == "100")
 		{
-			// Único valor de 3 dígitos inteiros válido (100%) — caso especial,
-			// já que a regra normal reserva só 2 dígitos pra parte inteira.
 			texto = "100";
 			valor = 100m;
 			casasDecimais = 0;
@@ -165,7 +142,6 @@
 		_texto = texto;
 		Value = valor;
 
-		// grava direto no DOM (o Blazor pula a atualização quando o texto formatado não muda)
 		await JS.InvokeVoidAsync("inputHelper.definirValorInput", _ref, _texto);
 		await ValueChanged.InvokeAsync((valor, casasDecimais));
 	}

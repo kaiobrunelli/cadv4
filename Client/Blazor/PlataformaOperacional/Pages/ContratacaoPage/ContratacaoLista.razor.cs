@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using MudBlazor;
 using PlataformaOperacional.Components.BlazorComponentes.Dialog;
@@ -13,11 +13,7 @@ namespace PlataformaOperacional.Pages.ContratacaoPage
     {
         [Parameter] public string CodigoTomador { get; set; } = "";
         private bool CarregandoListaTabela = false;
-        //private string numeroContratoBuscar = "";
-        //private string NumeroMatricula = "";
-        //private string NumeroLote = "";
         private ContratacaoContrato contratoObjeto = new ();
-        //private string urlPublicado = "/plataforma-operacional/contratacaoatualizar";
         private List<ContratacaoContrato> ListaContratos = [];
         private ContratacaoTomador Tomador = new();
         private string FiltroBuscarPalavra = "";
@@ -57,7 +53,6 @@ namespace PlataformaOperacional.Pages.ContratacaoPage
         public void ConsultarContratoTomadorParaAtualizar(string numeroDoContrato)
         {
             Navigation.NavigateTo($"{Navigation.BaseUri}contratacaoatualizarcontrato/{numeroDoContrato}");
-            //Navigation.NavigateTo($"/contratacaoatualizarcontrato/{numeroDoContrato}");
         }
 
         private IEnumerable<ContratacaoContrato> Elements = new List<ContratacaoContrato>();

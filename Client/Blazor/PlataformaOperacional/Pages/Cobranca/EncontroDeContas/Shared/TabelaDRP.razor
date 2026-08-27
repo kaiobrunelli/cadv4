@@ -1,4 +1,4 @@
-﻿@using MudBlazor
+@using MudBlazor
 @using System.Collections.Generic
 @using System.Linq
 @using System.Threading.Tasks
@@ -66,7 +66,7 @@
 		<MudTd Class="text-center">@item.QtdMovimentacoes</MudTd>
 		<MudTd Class="text-center">
 			<MudIconButton Icon="@Icons.Material.Filled.Search" Color="Color.Primary"
-						   OnClick="@(() => ToggleExpand(item))" /> @* <-- O Botão que alterna o estado *@
+						   OnClick="@(() => ToggleExpand(item))" />
 		</MudTd>
 	</RowTemplate>
 
@@ -126,13 +126,11 @@
 	[Parameter] public string RowsPerPageString { get; set; } = "Itens por página";
 	[Parameter] public string InfoFormat { get; set; } = "{first}–{last} de {total}";
 
-	// Função LÊ o estado atual. Se ExibirLinha é TRUE, a MudTable renderiza o ChildRowContent.
 	private bool IsRowExpanded(MovimentacaoDrp item) => item.ExpandirObservacao;
 
 
 	void ToggleExpand(MovimentacaoDrp item)
 	{
-		// Funçao ESCREVE o novo estado (Alternância)
 		item.ExpandirObservacao = !item.ExpandirObservacao;
 		StateHasChanged();
 	}

@@ -1,4 +1,4 @@
-﻿@page "/contratacaolistatomador/{CodigoTomador}"
+@page "/contratacaolistatomador/{CodigoTomador}"
 @inject NavigationManager Navigation
 @inject ContratacaoService ContratacaoServiceInject
 @inject ContratacaoService ContratacaoServiceInject
@@ -37,7 +37,6 @@
                                     <MudItem Class="d-flex justify-end flex-grow-1">
                                         <MudSpacer />
                                         <MudTextField @bind-Value="FiltroBuscarPalavra" Placeholder="Buscar" Style="width:200px" Class="mt-0 flex-none"></MudTextField>
-                                        @* <MudButton Class="btn-caixa-small" Style="color:white" OnClick="ClearFilter">Limpar filtro</MudButton> *@
                                     </MudItem>
                                 </ToolBarContent>
                                 <HeaderContent>

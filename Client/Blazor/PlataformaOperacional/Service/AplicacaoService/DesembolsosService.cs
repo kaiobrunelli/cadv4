@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.AspNetCore.Components.Forms;
 using PlataformaOperacional.Model.CentralPermissoes;
 using PlataformaOperacional.Model.DesembososModel;
 using System.Net.Http.Headers;
@@ -68,7 +68,7 @@ public class DesembolsosService(IHttpClientFactory httpClientFactory)
 
     public async Task<HttpResponseMessage> ProcessarValidacaoAsync(IBrowserFile arquivo)
     {
-        const long maxFileSize = 20 * 1024 * 1024; // 20 MB
+        const long maxFileSize = 20 * 1024 * 1024;
 
         using var formData = new MultipartFormDataContent();
 
@@ -93,7 +93,7 @@ public class DesembolsosService(IHttpClientFactory httpClientFactory)
 
     public async Task<HttpResponseMessage> UploadArquivoValidadoAsync(IBrowserFile arquivo)
     {
-        const long maxFileSize = 20 * 1024 * 1024; // 20 MB
+        const long maxFileSize = 20 * 1024 * 1024;
 
         using var formData = new MultipartFormDataContent();
 

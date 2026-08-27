@@ -1,16 +1,16 @@
-﻿@page "/gerenciar2"
+@page "/gerenciar2"
 @using System.ComponentModel.DataAnnotations
 <style>
 
 	.email-input {
 		width: 100%;
-		border-radius: 0.75rem; /* rounded-xl */
-		background-color: #f8fafc; /* bg-slate-50 */
-		border: 1px solid #e2e8f0; /* border-slate-200 */
-		height: 3rem; /* h-12 */
+		border-radius: 0.75rem;
+		background-color: #f8fafc;
+		border: 1px solid #e2e8f0;
+		height: 3rem;
 		padding-left: 1rem;
 		padding-right: 1rem;
-		color: #0f172a; /* text-slate-900 */
+		color: #0f172a;
 		transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 		outline: none;
 	}
@@ -69,7 +69,6 @@
 	}
 
 		.user-card-hover:hover {
-			/* transform: translateY(-2px); */
 			border-color: var(--mud-palette-primary) !important;
 			box-shadow: 0 12px 24px -10px rgba(0,0,0,0.08);
 		}
@@ -91,9 +90,7 @@
 		--meu-gradiente-radial: radial-gradient(circle at top left, #e2e8f0, #cbd5e1);
 	}
 
-	/* Aplicando ao container principal do app */
 	.mud-layout {
-		/* background: var(--meu-gradiente-radial) fixed; */
 		background: #E2E8F0;
 	}
 	.container-preditor{
@@ -106,13 +103,10 @@
 		background-color: #E2E8F0 !important;
 	}
 </style>
-@* <MudLayout Style="@StyleGradient">
-    <MudContainer MaxWidth="MaxWidth.Medium" Class="my-8" Style="@StyleGradient"> *@
 
 
 	<MudPaper Elevation="0" Class="pa-0 mud-border-radius-xl overflow-hidden mb-16 ml-8" Style="background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px);">
 
-		@* Header *@
 		<div class="pa-8 d-flex justify-space-between align-center">
 			<div>
 				<MudText Typo="Typo.h4" Style="font-weight: 700; color: #0f172a; letter-spacing: -0.025em;">Gerenciar Acesso</MudText>
@@ -121,7 +115,6 @@
 			<MudIconButton Icon="@Icons.Material.Filled.ArrowBack" OnClick="AlternarGradiente" Variant="Variant.Text" Color="Color.Default" />
 		</div>
 		<div class="px-8">
-			@* Seção: Adicionar Colaborador *@
 			<section>
 				<div Class="card-adicionar-colaborador">
 					<MudText Typo="Typo.subtitle1" Class="mb-4" Style="font-weight: 600; color: #0f172a;">Adicionar novo colaborador</MudText>
@@ -138,7 +131,6 @@
 					</MudGrid>
 				</div>
 
-				@* Listagem de Usuários *@
 				<MudStack Spacing="3" Class="mt-4">
 					@foreach (var user in _users)
 					{
@@ -173,7 +165,6 @@
 				</MudStack>
 			</section>
 
-			@* Seção: E-mails *@
 			<section>
 				<div class="d-flex align-center gap-3 mb-6 mt-4">
 					<div style="width: 4px; height: 24px; background-color: var(--mud-palette-primary); border-radius: 2px;"></div>
@@ -183,8 +174,6 @@
 				<MudGrid Spacing="3" Class="align-end mb-4">
 					<MudItem xs="12" sm="8">
 						<input class="email-input" placeholder="exemplo@empresa.com" />
-						@*     <MudTextField @bind-Value="_emailInput" T="string" Label="Endereço de e-mail" Placeholder="exemplo@empresa.com"
-						Variant="Variant.Outlined" Margin="Margin.Dense" Class="bg-slate-50" /> *@
 					</MudItem>
 					<MudItem xs="12" sm="4">
 						<MudButton FullWidth="true" Variant="Variant.Outlined" Color="Color.Primary" Class="py-3 mud-border-radius-md" Style="border-width: 2px; font-weight: 700;">
@@ -205,19 +194,10 @@
 			</section>
 		</div>
 
-		@* Footer *@
-		@*         <div class="pa-10 d-flex justify-end gap-4" style="background-color: rgba(248, 250, 252, 0.5); border-top: 1px solid #f1f5f9;">
-		<MudButton Variant="Variant.Text" Class="px-8 py-3" Style="color: #64748b; font-weight: 700;">Cancelar</MudButton>
-		<MudButton Variant="Variant.Filled" Color="Color.Primary" Class="px-10 py-3 mud-border-radius-md glass-button-gradient">
-		Salvar Alterações
-		</MudButton>
-		</div> *@
 	</MudPaper>
 
 
 
-@* </MudContainer>
-</MudLayout> *@
 
 
 @code {
@@ -232,11 +212,9 @@
 		};
 	private bool _isAltGradient = false;
 
-	// Definição dos dois estados de gradiente
 	private string _gradiente1 = "radial-gradient(circle at top left, #F8FAFC, #cbd5e1)";
 	private string _gradiente2 = "radial-gradient(circle at bottom right, #e2e8f0, #ffffff)";
 
-	// Propriedade calculada que injeta o valor na variável CSS
 	private string StyleGradient => $"--meu-gradiente-radial: {(_isAltGradient ? _gradiente2 : _gradiente1)};";
 
 	private void AlternarGradiente()

@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Primitives;
+using Microsoft.Extensions.Primitives;
 using System.Text.Json.Serialization;
 
 namespace PlataformaOperacional.Model.ContratacaoModel
@@ -30,9 +30,6 @@ namespace PlataformaOperacional.Model.ContratacaoModel
         public int? Irregular { get; set; }
         [JsonPropertyName("verificacoesConcluidas")]
         public int? VerificacoesConcluidas { get; set; }
-        /// <summary>
-        /// Tipo de verificação representa o "ETAPA/TOPICO" do checklist
-        /// </summary>
         [JsonPropertyName("tiposVerificacao")]      
         public List<ContratacaoTipoDeVerificacao> ListaDeTipoDeVerificacoes { get; set; } = new List<ContratacaoTipoDeVerificacao>();
        

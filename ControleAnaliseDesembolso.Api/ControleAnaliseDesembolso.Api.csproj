@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ControleAnaliseDesembolso\ControleAnaliseDesembolso.csproj" />
+    <ProjectReference Include="..\PlataformaOperacional.Application\PlataformaOperacional.Application.csproj" />
   </ItemGroup>
 
 </Project>

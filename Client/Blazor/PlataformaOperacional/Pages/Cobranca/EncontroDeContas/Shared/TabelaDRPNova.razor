@@ -1,10 +1,9 @@
-﻿@using MudBlazor
+@using MudBlazor
 @using System.Collections.Generic
 @using System.Linq
 @using System.Threading.Tasks
 
 <style>
-    /* ===== Container do card (visual da imagem) ===== */
     .drp-card {
         background-color: #ffffff;
         border: 1px solid #e6eaf0;
@@ -13,7 +12,6 @@
         overflow: hidden;
     }
 
-    /* ===== Header do card: título + filtro alinhados ===== */
     .drp-card-header {
         display: flex;
         align-items: center;
@@ -53,7 +51,6 @@
         line-height: 1.4;
     }
 
-    /* ===== Badge "X na lista" estilo da imagem ===== */
     .drp-count-badge {
         background-color: #e6f0fa;
         color: #005ca9;
@@ -65,7 +62,6 @@
         white-space: nowrap;
     }
 
-    /* ===== Barra de filtro (campo + botão) ===== */
     .drp-filter-bar {
         display: flex;
         align-items: center;
@@ -107,7 +103,6 @@
             background-color: #004a8a !important;
         }
 
-    /* ===== Tabela ===== */
     .drp-table .mud-table-container {
         border-radius: 0;
     }
@@ -134,7 +129,6 @@
         background-color: #f8fafd !important;
     }
 
-    /* zebra mais sutil que o default */
     .drp-table .mud-table-body tr:nth-of-type(odd) td {
         background-color: #fcfcfd;
     }
@@ -159,7 +153,6 @@
         color: #0f1729;
     }
 
-    /* ===== Botão de expandir (lupa) ===== */
     .drp-expand-btn {
         background-color: #f0f4fa !important;
         color: #005ca9 !important;
@@ -179,7 +172,6 @@
             color: #ffffff !important;
         }
 
-    /* ===== Linha expandida (detalhe) ===== */
     .drp-detail-row td {
         padding: 0 !important;
         background-color: #f8fafd !important;
@@ -234,14 +226,12 @@
         align-items: flex-start;
     }
 
-    /* ===== Paginação ===== */
     .drp-table .mud-table-pagination {
         border-top: 1px solid #eef1f6;
         background-color: #fafbfc;
         padding: 8px 16px;
     }
 
-    /* ===== Estado vazio ===== */
     .drp-no-records {
         padding: 48px 24px;
         text-align: center;
@@ -260,7 +250,6 @@
 
 <div class="drp-card">
 
-    @* ============ HEADER DO CARD ============ *@
     <div class="drp-card-header">
         <div>
             <div class="drp-card-title-wrap">
@@ -268,10 +257,6 @@
                     <MudIcon Icon="@Icons.Material.Filled.ListAlt" Size="Size.Medium" />
                 </span>
                 <h3 class="drp-card-title">Movimentações DRP</h3>
-            @*     @if (Items != null)
-                {
-                    <span class="drp-count-badge">@Items.Count() na lista</span>
-                } *@
             </div>
          
         </div>
@@ -293,7 +278,6 @@
         </div>
     </div>
 
-    @* ============ TABELA ============ *@
     <MudTable T="MovimentacaoDrp"
               Class="drp-table"
               Virtualize="false"
@@ -403,12 +387,10 @@
     [Parameter] public string RowsPerPageString { get; set; } = "Itens por página";
     [Parameter] public string InfoFormat { get; set; } = "{first}–{last} de {total}";
 
-    // Função LÊ o estado atual. Se ExibirLinha é TRUE, a MudTable renderiza o ChildRowContent.
     private bool IsRowExpanded(MovimentacaoDrp item) => item.ExpandirObservacao;
 
     void ToggleExpand(MovimentacaoDrp item)
     {
-        // Funçao ESCREVE o novo estado (Alternância)
         item.ExpandirObservacao = !item.ExpandirObservacao;
         StateHasChanged();
     }

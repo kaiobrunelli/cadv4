@@ -4,8 +4,8 @@ using ControleAnaliseDesembolso.Application.Interface;
 using ControleAnaliseDesembolso.Domain.Entitys;
 using ControleAnaliseDesembolso.Domain.Enums;
 using ControleAnaliseDesembolso.Domain.Repositorys;
-using ControleAnaliseDesembolso.Infra.Data.Context;
-using ControleAnaliseDesembolso.Infra.Data.Repositorys;
+using ControleAnaliseDesembolso.Infra.Datas.Context;
+using ControleAnaliseDesembolso.Infra.Datas.Repositorys;
 
 namespace ControleAnaliseDesembolso.Application
 {
@@ -18,17 +18,14 @@ namespace ControleAnaliseDesembolso.Application
             _repositorioFpd = new RepositorioFichaPedidoDesembolso(context);
         }
 
-        // Mesmo conjunto de campos de ControleAnaliseDesembolsoService.MapearParaFicha —
-        // os dois serviços não compartilham esse helper hoje (não introduzi
-        // esse acoplamento novo), só a lista de campos é igual porque o DTO
-        // de origem é o mesmo.
-        private static FichaPedidoDesembolso MapearParaFicha(PedidoDesembolsoRequest request)
+        private static Desembolso MapearParaFicha(PedidoDesembolsoRequest request)
         {
-            return new FichaPedidoDesembolso
+            return new Desembolso
             {
                 MatriculaSolicitante = request.MatriculaSolicitante,
                 CoGigov = request.CoGigov,
                 MatriculaGestor = request.MatriculaGestor,
+                NuDesembolso = request.NuDesembolso,
                 CoContratoAf = request.CoContratoAf,
                 CoContratoAfDv = request.CoContratoAfDv,
                 PrimeiroDesembolso = request.PrimeiroDesembolso,
@@ -53,6 +50,8 @@ namespace ControleAnaliseDesembolso.Application
                 PlacaLocal = request.PlacaLocal,
                 LicensaInstalacao = request.LicensaInstalacao,
                 LicensaOperacao = request.LicensaOperacao,
+                CndValido = request.CndValido,
+                CrpValido = request.CrpValido,
                 SolicitadoVi = request.SolicitadoVi,
                 GlossadoVi = request.GlossadoVi,
                 AceitoVi = request.AceitoVi,
@@ -64,9 +63,11 @@ namespace ControleAnaliseDesembolso.Application
                 Excepcionalizado = request.Excepcionalizado,
                 ContrapartidaAtual = request.ContrapartidaAtual,
                 Integralizado = request.Integralizado,
-                SaldoAIntegralizar = request.SaldoAIntegralizar,
+                SaldoIntegralizar = request.SaldoIntegralizar,
                 ContrapartidaAlterada = request.ContrapartidaAlterada,
-                Amortizacao = request.Amortizacao,
+                //Amortizacao = request.Amortizacao,
+                Sanepar = request.Sanepar,
+                Mensagem = request.Mensagem,
             };
         }
 
@@ -90,7 +91,7 @@ namespace ControleAnaliseDesembolso.Application
             var FpdAnterior = await _repositorioFpd.ObterContrato(x =>
                                         x.CoContratoAf == Pedido.CoContratoAf &&
                                         x.CoContratoAfDv == Pedido.CoContratoAfDv,
-                                        x => x.CoFpd,
+                                        x => x.CoDesembolso,
                                         cancellationToken);
 
             if (FpdAnterior is null)
@@ -102,15 +103,23 @@ namespace ControleAnaliseDesembolso.Application
             {
                 CoContratoAf = FpdAnterior.CoContratoAf,
                 CoContratoAfDv = FpdAnterior.CoContratoAfDv,
-                // NuFpd: entidade não tem mais esse campo (era incrementado aqui
-                // antes, `FpdAnterior.NuFpd++`, já vinha comentado na origem) —
-                // fica em 0 até essa regra ser retomada.
+                NuFpd = FpdAnterior.NuDesembolso,
+                CoGigov = FpdAnterior.CoGigov,
+                MatriculaGestor = FpdAnterior.MatriculaGestor,
                 AgenteFinanceiro = FpdAnterior.AgenteFinanceiro,
+                CnpjAf = FpdAnterior.CnpjAf,
                 MutuarioFinal = FpdAnterior.MutuarioFinal,
+                CnpjMutuarioFinal = FpdAnterior.CnpjMutuarioFinal,
                 AgenteTecnicoOperador = FpdAnterior.AgenteTecnicoOperador,
+                CnpjAgenteTecnicoOperador = FpdAnterior.CnpjAgenteTecnicoOperador,
                 AgentePromotor = FpdAnterior.AgentePromotor,
+                CnpjAgentePromotor = FpdAnterior.CnpjAgentePromotor,
                 Programa = FpdAnterior.Programa.ToString(),
                 RetornoParcial = FpdAnterior.RetornoParcial ?? false,
+                DtEngenharia = FpdAnterior.DtEngenharia,
+                SituacaoObra = FpdAnterior.SituacaoObra?.ToString(),
+                DtSocioAmbiental = FpdAnterior.DtSocioAmbiental,
+                PercentualObra = FpdAnterior.PercentualObra,
                 ValorEmprestimo = FpdAnterior.ValorEmprestimo,
                 Desembolsado = FpdAnterior.Desembolsado,
                 ContrapartidaAtual = FpdAnterior.ContrapartidaAtual,

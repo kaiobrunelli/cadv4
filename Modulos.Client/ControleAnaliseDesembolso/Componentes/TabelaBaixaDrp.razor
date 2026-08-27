@@ -4,7 +4,6 @@
 
 <div class="drp">
 
-    <!-- Cabeçalho da tabela: título + filtros + ação BAIXA -->
     <div class="drp-topo">
         <div class="drp-topo-info">
             <span class="drp-topo-titulo">Controle de baixa · DRP</span>
@@ -49,7 +48,6 @@
     }
     else
     {
-    <!-- Tabela (scroll horizontal em telas pequenas) -->
     <div class="drp-scroll">
         <table class="drp-tabela">
             <thead>
@@ -60,44 +58,51 @@
                                @onchange="AlternarTodos"
                                title="Selecionar todos aguardando baixa" />
                     </th>
-                    <th>GIGOV</th>
-                    <th>Contrato (DV)</th>
-                    <th>Tipo</th>
-                    <th class="drp-num">Valor FGTS</th>
-                    <th>Solicitação</th>
-                    <th>Responsável</th>
-                    <th>Gestor</th>
-                    <th>Status</th>
-                    <th class="drp-col-acao"></th>
+                    <th class="drp-center drp-th-ordenavel" @onclick='() => OrdenarPor("gigov")'>GIGOV @IconeOrdenacao("gigov")</th>
+                    <th>Contrato</th>
+                    <th class="drp-center drp-th-ordenavel" @onclick='() => OrdenarPor("tipo")'>Tipo @IconeOrdenacao("tipo")</th>
+                    <th class="drp-num drp-th-ordenavel" @onclick='() => OrdenarPor("valor")'>Valor FGTS @IconeOrdenacao("valor")</th>
+                    <th class="drp-th-ordenavel" @onclick='() => OrdenarPor("solicitacao")'>Solicitação @IconeOrdenacao("solicitacao")</th>
+                    <th class="drp-th-ordenavel" @onclick='() => OrdenarPor("responsavel")'>Responsável @IconeOrdenacao("responsavel")</th>
+                    <th class="drp-th-ordenavel" @onclick='() => OrdenarPor("gestor")'>Gestor @IconeOrdenacao("gestor")</th>
+                    <th class="drp-center drp-th-ordenavel" @onclick='() => OrdenarPor("status")'>Status @IconeOrdenacao("status")</th>
+                    <th class="drp-col-acao drp-center"></th>
                 </tr>
             </thead>
             <tbody>
                 @foreach (var r in _registrosPaginados)
                 {
-                    <tr class="@(_selecionados.Contains(r.Id) ? "drp-linha-sel" : "") @(r.Baixado ? "drp-linha-baixada" : "")">
-                        <td class="drp-col-check">
+                    <tr class="drp-linha-clicavel @(_selecionados.Contains(r.Id) ? "drp-linha-sel" : "") @(r.Baixado || r.Rejeitado ? "drp-linha-baixada" : "")"
+                        @onclick="() => AbrirResumo(r)">
+                        <td class="drp-col-check" @onclick:stopPropagation>
                             <input type="checkbox"
                                    checked="@_selecionados.Contains(r.Id)"
-                                   disabled="@r.Baixado"
+                                   disabled="@(r.Baixado || r.Rejeitado)"
                                    @onchange="() => AlternarSelecao(r.Id)" />
                         </td>
-                        <td><span class="drp-gigov">@r.Gigov</span></td>
+                        <td class="drp-center"><span class="drp-gigov">@r.Gigov</span></td>
                         <td class="drp-mono">@r.ContratoDv</td>
-                        <td>
+                        <td class="drp-center">
                             <span class="drp-tipo drp-tipo-@r.TipoDesembolso">
-                                @(r.TipoDesembolso == "adiantamento" ? "Adiantamento" : "Normal")
+                                @(r.TipoDesembolso == "ADIANTAMENTO" ? "Adiantamento" : "Normal")
                             </span>
                         </td>
                         <td class="drp-num drp-valor">@r.ValorFgts.ToString("C", _br)</td>
                         <td class="drp-mono-dim">@r.DataSolicitacao.ToString("dd/MM/yyyy")</td>
-                        <td class="drp-matricula">@r.Responsavel</td>
+                        <td class="drp-matricula">@r.ResponsavelBaixa</td>
                         <td class="drp-matricula">@r.Gestor</td>
-                        <td>
+                        <td class="drp-center">
                             @if (r.Baixado)
                             {
-                                <span class="drp-status drp-status-ok" title="Baixado por @r.Baixa">
+                                <span class="drp-status drp-status-ok" title="Baixado por @r.ResponsavelDesembolso">
                                     <i class="bi bi-check-circle-fill"></i> Baixado
-                                    <span class="drp-status-por">@r.Baixa</span>
+                                    <span class="drp-status-por">@r.ResponsavelDesembolso</span>
+                                </span>
+                            }
+                            else if (r.Rejeitado)
+                            {
+                                <span class="drp-status drp-status-rejeitado" title="Rejeitado por @r.ResponsavelBaixa">
+                                    <i class="bi bi-x-circle-fill"></i> Rejeitado
                                 </span>
                             }
                             else
@@ -107,12 +112,9 @@
                                 </span>
                             }
                         </td>
-                        <td class="drp-col-acao">
+                        <td class="drp-col-acao drp-center" @onclick:stopPropagation>
                             <div class="drp-acoes-linha">
-                                <button class="drp-acao-ver" @onclick="() => AbrirResumo(r)" title="Ver resumo (checagem final)">
-                                    <i class="bi bi-eye"></i>
-                                </button>
-                                @if (!r.Baixado)
+                                @if (!r.Baixado && !r.Rejeitado)
                                 {
                                     <button class="drp-acao-linha" @onclick="() => AbrirBaixaUnico(r.Id)" title="Baixar este">
                                         <i class="bi bi-check2"></i>
@@ -158,7 +160,6 @@
 
 @if (_resumoDesembolso is not null)
 {
-    <!-- Checagem final: espelho do desembolso, somente leitura (Resumo + Histórico) -->
     <DialogResumoDrp Desembolso="_resumoDesembolso"
                      Todos="_desembolsosParaResumo"
                      AoFechar="() => _resumoDesembolso = null"
@@ -177,26 +178,67 @@
     private List<int> _idsParaBaixar = [];
     private bool _carregando = true;
 
-    // Resumo read-only (checagem final) — mapeia a linha DRP ao desembolso real
     private List<DesembolsoCAD> _desembolsosParaResumo = [];
     private DesembolsoCAD? _resumoDesembolso;
 
-    // Filtro de período + busca + paginação — únicos nesta aba, porque é a
-    // lista final de TODOS os desembolsos (a que efetivamente cresce sem
-    // limite); as outras abas da página de análise não paginam.
     private const int ItensPorPagina = 10;
     private int    _paginaAtual   = 1;
-    private string _periodoFiltro = "todos"; // 5 | 15 | 30 | todos
+    private string _periodoFiltro = "todos";
     private string _textoBusca    = "";
 
-    private List<RegistroDrp> _registrosFiltrados => AplicarBusca(AplicarFiltroPeriodo(_registros));
+    private List<RegistroDrp> _registrosFiltrados => AplicarOrdenacao(AplicarBusca(AplicarFiltroPeriodo(_registros)));
+
+    private string _colunaOrdenacao = "";
+    private bool   _ordemAscendente = true;
+
+    private void OrdenarPor(string coluna)
+    {
+        if (_colunaOrdenacao == coluna)
+            _ordemAscendente = !_ordemAscendente;
+        else
+        {
+            _colunaOrdenacao = coluna;
+            _ordemAscendente = true;
+        }
+    }
+
+    private MarkupString IconeOrdenacao(string coluna)
+    {
+        if (_colunaOrdenacao != coluna) return (MarkupString)"";
+        var icone = _ordemAscendente ? "bi-caret-up-fill" : "bi-caret-down-fill";
+        return (MarkupString)$"<i class=\"bi {icone} drp-icone-ordenacao\"></i>";
+    }
+
+    private List<RegistroDrp> AplicarOrdenacao(List<RegistroDrp> lista)
+    {
+        if (string.IsNullOrEmpty(_colunaOrdenacao)) return lista;
+
+        IOrderedEnumerable<RegistroDrp> ordenado = _colunaOrdenacao switch
+        {
+            "gigov"       => lista.OrderBy(r => r.Gigov, StringComparer.OrdinalIgnoreCase),
+            "tipo"        => lista.OrderBy(r => r.TipoDesembolso, StringComparer.OrdinalIgnoreCase),
+            "valor"       => lista.OrderBy(r => r.ValorFgts),
+            "solicitacao" => lista.OrderBy(r => r.DataSolicitacao),
+            "responsavel" => lista.OrderBy(r => ValorNumericoMatricula(r.ResponsavelBaixa)),
+            "gestor"      => lista.OrderBy(r => ValorNumericoMatricula(r.Gestor)),
+            "status"      => lista.OrderBy(r => r.Baixado),
+            _             => lista.OrderBy(r => 0)
+        };
+
+        return _ordemAscendente ? ordenado.ToList() : ordenado.Reverse().ToList();
+    }
+
+    private static long ValorNumericoMatricula(string matricula)
+    {
+        var digitos = new string(matricula.Where(char.IsDigit).ToArray());
+        return long.TryParse(digitos, out var numero) ? numero : 0;
+    }
 
     private int _totalPaginas => Math.Max(1, (int)Math.Ceiling(_registrosFiltrados.Count / (double)ItensPorPagina));
 
     private List<RegistroDrp> _registrosPaginados =>
         _registrosFiltrados.Skip((PaginaAtualValidada - 1) * ItensPorPagina).Take(ItensPorPagina).ToList();
 
-    // Corrige a página atual se um filtro reduziu o total de páginas.
     private int PaginaAtualValidada => Math.Min(_paginaAtual, _totalPaginas);
 
     private void SelecionarPeriodo(string periodo)
@@ -220,7 +262,7 @@
         return lista.Where(r =>
             r.ContratoDv.Contains(termo, StringComparison.OrdinalIgnoreCase) ||
             r.Gigov.Contains(termo, StringComparison.OrdinalIgnoreCase) ||
-            r.Responsavel.Contains(termo, StringComparison.OrdinalIgnoreCase) ||
+            r.ResponsavelBaixa.Contains(termo, StringComparison.OrdinalIgnoreCase) ||
             r.Gestor.Contains(termo, StringComparison.OrdinalIgnoreCase)
         ).ToList();
     }
@@ -236,7 +278,11 @@
         try
         {
             _registros = await Service.ObterRegistrosDrpAsync();
-            _desembolsosParaResumo = await Service.ObterTodosAsync();
+
+            var idsDrp = _registros.Select(r => r.Id.ToString()).ToHashSet();
+            _desembolsosParaResumo = (await Service.ObterTodosAsync())
+                .Where(d => idsDrp.Contains(d.Id))
+                .ToList();
         }
         catch (Exception ex)
         {
@@ -250,14 +296,12 @@
         }
     }
 
-    // Abre o espelho do desembolso correspondente à linha DRP (Id da linha DRP
-    // é o próprio CoDesembolso — ver ObterRegistrosDrp no servidor).
     private void AbrirResumo(RegistroDrp r)
     {
         _resumoDesembolso = _desembolsosParaResumo.FirstOrDefault(d => d.Id == r.Id.ToString());
     }
 
-    private IEnumerable<RegistroDrp> Baixaveis => _registros.Where(r => !r.Baixado);
+    private IEnumerable<RegistroDrp> Baixaveis => _registros.Where(r => !r.Baixado && !r.Rejeitado);
     private bool TodosSelecionados => Baixaveis.Any() && Baixaveis.All(r => _selecionados.Contains(r.Id));
 
     private void AlternarSelecao(int id)
@@ -275,7 +319,6 @@
                 _selecionados.Add(r.Id);
     }
 
-    // Baixa em lote (a partir da seleção)
     private void AbrirBaixaSelecionados()
     {
         if (_selecionados.Count == 0) return;
@@ -283,7 +326,6 @@
         _dialogAberto = true;
     }
 
-    // Baixa de um único (botão da linha)
     private void AbrirBaixaUnico(int id)
     {
         _idsParaBaixar = [id];
@@ -325,7 +367,6 @@
     overflow: hidden;
 }
 
-/* ── Topo: título + botão Baixa ── */
 .drp-topo {
     display: flex;
     align-items: center;
@@ -343,7 +384,6 @@
 .drp-topo-sub { font-size: 11.5px; color: var(--ink-400, var(--ink-300)); }
 .drp-topo-selecao { color: var(--brand-700); font-weight: 600; }
 
-/* Filtros: período + busca (únicos na aba DRP — ver comentário no code-behind) */
 .drp-topo-filtros { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 
 .select-periodo {
@@ -379,7 +419,6 @@
     width: 140px;
 }
 
-/* Estado vazio (filtro sem resultado) */
 .drp-vazio {
     display: flex;
     align-items: center;
@@ -392,7 +431,6 @@
 .drp-vazio .spin { display: inline-block; animation: drp-girar .8s linear infinite; }
 @@keyframes drp-girar { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-/* Paginação */
 .paginacao {
     display: flex;
     align-items: center;
@@ -432,20 +470,22 @@
 .drp-btn-baixa:hover:not(:disabled) { background: var(--brand-800, #004F93); }
 .drp-btn-baixa:disabled { opacity: .4; cursor: not-allowed; }
 .drp-btn-baixa-num {
-    background: rgba(255,255,255,.25);
+    display: inline-flex; align-items: center; justify-content: center;
+    background: #fff;
+    color: var(--brand-700);
     border-radius: var(--radius-full);
-    padding: 0 6px; font-size: 11px; font-weight: 800;
-    min-width: 18px; text-align: center;
+    padding: 0 6px; font-size: 11.5px; font-weight: 700;
+    min-width: 18px; height: 18px; text-align: center;
+    font-variant-numeric: tabular-nums;
 }
 
-/* ── Tabela ── */
-.drp-scroll { overflow-x: auto; }   /* rola em telas pequenas em vez de quebrar */
+.drp-scroll { overflow-x: auto; }
 
 .drp-tabela {
     width: 100%;
     border-collapse: collapse;
     font-size: 12.5px;
-    min-width: 860px;   /* abaixo disso, o .drp-scroll assume o scroll horizontal */
+    min-width: 860px;
 }
 .drp-tabela thead th {
     text-align: left;
@@ -456,13 +496,17 @@
     border-bottom: 1px solid var(--ink-200);
     white-space: nowrap;
 }
+.drp-th-ordenavel { cursor: pointer; user-select: none; }
+.drp-th-ordenavel:hover { color: var(--brand-700); }
+.drp-icone-ordenacao { margin-left: 4px; font-size: 9px; color: var(--brand-700); }
 .drp-tabela tbody td {
     padding: 11px 12px;
     border-bottom: 1px solid var(--ink-50);
     color: var(--ink-900);
     white-space: nowrap;
 }
-.drp-tabela tbody tr:hover { background: var(--ink-50); }
+.drp-linha-clicavel { cursor: pointer; }
+.drp-tabela tbody tr:hover { background: var(--brand-50); }
 .drp-tabela tbody tr.drp-linha-sel { background: var(--brand-50); }
 .drp-tabela tbody tr.drp-linha-sel:hover { background: var(--brand-100); }
 .drp-tabela tbody tr.drp-linha-baixada { opacity: .62; }
@@ -474,6 +518,7 @@
 
 .drp-num { text-align: right; }
 .drp-valor { font-weight: 700; font-variant-numeric: tabular-nums; }
+.drp-center { text-align: center; }
 
 .drp-gigov {
     font-size: 10.5px; font-weight: 700; color: var(--brand-700);
@@ -503,12 +548,13 @@
 .drp-status i { font-size: 11px; }
 .drp-status-ok         { background: var(--ok-bg); color: var(--ok); }
 .drp-status-aguardando { background: var(--warn-bg); color: #9A5B00; }
+.drp-status-rejeitado  { background: var(--err-bg); color: var(--err); }
 .drp-status-por {
     font-family: var(--font-mono, monospace);
     font-weight: 700; opacity: .8; margin-left: 2px;
 }
 
-.drp-acoes-linha { display: flex; align-items: center; gap: 4px; }
+.drp-acoes-linha { display: flex; align-items: center; justify-content: center; gap: 4px; }
 
 .drp-acao-linha {
     width: 28px; height: 28px;
@@ -520,18 +566,8 @@
 }
 .drp-acao-linha:hover { background: var(--brand-50); }
 
-.drp-acao-ver {
-    width: 28px; height: 28px;
-    display: inline-flex; align-items: center; justify-content: center;
-    border-radius: var(--radius-md);
-    color: var(--brand-700); font-size: 17px;
-    transition: background .12s;
-    flex-shrink: 0;
-}
-.drp-acao-ver:hover { background: var(--brand-50); }
 .drp-col-acao { white-space: nowrap; }
 
-/* Telas pequenas: aperta paddings; o scroll horizontal já garante que caiba */
 @@media (max-width: 900px) {
     .drp-topo { flex-wrap: wrap; }
     .drp-tabela thead th, .drp-tabela tbody td { padding: 9px 10px; }

@@ -1,13 +1,3 @@
-@*
-    MetricsSkeleton
-    ---------------------------------------------------------------
-    Placeholder visual do MetricsPanel enquanto o Controle está
-    em estado Idle/Loading/Failure-sem-lastGood.
-
-    Uso:
-        <MetricsSkeleton />
-        <MetricsSkeleton CardCount="4" />
-*@
 
 <div class="mt-skel" role="status" aria-busy="true" aria-label="Carregando métricas">
 
@@ -68,9 +58,5 @@
 </style>
 
 @code {
-    /// <summary>
-    /// Quantos cards de métrica simular. Default 3
-    /// (alinhado com Reaberturas, Condicionais, DRP).
-    /// </summary>
     [Parameter] public int CardCount { get; set; } = 3;
 }

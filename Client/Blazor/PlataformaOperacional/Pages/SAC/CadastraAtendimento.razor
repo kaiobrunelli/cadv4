@@ -1,4 +1,4 @@
-﻿@page "/CadastraAtendimento"
+@page "/CadastraAtendimento"
 
 
 <MudContainer >
@@ -8,7 +8,6 @@
             @MensagemDeErro
         </MudAlert>
     }
-    @* <MudCard Class="ml-6" Elevation="0"> *@      
     <MudGrid >
         <MudItem xs="8">
             <MudPaper Class="card-body">
@@ -30,12 +29,6 @@
                     </MudItem>
                     <MudItem class="d-flex align-center justify-space-between">
                         <MudFileUpload T="IBrowserFile" FilesChanged="OnFileSelect">
-@*                             <ActivatorContent>
-                                <MudButton Class="btn-caixa-small" Variant="Variant.Filled"
-                                           Color="Color.Primary">
-                                    Anexar Arquivo
-                                </MudButton>
-                            </ActivatorContent> *@
                             <SelectedTemplate>
                                 @if (context != null)
                                 {

@@ -8,7 +8,7 @@
 @code {
     [Parameter, EditorRequired] public string Titulo   { get; set; } = "";
     [Parameter, EditorRequired] public int    Contagem { get; set; }
-    [Parameter, EditorRequired] public string Tipo     { get; set; } = ""; // pendencia | pendente | aprovado | agendado
+    [Parameter, EditorRequired] public string Tipo     { get; set; } = "";
     [Parameter] public bool Aberto { get; set; } = true;
     [Parameter] public EventCallback<bool> AoAlternar { get; set; }
 
@@ -21,7 +21,6 @@
 
 
 <style>
-/* O card wrapper fica em PaginaAnalise; este componente é só o conteúdo interno do header */
 .grupo-cabecalho {
     display: flex;
     align-items: center;
@@ -55,6 +54,7 @@
 .grupo-dot-aprovado  { background: #1A7A4A; }
 .grupo-dot-agendado  { background: #2D8AD8; }
 .grupo-dot-rejeitado { background: #7A1F16; }
+.grupo-dot-geral     { background: #005CA9; }
 
 .grupo-titulo {
     font-size: 14px;
@@ -62,7 +62,6 @@
     color: var(--ink-900);
 }
 
-/* Badge colorido por tipo (mesmo esquema de PilulhaStatus) */
 .grupo-contagem {
     display: inline-flex;
     align-items: center;
@@ -78,4 +77,5 @@
 .grupo-contagem-aprovado  { background: #E0F2E7; color: #1A7A4A; }
 .grupo-contagem-agendado  { background: #DCEBFA; color: #1074C8; }
 .grupo-contagem-rejeitado { background: #F1D9D6; color: #7A1F16; }
+.grupo-contagem-geral     { background: #EBF5FF; color: #005CA9; }
 </style>

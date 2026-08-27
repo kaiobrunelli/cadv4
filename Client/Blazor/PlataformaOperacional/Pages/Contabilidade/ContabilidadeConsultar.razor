@@ -1,4 +1,4 @@
-﻿ @page "/ConsultarLoteContabil"
+ @page "/ConsultarLoteContabil"
  @inject HttpClient httpClient
 
  @inject DialogServicePlataformaOperacional DialogServicePlataformaOperacional
@@ -27,16 +27,7 @@
                 @MensagemDeErro
             </MudAlert>
         }
-        @* <MudCard Class="ml-6" Elevation="0"> *@
         <MudCard Elevation="0">
-        @* <MudCard Class="d-flex flex-column pb-4 mt-2" Elevation="0">
-            <MudCard Class="d-flex flex-row mt-2 gap-1" Elevation="0">
-                <MudIcon Icon="@Icons.Material.Filled.Search" Size="Size.Large" ></MudIcon>
-                <MudText Typo="Typo.h3" Color="Color.Secondary" Style="font-weight:400">Consultar Lote</MudText>
-            </MudCard>
-            <MudDivider Class="mt-2 flex-grow-1" DividerType="DividerType.FullWidth"></MudDivider>
-            </MudCard> *@
-        @* <MudBreadcrumbs Items="_items"></MudBreadcrumbs> *@
         <MudPaper Class="card-body">
             <MudItem Class="d-flex gap-6 mb-4">
                 <MudTextField T="DateTime?" @bind-Value="DataInicial" Format="yyyy-MM-dd" Label="Data Inicial" InputType="InputType.Date" />

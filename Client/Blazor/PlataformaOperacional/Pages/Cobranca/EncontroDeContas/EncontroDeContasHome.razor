@@ -13,10 +13,6 @@
 <div class="app">
     <main class="page">
         <PageHead ReferenciaData="@_encontroDeContasControle?.DtInicioExecucao" />
-      @* 
-        <h4>TotalProcessado @EncontroDeContas.ObservadorAutomacaoAPI.TotalProcessado</h4>
-        <h4>Severity @EncontroDeContas.ObservadorAutomacaoAPI.Severity</h4>
-        <h4>AlertaSeverity @EncontroDeContas.ObservadorAutomacaoAPI.AlertaSeverity</h4> *@
         <ProgressBarECT Executando="@EncontroDeContas.IsRunning"
                         Pct="@EncontroDeContas.ProgressoPercentual"
                         DescricaoEtapas="@EncontroDeContas.DescricaoEtapa"
@@ -47,12 +43,6 @@
 
           
 
-      @*      <MudButton Variant="Variant.Outlined"
-                           Color="Color.Secondary"
-                           OnClick="TestarProgressBarSP"
-                           Disabled="@EncontroDeContas.IsRunning">
-                    Simulador SignalR
-                </MudButton>  *@
             }
         }
       
@@ -99,17 +89,6 @@
         }
     
 
-        @*         <div>
-            <MudButton Variant="Variant.Filled" OnClick="SnackBarTeste">SnackBar Teste</MudButton>
-            <p>ChaveConexao  @EncontroDeContas.ObservadorAutomacaoAPI.ChaveConexao</p>
-            <p>AlertaSeverity @EncontroDeContas.ObservadorAutomacaoAPI.AlertaSeverity</p>
-            <p>NomeProcesso @EncontroDeContas.ObservadorAutomacaoAPI.NomeProcesso</p>
-            <p>Mensagem     @EncontroDeContas.ObservadorAutomacaoAPI.Mensagem</p>
-            <p>TotalAProcessar @EncontroDeContas.ObservadorAutomacaoAPI.TotalAProcessar</p>
-            <p>NumeroFaseAtual @EncontroDeContas.ObservadorAutomacaoAPI.NumeroFaseAtual</p>
-            <p>TotalProcessado @EncontroDeContas.ObservadorAutomacaoAPI.TotalProcessado</p>
-            <p>PercentualProcessado @EncontroDeContas.ObservadorAutomacaoAPI.PercentualProcessado</p>
-        </div> *@
     </main>
 </div>
 
@@ -145,7 +124,6 @@
     private string? _senhaCriptografada = "";
     private bool _mostrarTabelaDrp = false;
     private bool _tabelaDRPIsLoading = false;
-    // private int _faseAtualEtapas;
     private List<MovimentacaoDrp> _movimentacoesDrpData = new();
     private bool _carregamentoPaginaCompleto;
 
@@ -161,7 +139,6 @@
     {
         EncontroDeContas.TotalDeFases = _fasesEncontroDeContas.Count();
         _etapaInicial = EncontroDeContas.NumeroFaseAtualProgresso;
-        // await ConsultaControleGeral();
         var response = await EncontroDeContas.ControleGeralEncontroDeContas();
         _encontroDeContasControle = await HttpResponseHandler.ResponseHandler<ReadEncontroDeContasControleDto>(response, Snackbar);
         if (EncontroDeContas.NumeroFaseAtualProgresso < 0)
@@ -234,13 +211,6 @@
     {
         Navigation.NavigateTo("Relatorio");
     }
-    // private async Task ASyncControle()
-    // {
-    //     _faseAtualEtapas = EncontroDeContas.NumeroFaseAtualProgresso;
-    //     await ConsultaControleGeral();
-    //     var novaFase = IdentificarFase(_encontroDeContasControle.Situacao);
-    //     _faseAtualEtapas = novaFase;
-    // }
     private int IdentificarFase(string? faseAtual)
     {
         return faseAtual?.ToLower() switch
@@ -289,11 +259,6 @@
 
             var content = await response.Content.ReadAsStringAsync();
 
-            // if (string.IsNullOrWhiteSpace(content))
-            // {
-            //     Snackbar.Add("Resposta vazia da API", Severity.Warning);
-            //     return;
-            // }
             await HttpResponseHandler.ResponseHandler(response, Snackbar);
            
         }

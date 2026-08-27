@@ -1,4 +1,4 @@
-﻿@page "/PrevisaoDeDesembolso"
+@page "/PrevisaoDeDesembolso"
 @using PlataformaOperacional.Model.AplicacaoModel.Preditor
 
 
@@ -99,32 +99,16 @@
                 </MudItem>
 
 
-                @* 		<MudItem lg="12" md="12" Class="mb-8">
-					<PredTabelaResultados_CPT Dados="ResultadoRowMockFactory.CriarListaMock()" />
-				</MudItem>  *@
 
                 <MudItem lg="12" md="12" Class="mb-8">
-                    @* <NovaTabelaPreditor_CPT Dados="ControleGeralMock.ObterDados()"></NovaTabelaPreditor_CPT> *@
-                    @* <PredRelatorioDeResultados_CPT Dados="_readRelatorioDeResultados"></PredRelatorioDeResultados_CPT> *@
                     <PreditorTabelaResultados_CPT DadosRelatorioDeResultados="_readRelatorioDeResultados"></PreditorTabelaResultados_CPT>
                 </MudItem>
             </MudGrid>
         
-            @* 			<MudText>ValorCalculado setor publico @_controlePreditor.AnaliticoSetorPublico.ValorCalculado</MudText>
-			<MudText>ValorTotal _controlePreditor @_controlePreditor.AnaliticoSetorPublico.ValorTotal</MudText>
-	
-			<MudText>ValorCalculado _atualizarPreditorPublico @_atualizarPreditorPublico.ValorCalculado</MudText>
-			<MudText>ValorTotal _atualizarPreditorPublico     @_atualizarPreditorPublico.ValorTotal</MudText> *@
 
         </MudContainer>
     }
     <MudButton OnClick=" AtivarMock" />
-    @* 	<div class="mt-6">
-	Mockar
-	</MudButton>	<MudButton OnClick="  ConfiguracaoUsuario2">
-	Gerenciar
-	</MudButton>
-	</div> *@
 </MudContainer>
 
 @code {
@@ -353,7 +337,6 @@
         {
             CloseOnEscapeKey = true,
         };
-        // await DialogService.ShowAsync<DialogPreditorTeste_CPT>("Inserir Observação", options);
         await DialogService.ShowAsync<PreditorGerenciadorAutorizados>("Inserir Observação", options);
     }
     #endregion
@@ -370,129 +353,32 @@
     #endregion
 
 
-    // public static class ResultadoRowMockFactory
-    // {
-    // 	public static List<ResultadoRow> CriarListaMock()
-    // 	{
-    // 		// Seed fixa => lista determinística (excelente para testes e mocks)
-    // 		var rng = new Random(20260302);
 
-    // 		var setores = new[]
-    // 		{
-    // 		"Habitação",
-    // 		"Infra/Sane"
-    // 	};
 
-    // 		// Queremos que a última data seja no máximo Fevereiro.
-    // 		// Como hoje é 02/03/2026, vamos fixar o fim em 28/02/2026.
-    // 		var dataFim = new DateTime(2026, 2, 28);
 
-    // 		// 30 dias => do 30º dia antes até dataFim (inclusive)
-    // 		var dataInicio = dataFim.AddDays(-29);
 
-    // 		// 2 setores por dia => 30 dias * 2 = 60 linhas
-    // 		var dias = 16;
-    // 		// 2 setores por dia => 16 * 2 = 32 linhas
-    // 		var lista = new List<ResultadoRow>(capacity: dias * setores.Length);
 
-    // 		for (int d = 0; d < dias; d++)
 
-    // 		{
-    // 			var data = dataInicio.AddDays(d);
 
-    // 			// Para a MESMA data, cria 2 linhas (uma por setor)
-    // 			foreach (var setor in setores)
-    // 			{
-    // 				// Previsto: 1.000.000 até 25.000.000
-    // 				var previsto = NextDecimal(rng, 1_000_000m, 25_000_000m);
 
-    // 				// Percentual: 90% até 130% (fator 0,90 a 1,30)
-    // 				var fator = NextDecimal(rng, 0.90m, 1.30m);
 
-    // 				// Realizado calculado a partir do previsto (garante percentual na faixa)
-    // 				var realizado = DecimalRound(previsto * fator, 2);
 
-    // 				// CalculadoInicial: baseline, previsto com variação -10%..+10%
-    // 				var calculadoInicial = DecimalRound(previsto * NextDecimal(rng, 0.90m, 1.10m), 2);
 
-    // 				lista.Add(new ResultadoRow
-    // 					{
-    // 						Data = data,
-    // 						Setor = setor,
-    // 						CalculadoInicial = calculadoInicial,
-    // 						TotalPrevisto = DecimalRound(previsto, 2),
-    // 						TotalRealizado = realizado
-    // 					});
-    // 			}
-    // 		}
 
-    // 		return lista;
-    // 	}
 
-    // 	private static decimal NextDecimal(Random rng, decimal min, decimal max)
-    // 	{
-    // 		var sample = (decimal)rng.NextDouble(); // [0,1)
-    // 		return min + (max - min) * sample;
-    // 	}
 
-    // 	private static decimal DecimalRound(decimal value, int decimals) =>
-    // 		Math.Round(value, decimals, MidpointRounding.AwayFromZero);
-    // }
 
-    // public static class ResultadoRowMockFactory
-    // {
-    // 	public static List<ResultadoRow> CriarListaMock()
-    // 	{
-    // 		// Seed fixa => lista determinística (excelente para testes e mocks)
-    // 		var rng = new Random(20260302);
 
-    // 		var setores = new[]
-    // 		{
-    // 		"Habitação", "Infra/Sane",
-    // 	};
 
-    // 		var lista = new List<ResultadoRow>(capacity: 30);
 
-    // 		// Datas: últimos 30 dias (um por dia)
-    // 		var dataBase = DateTime.Today.AddDays(-29);
 
-    // 		for (int i = 0; i < 30; i++)
-    // 		{
-    // 			// Previsto: 1.000.000 até 25.000.000
-    // 			var previsto = NextDecimal(rng, 1_000_000m, 25_000_000m);
 
-    // 			// Percentual: 90% até 120% (em fator 0,90 a 1,20)
-    // 			var fator = NextDecimal(rng, 0.90m, 1.30m);
 
-    // 			// Realizado calculado a partir do previsto (garante percentual na faixa)
-    // 			var realizado = DecimalRound(previsto * fator, 2);
 
-    // 			// "CalculadoInicial": pode ser um baseline, por ex. previsto com variação -10%..+10%
-    // 			var calculadoInicial = DecimalRound(previsto * NextDecimal(rng, 0.90m, 1.10m), 2);
 
-    // 			lista.Add(new ResultadoRow
-    // 				{
-    // 					Data = dataBase.AddDays(i),
-    // 					Setor = setores[i % setores.Length],
-    // 					CalculadoInicial = calculadoInicial,
-    // 					TotalPrevisto = DecimalRound(previsto, 2),
-    // 					TotalRealizado = realizado
-    // 				});
-    // 		}
 
-    // 		return lista;
-    // 	}
 
-    // 	private static decimal NextDecimal(Random rng, decimal min, decimal max)
-    // 	{
-    // 		// rng.NextDouble: [0,1)
-    // 		var sample = (decimal)rng.NextDouble();
-    // 		return min + (max - min) * sample;
-    // 	}
 
-    // 	private static decimal DecimalRound(decimal value, int decimals) =>
-    // 		Math.Round(value, decimals, MidpointRounding.AwayFromZero);
-    // }
 
 
 }

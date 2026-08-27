@@ -1,4 +1,4 @@
-﻿
+
 
 
 using MudBlazor;
@@ -36,7 +36,6 @@ namespace PlataformaOperacional.Pages.ContratacaoPage
         public void ConsultarTomador(string codigoTomador)
         {
             Navigation.NavigateTo($"{Navigation.BaseUri}contratacaolistatomador/{codigoTomador}");
-            //Navigation.NavigateTo($"/contratacaolistatomador/{codigoTomador}");
         }
         public void ConsultarSituacoes()
         {

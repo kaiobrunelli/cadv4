@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "cad-client",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": ["run", "--project", "Client/Blazor/PlataformaOperacional", "--urls", "http://localhost:5181"],
+      "port": 5181
+    }
+  ]
+}

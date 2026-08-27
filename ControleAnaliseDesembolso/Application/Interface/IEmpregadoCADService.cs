@@ -6,5 +6,9 @@ namespace ControleAnaliseDesembolso.Application.Interface
     {
         Task<List<Empregado>> ObterTodos();
         Task<Empregado?> ObterPorMatricula(string matricula);
+
+        Task<List<Empregado>> ObterEmpregadosPorCoordenacao(string codigoCoordenacao);
+
+        Task<List<string>> ObterCodigosGigovPorMatricula(string matricula);
     }
 }

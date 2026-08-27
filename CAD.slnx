@@ -11,4 +11,6 @@
   <Project Path="ControleAnaliseDesembolso/ControleAnaliseDesembolso.csproj" />
   <Project Path="Plataforma.UI.Shared/Plataforma.UI.Shared.csproj" />
   <Project Path="PlataformaNotificacao/PlataformaNotificacao.csproj" />
+  <Project Path="PlataformaOperacional.Application/PlataformaOperacional.Application.csproj" />
+  <Project Path="Utilitarios/Utilitarios.csproj" />
 </Solution>

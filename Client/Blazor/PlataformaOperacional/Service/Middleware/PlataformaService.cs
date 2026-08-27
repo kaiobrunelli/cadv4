@@ -1,4 +1,4 @@
-﻿namespace PlataformaOperacional.Service.Middleware
+namespace PlataformaOperacional.Service.Middleware
 {
 	public class PlataformaService
 	{
@@ -8,7 +8,6 @@
 
 		public PlataformaService(IHttpClientFactory httpClientFactory, BlazorMockService blazorMockService)
 		{
-			//_httpClient = httpClientFactory.CreateClient(ClientName);
 			_httpClient = httpClientFactory.CreateClient("Api");
 
 			_httpLocal = httpClientFactory.CreateClient("ApiLocal");

@@ -1,4 +1,4 @@
-﻿@page "/Relatorio"
+@page "/Relatorio"
 
 @using Plataforma.Components.Shared
 @using PlataformaOperacional.Pages.Cobranca.Amortizacao
@@ -21,8 +21,6 @@
         padding: 8px 4px;
     }
 
-    /* Inputs de data — underline simples sobre fundo claro
-           (mesmo formato/borda do MudTextField Variant.Text) */
     .filtro-input {
         background-color: transparent;
         border: 0;
@@ -52,9 +50,6 @@
             padding-bottom: 5px;
         }
 
-    /* =====================================================
-           Total de registros (rótulo discreto à direita do título)
-           ===================================================== */
     .total-registros {
         color: #4b5563;
         font-size: 14px;
@@ -99,20 +94,6 @@
                     Voltar
                 </MudButton>
             </MudItem>
-           @*  <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3">
-                <MudIconButton Icon="@Icons.Material.Filled.ArrowBack"
-                               Color="Color.Primary"
-                               OnClick="VoltarPagina"
-                               aria-label="Voltar para a página anterior" />
-                <MudText Typo="Typo.h5"
-                         Style="color:#005ca9; font-weight:600; letter-spacing:0.2px;">
-                    Relatório
-                </MudText>
-                <MudSpacer />
-                <MudText Class="total-registros">
-                    Total de registros encontrados: <b>@_movimentacoes.Count</b>
-                </MudText>
-            </MudStack> *@
 
             <div class="filtro-toolbar">
                 <p style="color: #64748B;">Data Inicial</p>
@@ -193,13 +174,6 @@
         try
         {           
         
-            //  var response = await EncontroDeContas
-            //      .ObterRelatorioMovimentacoesAsync(_dataInicio, _dataFim);
-            //
-            //  _movimentacoes = await HttpResponseHandler
-            //      .ResponseHandler<List<MovimentacaoDrp>>(response, Snackbar)
-            //      ?? new();
-            // -----------------------------------------------------------
 
             _movimentacoes ??= new();
         }

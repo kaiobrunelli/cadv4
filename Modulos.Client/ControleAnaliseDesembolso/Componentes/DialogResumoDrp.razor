@@ -3,43 +3,25 @@
 @using ControleAnaliseDesembolso.Service
 @inject ControleAnaliseDesembolsoService Service
 
-@*
-   DIALOG RESUMO DRP — modal centrado, em etapas (mesmo padrão de
-   PainelPreencherFpdEtapas), 100% somente-leitura: é a checagem final
-   antes/depois da baixa.
-
-   3 etapas — optei por 3 em vez de 2 porque Validações (lista com
-   comentários) e Histórico (timeline) são conteúdos longos o bastante pra
-   não caberem bem numa etapa só sem rolagem excessiva:
-   1. Cabeçalho    — dados do desembolso/contrato/valores, sem nada pra rolar.
-   2. Validações   — checklist em acordeão (expande por item, não em coluna
-      fixa) pra caber sem ocupar muito espaço; aviso quando algum item tem
-      comentário registrado.
-   3. Histórico    — timeline de toda a atividade do desembolso.
-
-   Ao contrário do PainelPreencherFpdEtapas, aqui todas as etapas são
-   clicáveis livremente (sem bloqueio de "avançar só depois de validar") —
-   é revisão, não preenchimento.
-*@
 
 <div class="overlay-dfp" @onclick="FecharDialog">
     <div class="dfp" @onclick:stopPropagation role="dialog" aria-modal="true">
 
         @{
-            // Cabeçalho (contrato/valores) ainda vem do mock — fora do escopo deste
-            // ajuste. Validações (etapa 2) e histórico (etapa 3) já vêm do backend
-            // real (ver MontarChecklistReal), com o histórico completo de respostas.
-            var detalhe   = ServicoMock.ObterDetalheContrato(Desembolso);
-            var fin       = detalhe.Financiamento;
             var checklist = MontarChecklistReal();
         }
 
-        <!-- ── TOP BAR ── -->
         <div class="dfp-topbar">
             <div class="dfp-id">
                 <i class="bi bi-file-text"></i>
                 <span class="dfp-id-label">Desembolso ID</span>
                 <span class="dfp-id-num">@Desembolso.NumId</span>
+                @if (!string.IsNullOrEmpty(Desembolso.Gigov))
+                {
+                    <span class="dfp-id-separador">-</span>
+                    <span class="dfp-id-label">GIGOV</span>
+                    <span class="dfp-id-num">@Desembolso.Gigov</span>
+                }
             </div>
             <div class="dfp-topbar-right">
                 <div class="nav-pill-group">
@@ -57,138 +39,181 @@
             </div>
         </div>
 
-        <!-- ═══ STEPPER ═══ -->
         <div class="fpd-stepper">
-            @StepHeader(1, "bi-file-earmark-text", "Cabeçalho")
+            @StepHeader(1, "bi-file-earmark-text", "Dados do Contrato")
             <div class="fpd-step-linha @(_etapaAtual > 1 ? "concluida" : "")"></div>
             @StepHeader(2, "bi-check2-square", "Validações")
             <div class="fpd-step-linha @(_etapaAtual > 2 ? "concluida" : "")"></div>
             @StepHeader(3, "bi-clock-history", "Histórico")
         </div>
 
-        <!-- ── Corpo ── -->
         @if (_etapaAtual == 1)
         {
-            <!-- ═══ ETAPA 1 — CABEÇALHO ═══ -->
-            <div class="dfp-header dfp-header-etapa">
-
-                <div class="dfp-titulo-row">
-                    <div class="dfp-titulo-left">
-                        <div class="dfp-name-row">
-                            <h2 class="dfp-mutuario">@Desembolso.Mutuario</h2>
-                            <span class="dfp-dsb-id">@Desembolso.Id</span>
-                            @if (!string.IsNullOrEmpty(Desembolso.Gigov))
-                            {
-                                <span class="dfp-gigov">@Desembolso.Gigov</span>
-                            }
-                        </div>
-                        <div class="dfp-meta-row">
-                            <PilulhaStatus Status="@Desembolso.Status" Tamanho="sm" />
-                            <span class="dfp-prazo-chip">
-                                <i class="bi bi-calendar3"></i>
-                                Prazo:&nbsp;<strong>@Desembolso.PrazoFinal.ToString("dd MMM", new CultureInfo("pt-BR"))</strong>
-                            </span>
-                            @if (detalhe.PrimeiroDesembolso)
-                            {
-                                <span class="dfp-badge-destaque"><i class="bi bi-flag-fill"></i> Primeiro desembolso</span>
-                            }
-                            @* "Normal" só faz sentido quando nenhuma flag acima está marcada — ver
-                               mesmo ajuste em DialogDesembolsoFpd. *@
-                            @if (detalhe.TipoDesembolso == "adiantamento" || !detalhe.PrimeiroDesembolso)
-                            {
-                                <span class="dfp-badge-tipo @(detalhe.TipoDesembolso == "adiantamento" ? "adiantamento" : "")">
-                                    @(detalhe.TipoDesembolso == "adiantamento" ? "Adiantamento" : "Normal")
-                                </span>
-                            }
-                            @if (Analista is not null)
-                            {
-                                <div class="analista-mini" style="background: @Analista.Cor">@Analista.Iniciais</div>
-                                <span class="dfp-analista-nome">@Analista.Nome</span>
-                            }
-                        </div>
-                    </div>
+            @if (_carregandoReal)
+            {
+                <div class="dfp-painel-placeholder" style="padding:60px;">
+                    <i class="bi bi-arrow-repeat spin"></i>
+                    <p>Carregando…</p>
                 </div>
+            }
+            else if (_detalheReal is null)
+            {
+                <div class="dfp-painel-placeholder" style="padding:60px;">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <p>Não foi possível carregar este desembolso.</p>
+                </div>
+            }
+            else
+            {
+                <div class="dfp-header dfp-header-etapa">
 
-                <!-- Dados do contrato (AF, agentes, programa) -->
-                <div class="dfp-dados-grid">
-                    <div class="dfp-coluna">
-                        <div class="dfp-secao-titulo">Contrato AF</div>
-                        <div class="dfp-linha">
-                            <span class="dfp-rotulo">Contrato</span>
-                            <span class="dfp-valor dfp-mono">@Desembolso.Contrato</span>
-                        </div>
-                        <div class="dfp-linha">
-                            <span class="dfp-rotulo">Agente Financeiro</span>
-                            <span class="dfp-valor">@detalhe.AgenteFinanceiro</span>
-                        </div>
-                        <div class="dfp-linha">
-                            <span class="dfp-rotulo">Agente Promotor</span>
-                            <span class="dfp-valor">@detalhe.AgentePromotor</span>
-                        </div>
-                        <div class="dfp-linha dfp-linha-last">
-                            <span class="dfp-rotulo">Programa</span>
-                            <span class="dfp-valor">@fin.Programa</span>
-                        </div>
-                    </div>
-
-                    <div class="dfp-divisor-v"></div>
-
-                    <div class="dfp-coluna">
-                        <div class="dfp-secao-titulo">Financiamento</div>
-                        <div class="dfp-linha">
-                            <span class="dfp-rotulo">Fase</span>
-                            <span class="dfp-valor">@fin.Fase</span>
-                        </div>
-                        <div class="dfp-linha">
-                            <span class="dfp-rotulo">Nº Desembolso</span>
-                            <span class="dfp-valor">@fin.NumeroDesembolso</span>
-                        </div>
-                        <div class="dfp-linha dfp-linha-last">
-                            <span class="dfp-rotulo">% Obra concluída (BM)</span>
-                            <div class="dfp-obra-wrap">
-                                <div class="obra-track">
-                                    <div class="obra-fill" style="width: @fin.PercentualObra%"></div>
-                                </div>
-                                <span class="dfp-valor dfp-mono">@fin.PercentualObra%</span>
+                    <div class="dfp-titulo-row">
+                        <div class="dfp-titulo-left">
+                            <div class="dfp-name-row">
+                                <h2 class="dfp-mutuario" title="@Desembolso.Mutuario">@Desembolso.Mutuario</h2>
+                                <span class="dfp-dsb-id">@Desembolso.Id</span>
+                                @if (!string.IsNullOrEmpty(Desembolso.Gigov))
+                                {
+                                    <span class="dfp-gigov">@Desembolso.Gigov</span>
+                                }
+                            </div>
+                            <div class="dfp-meta-row">
+                                <PilulhaStatus Status="@Desembolso.Status" Tamanho="sm" />
+                                <span class="dfp-prazo-chip">
+                                    <i class="bi bi-calendar3"></i>
+                                    Prazo:&nbsp;<strong>@Desembolso.PrazoFinal.ToString("dd MMM", new CultureInfo("pt-BR"))</strong>
+                                </span>
+                                @if (_detalheReal.PrimeiroDesembolso)
+                                {
+                                    <span class="dfp-badge-destaque"><i class="bi bi-flag-fill"></i> Primeiro desembolso</span>
+                                }
+                                @if (_detalheReal.TipoDesembolso == "ADIANTAMENTO" || !_detalheReal.PrimeiroDesembolso)
+                                {
+                                    <span class="dfp-badge-tipo @(_detalheReal.TipoDesembolso == "ADIANTAMENTO" ? "adiantamento" : "")">
+                                        @(_detalheReal.TipoDesembolso == "ADIANTAMENTO" ? "Adiantamento" : "Normal")
+                                    </span>
+                                }
+                                @if (Analista is not null)
+                                {
+                                    <div class="analista-mini" style="background: @Analista.Cor">@Analista.Iniciais</div>
+                                    <span class="dfp-analista-nome">@Analista.Nome</span>
+                                }
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Valores -->
-                <div class="dfp-valores">
-                    <div class="dfp-secao-titulo">Valores</div>
-                    <div class="dfp-linha dfp-linha-destaque">
-                        <span class="dfp-rotulo">Valor solicitado (parcela)</span>
-                        <span class="dfp-valor dfp-mono dfp-valor-destaque">@ServicoMock.FormatarBRL(Desembolso.Valor)</span>
-                    </div>
-                    <div class="dfp-linha">
-                        <span class="dfp-rotulo">VE (Valor Empréstimo)</span>
-                        <span class="dfp-valor dfp-mono">@ServicoMock.FormatarBRL(fin.Ve)</span>
-                    </div>
-                    <div class="dfp-linha">
-                        <span class="dfp-rotulo">Participação FGTS</span>
-                        <span class="dfp-valor dfp-mono">@ServicoMock.FormatarBRL(fin.ParticipacaoFgts)</span>
-                    </div>
-                    <div class="dfp-linha">
-                        <span class="dfp-rotulo">Contrapartida</span>
-                        <span class="dfp-valor dfp-mono">@ServicoMock.FormatarBRL(fin.Contrapartida)</span>
-                    </div>
-                    @if (fin.PercGlobal is not null)
-                    {
-                        <div class="dfp-linha dfp-linha-last">
-                            <span class="dfp-rotulo">% Global (FGTS + contrapartida / VE)</span>
-                            <span class="dfp-valor dfp-mono">@(fin.PercGlobal.Value.ToString("0.0", new CultureInfo("pt-BR")))%</span>
+                    <div class="dfp-dados-grid">
+                        <div class="dfp-coluna">
+                            <div class="dfp-linha">
+                                <span class="dfp-rotulo">Contrato AF</span>
+                                <span class="dfp-valor dfp-mono">@Desembolso.Contrato</span>
+                            </div>
+                            <div class="dfp-linha">
+                                <span class="dfp-rotulo">Contrato AO</span>
+                                <span class="dfp-valor dfp-mono @(string.IsNullOrWhiteSpace(_detalheReal.ContratoAo) ? "dfp-valor-vazio" : "")">@ExibirTexto(_detalheReal.ContratoAo)</span>
+                            </div>
+                            <div class="dfp-linha">
+                                <span class="dfp-rotulo">Agente Financeiro</span>
+                                <span class="dfp-valor dfp-valor-truncar @(string.IsNullOrWhiteSpace(_detalheReal.AgenteFinanceiro) ? "dfp-valor-vazio" : "")" title="@ExibirTexto(_detalheReal.AgenteFinanceiro)">@ExibirTexto(_detalheReal.AgenteFinanceiro)</span>
+                            </div>
+                            <div class="dfp-linha dfp-linha-last">
+                                <span class="dfp-rotulo">Agente Promotor</span>
+                                <span class="dfp-valor dfp-valor-truncar @(string.IsNullOrWhiteSpace(_detalheReal.AgentePromotor) ? "dfp-valor-vazio" : "")" title="@ExibirTexto(_detalheReal.AgentePromotor)">@ExibirTexto(_detalheReal.AgentePromotor)</span>
+                            </div>
                         </div>
-                    }
+
+                        <div class="dfp-divisor-v"></div>
+
+                        <div class="dfp-coluna">
+                            <div class="dfp-linha">
+                                <span class="dfp-rotulo">Agente Técnico</span>
+                                <span class="dfp-valor dfp-valor-truncar @(string.IsNullOrWhiteSpace(_detalheReal.AgenteTecnicoOperador) ? "dfp-valor-vazio" : "")" title="@ExibirTexto(_detalheReal.AgenteTecnicoOperador)">@ExibirTexto(_detalheReal.AgenteTecnicoOperador)</span>
+                            </div>
+                            <div class="dfp-linha">
+                                <span class="dfp-rotulo">Tomador / Mutuário</span>
+                                <span class="dfp-valor dfp-valor-truncar @(string.IsNullOrWhiteSpace(_detalheReal.MutuarioFinal) ? "dfp-valor-vazio" : "")" title="@ExibirTexto(_detalheReal.MutuarioFinal)">@ExibirTexto(_detalheReal.MutuarioFinal)</span>
+                            </div>
+                            <div class="dfp-linha">
+                                <span class="dfp-rotulo">Nº Desembolso</span>
+                                <span class="dfp-valor">@_detalheReal.NuDesembolso</span>
+                            </div>
+                            <div class="dfp-linha dfp-linha-last">
+                                <span class="dfp-rotulo">Programa</span>
+                                <span class="dfp-valor">@_detalheReal.Programa</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="dfp-valores">
+                        <div class="dfp-secao-titulo">Valores</div>
+                        <div class="dfp-valores-split">
+                            <div class="dfp-valores-col">
+                                <div class="dfp-valores-col-titulo">Desembolso</div>
+                                <div class="dfp-linha dfp-linha-destaque">
+                                    <span class="dfp-rotulo">Valor solicitado (parcela)</span>
+                                    <span class="dfp-valor dfp-mono dfp-valor-destaque">@ServicoMock.FormatarBRL(_detalheReal.SolicitadoVi)</span>
+                                </div>
+                                <div class="dfp-linha">
+                                    <span class="dfp-rotulo">VE (Valor Empréstimo)</span>
+                                    <span class="dfp-valor dfp-mono">@ServicoMock.FormatarBRL(_detalheReal.ValorEmprestimo)</span>
+                                </div>
+                                <div class="dfp-linha">
+                                    <span class="dfp-rotulo">Participação FGTS</span>
+                                    <span class="dfp-valor dfp-mono">@ServicoMock.FormatarBRL(_detalheReal.ParticipacaoFgts)</span>
+                                </div>
+                                <div class="dfp-linha">
+                                    <span class="dfp-rotulo">Desembolsado</span>
+                                    <span class="dfp-valor dfp-mono">@ServicoMock.FormatarBRL(_detalheReal.Desembolsado)</span>
+                                </div>
+                                <div class="dfp-linha dfp-linha-last">
+                                    <span class="dfp-rotulo" title="Calculado: VE - Desembolsado">Saldo a desembolsar</span>
+                                    <span class="dfp-valor dfp-mono">@ServicoMock.FormatarBRL(_detalheReal.ValorEmprestimo - _detalheReal.Desembolsado)</span>
+                                </div>
+                            </div>
+                            <div class="dfp-valores-divisor"></div>
+                            <div class="dfp-valores-col">
+                                <div class="dfp-valores-col-titulo">Contrapartida</div>
+                                <div class="dfp-linha">
+                                    <span class="dfp-rotulo">Contrapartida</span>
+                                    <span class="dfp-valor dfp-mono">@ServicoMock.FormatarBRL(_detalheReal.Contrapartida)</span>
+                                </div>
+                                <div class="dfp-linha">
+                                    <span class="dfp-rotulo">Contrapartida Atual</span>
+                                    <span class="dfp-valor dfp-mono">@ServicoMock.FormatarBRL(_detalheReal.ContrapartidaAtual)</span>
+                                </div>
+                                <div class="dfp-linha">
+                                    <span class="dfp-rotulo">Integralizado</span>
+                                    <span class="dfp-valor dfp-mono">@ServicoMock.FormatarBRL(_detalheReal.Integralizado)</span>
+                                </div>
+                                <div class="dfp-linha dfp-linha-last">
+                                    <span class="dfp-rotulo">Saldo a integralizar</span>
+                                    <span class="dfp-valor dfp-mono">@ServicoMock.FormatarBRL(_detalheReal.SaldoIntegralizar)</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="dfp-resumo-perc">
+                            <div class="dfp-resumo-perc-titulo">Resumo de percentuais</div>
+                            <div class="dfp-resumo-perc-grid">
+                                <div class="dfp-resumo-perc-item">
+                                    <span class="dfp-resumo-perc-rotulo">Obra concluída (BM)</span>
+                                    <strong><i class="bi bi-graph-up dfp-resumo-perc-icone"></i>@_detalheReal.PercentualObra.ToString("0.000", new CultureInfo("pt-BR"))%</strong>
+                                </div>
+                                <div class="dfp-resumo-perc-item">
+                                    <span class="dfp-resumo-perc-rotulo" title="(Desembolsado + Solicitado VI) / VE">Execução financeira</span>
+                                    <strong class="@ClassePercComparado(PercExecucaoFinanceira, _detalheReal.PercentualObra)"><i class="bi bi-graph-up dfp-resumo-perc-icone"></i>@FmtPerc(PercExecucaoFinanceira)</strong>
+                                </div>
+                                <div class="dfp-resumo-perc-item">
+                                    <span class="dfp-resumo-perc-rotulo" title="Integralizado / CP Atual">Contrapartida integralizada</span>
+                                    <strong><i class="bi bi-graph-up dfp-resumo-perc-icone"></i>@FmtPerc(PercContrapartidaIntegralizada)</strong>
+                                </div>
+                            </div>
+                            </div>
+                    </div>
                 </div>
-            </div>
+            }
         }
         else if (_etapaAtual == 2)
         {
-            <!-- ═══ ETAPA 2 — VALIDAÇÕES (acordeão) ═══
-                 Desembolso na DRP já passou pela aprovação — não existe "inválida" nem
-                 "a analisar" aqui, então é só a lista, sem agrupar por status. ═══ -->
             <div class="dfp-etapa-validacoes">
                 @if (_carregandoReal)
                 {
@@ -221,7 +246,6 @@
 
                         <div class="dfp-acc @(aberta ? "aberta" : "")">
                             <button class="dfp-acc-header" @onclick="() => AlternarValidacao(chave)">
-                                <span class="dfp-acc-num">@v.CoValidacao.ToString().PadLeft(2, '0')</span>
                                 <span class="dfp-acc-titulo">@v.Titulo</span>
                                 @{ var temResposta = TemRespostaFicha(v.Titulo, out var resposta); }
                                 @if (temResposta)
@@ -230,6 +254,7 @@
                                         @(resposta switch { true => "Sim", false => "Não", _ => "Não respondido" })
                                     </span>
                                 }
+                                <span class="dfp-acc-spacer"></span>
                                 @if (v.Comentarios.Any())
                                 {
                                     <i class="bi bi-chat-text-fill dfp-acc-comm">@v.Comentarios.Count</i>
@@ -240,8 +265,6 @@
                             <div class="dfp-acc-body">
                                 <div class="dfp-acc-inner">
                                     <div class="dfp-acc-corpo">
-                                        @* Histórico completo — não é só o status, é toda resposta/justificativa
-                                           que foi registrada pra essa validação (analista e/ou GIGOV). *@
                                         <FioComentario Comentarios="@v.Comentarios" ApenasLeitura="true" />
                                     </div>
                                 </div>
@@ -253,7 +276,6 @@
         }
         else
         {
-            <!-- ═══ ETAPA 3 — HISTÓRICO ═══ -->
             <div class="dfp-corpo">
                 <div class="dfp-timeline">
                     @foreach (var evento in MontarTimeline())
@@ -270,7 +292,6 @@
             </div>
         }
 
-        <!-- ── Rodapé ── -->
         <div class="dfp-rodape">
             <div class="dfp-rodape-status">
                 <i class="bi bi-clipboard-check ok"></i>
@@ -308,9 +329,6 @@
     private string? _idCarregado;
     private bool _carregandoReal = true;
 
-    // Sem @key no <DialogResumoDrp> do lado do PaginaAnalise/TabelaBaixaDrp — o
-    // Anterior/Próximo troca só o parâmetro Desembolso, não remonta o componente.
-    // OnParametersSetAsync recarrega sempre que o Id muda (OnInitializedAsync não seria chamado de novo).
     protected override async Task OnParametersSetAsync()
     {
         if (_idCarregado == Desembolso.Id) return;
@@ -331,6 +349,21 @@
         }
     }
 
+    private decimal? PercExecucaoFinanceira =>
+        _detalheReal is { ValorEmprestimo: > 0 }
+            ? Math.Round((_detalheReal.Desembolsado + _detalheReal.SolicitadoVi) / _detalheReal.ValorEmprestimo * 100, 3)
+            : null;
+
+    private decimal? PercContrapartidaIntegralizada =>
+        _detalheReal is { ContrapartidaAtual: > 0 }
+            ? Math.Round(_detalheReal.Integralizado / _detalheReal.ContrapartidaAtual * 100, 3)
+            : null;
+
+    private static string FmtPerc(decimal? p) => p is null ? "—" : $"{p.Value.ToString("0.000", new CultureInfo("pt-BR"))}%";
+    private static string ClassePercComparado(decimal? valor, decimal? referencia) =>
+        valor is null || referencia is null ? "" : valor <= referencia ? "dfp-perc-ok" : "dfp-perc-alerta";
+    private static string ExibirTexto(string? valor) => string.IsNullOrWhiteSpace(valor) ? "Não informado" : valor;
+
     private int IndiceAtual  => Todos.FindIndex(d => d.Id == Desembolso.Id);
     private bool TemAnterior => IndiceAtual > 0;
     private bool TemProximo  => IndiceAtual < Todos.Count - 1;
@@ -339,7 +372,6 @@
     private async Task Proximo()  { if (TemProximo)  await AoNavegar.InvokeAsync(Todos[IndiceAtual + 1].Id); }
     private async Task FecharDialog() => await AoFechar.InvokeAsync();
 
-    // ── Stepper — livre em qualquer direção (é revisão, não preenchimento) ──
     private RenderFragment StepHeader(int numero, string icone, string titulo) =>
         @<button type="button" class="fpd-step @(EstadoEtapa(numero))" @onclick="() => _etapaAtual = numero">
             <span class="fpd-step-num">
@@ -370,7 +402,6 @@
         public List<Comentario> Comentarios { get; set; } = [];
     }
 
-    // Situacao do servidor (TipoSituacaoValidacao): 0 Analisar, 1 Aprovado, 2 Negado.
     private static string MapSituacao(int situacao) => situacao switch
     {
         1 => "valido",
@@ -378,23 +409,6 @@
         _ => "pendente",
     };
 
-    // TipoRegistro do servidor <-> Tipo do client (Comentario.cs usa
-    // positivo/informativo/negativo; o servidor usa
-    // justificativa/informativo/parecer/observacao/rejeicao).
-    private static string MapTipoServidorParaCliente(string tipoRegistro) => tipoRegistro switch
-    {
-        "justificativa" => "positivo",
-        "parecer" => "negativo",
-        _ => "informativo",
-    };
-
-    // Resposta que foi de fato preenchida no formulário da FPD pra esse item
-    // (Sim/Não) — mesmo mapeamento título→campo usado em DialogDesembolsoFpd
-    // (TemCampoFicha). Só os 7 itens do checklist que têm campo booleano
-    // correspondente na ficha; os demais (Tomador/Promotor adimplente,
-    // Valores da FPD) não têm resposta de formulário, só o status da análise.
-    // Nenhuma validação hoje é do tipo "valor" (ex.: percentual) — se um dia
-    // existir, o mesmo padrão dá pra estender aqui.
     private bool TemRespostaFicha(string? titulo, out bool? resposta)
     {
         resposta = titulo switch
@@ -412,10 +426,6 @@
             or "Retorno parcial" or "Placa local" or "Excepcionalização" or "CP alterada";
     }
 
-    // Checklist com o histórico real de respostas (não só o status) — vem de
-    // ObterDetalheAsync, o mesmo endpoint usado no dialog de análise do desembolso.
-    // "Valores da FPD" não é uma validação sim/não, então usa status neutro (ver
-    // mesmo ajuste em DialogDesembolsoFpd).
     private List<ItemChecklistReal> MontarChecklistReal()
     {
         if (_detalheReal is null) return [];
@@ -425,13 +435,13 @@
             {
                 CoValidacao = v.CoValidacao,
                 Titulo = v.DeValidacao ?? "",
-                Status = v.DeValidacao == "Valores da FPD" ? "neutro" : MapSituacao(v.Situacao),
+                Status = MapSituacao(v.Situacao),
                 Comentarios = v.Comentarios
                     .OrderBy(c => c.DtCriacao)
                     .Select(c => new Comentario
                     {
-                        Id = c.CoRegistroValidacao,
-                        Tipo = MapTipoServidorParaCliente(c.TipoRegistro),
+                        Id = c.CoMensagem,
+                        Tipo = c.TipoMensagem,
                         Texto = c.Texto ?? "",
                         Autor = c.NomeAutor ?? c.MatriculaAutor ?? "",
                         MatriculaAutor = c.MatriculaAutor ?? "",
@@ -441,7 +451,6 @@
             }).ToList();
     }
 
-    // ── Histórico: timeline com todos os comentários de todas as validações ──
     private record EventoTimeline(string Icone, string Texto, string Quando, string Tipo);
 
     private List<EventoTimeline> MontarTimeline()
@@ -461,10 +470,10 @@
         foreach (var v in MontarChecklistReal())
             foreach (var c in v.Comentarios)
                 eventos.Add(new(
-                    c.Tipo == "positivo" ? "bi-check-circle" : c.Tipo == "negativo" ? "bi-x-circle" : "bi-chat-text",
+                    c.Tipo == "justificativa" ? "bi-check-circle" : c.Tipo == "parecer" ? "bi-x-circle" : "bi-chat-text",
                     $"<strong>{c.Autor}</strong> comentou em <strong>{v.Titulo}</strong>: “{c.Texto}”",
                     ServicoMock.FormatarTempo(c.Timestamp),
-                    c.Tipo == "negativo" ? "falha" : c.Tipo == "positivo" ? "ok" : "info"));
+                    c.Tipo == "parecer" ? "falha" : c.Tipo == "justificativa" ? "ok" : "info"));
 
         eventos.Add(Desembolso.Status switch
         {
@@ -483,7 +492,6 @@
 .overlay-dfp {
     position: fixed; inset: 0;
     background: rgba(34,41,46,.45);
-    /* MudAppBar (cabeçalho) usa z-index:1300 — precisa ficar acima disso. */
     z-index: 2000;
     display: flex; align-items: flex-start; justify-content: center;
     padding: 16px; overflow-y: auto;
@@ -503,12 +511,12 @@
     margin: auto;
 }
 
-/* ── Top bar ── */
 .dfp-topbar { display: flex; align-items: center; gap: 8px; padding: 9px 20px; border-bottom: 1px solid var(--ink-100); flex-shrink: 0; background: #fff; }
 .dfp-id { display: flex; align-items: center; gap: 5px; flex: 1; }
 .dfp-id i { font-size: 11px; color: #9EB2BB; }
 .dfp-id-label { font-size: 11.5px; font-weight: 600; color: var(--ink-600); }
 .dfp-id-num { font-family: monospace; font-size: 11.5px; font-weight: 600; color: var(--ink-700); }
+.dfp-id-separador { color: var(--ink-300); font-size: 11.5px; }
 .dfp-topbar-right { display: flex; align-items: center; gap: 6px; }
 
 .nav-pill-group { display: inline-flex; align-items: center; gap: 0; border: 1px solid var(--ink-100); border-radius: var(--radius-md); background: #FAFBFD; padding: 2px; }
@@ -520,16 +528,15 @@
 .btn-fechar { width: 28px; height: 28px; border-radius: var(--radius-md); border: 1px solid var(--ink-100); color: #64747A; font-size: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background .12s; }
 .btn-fechar:hover { background: var(--ink-50); }
 
-/* ── Stepper (mesmo padrão do PainelPreencherFpdEtapas) ── */
-.fpd-stepper { display: flex; align-items: center; padding: 14px 24px; background: var(--ink-50); border-bottom: 1px solid var(--ink-100); flex-shrink: 0; }
+.fpd-stepper { display: flex; align-items: center; padding: 12px 24px; background: var(--ink-50); border-bottom: 1px solid var(--ink-100); flex-shrink: 0; }
 .fpd-step {
     display: flex; align-items: center; gap: 8px; background: transparent; border: none;
-    padding: 4px 6px; border-radius: var(--radius-md); cursor: pointer; font-family: inherit;
+    padding: 3px 6px; border-radius: var(--radius-md); cursor: pointer; font-family: inherit;
 }
 .fpd-step-num {
-    width: 24px; height: 24px; border-radius: 50%; flex-shrink: 0;
+    width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
-    font-size: 11px; font-weight: 700; background: var(--ink-200); color: var(--ink-600, var(--ink-700));
+    font-size: 10px; font-weight: 700; background: var(--ink-200); color: var(--ink-600, var(--ink-700));
     transition: background .15s, color .15s;
 }
 .fpd-step-titulo { font-size: 12.5px; font-weight: 600; color: var(--ink-500); white-space: nowrap; transition: color .15s; }
@@ -541,7 +548,6 @@
 .fpd-step-linha { flex: 1; height: 2px; background: var(--ink-200); margin: 0 4px; transition: background .2s; }
 .fpd-step-linha.concluida { background: var(--ok); }
 
-/* ── Cabeçalho (etapa 1) ── */
 .dfp-header { background: #F8FAFC; flex-shrink: 0; overflow-y: auto; }
 .dfp-header-etapa { flex: 1; }
 
@@ -557,36 +563,62 @@
 .dfp-prazo-chip i { font-size: 10px; color: #005CA9; }
 .dfp-prazo-chip strong { font-weight: 700; }
 
-.dfp-badge-destaque { display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--brand-200); background: var(--brand-700); border-radius: var(--radius-full); padding: 4px 10px; font-size: 10.5px; font-weight: 700; color: #fff; }
+.dfp-badge-destaque { display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--brand-200); background: var(--brand-50); border-radius: var(--radius-full); padding: 4px 10px; font-size: 10.5px; font-weight: 600; color: var(--brand-800, #004F93); }
+.dfp-badge-destaque i { font-size: 10px; color: #005CA9; }
 
-.dfp-badge-tipo { display: inline-flex; align-items: center; border: 1px solid var(--ink-200); background: #fff; border-radius: var(--radius-full); padding: 4px 10px; font-size: 10.5px; font-weight: 700; color: var(--ink-700); }
+.dfp-badge-tipo { display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--ink-200); background: var(--ink-50); border-radius: var(--radius-full); padding: 4px 10px; font-size: 10.5px; font-weight: 600; color: var(--ink-700); }
 .dfp-badge-tipo.adiantamento { border-color: #F5D0A0; background: var(--warn-bg, #FFEFD6); color: #9A5B00; }
 
 .analista-mini { width: 20px; height: 20px; border-radius: 50%; color: #fff; font-size: 8.5px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .dfp-analista-nome { font-size: 12px; font-weight: 500; color: var(--ink-600); }
 
-/* Dados do contrato — grid 2 colunas */
 .dfp-dados-grid { display: flex; border-bottom: 1px solid var(--ink-100); }
 .dfp-coluna { flex: 1; padding: 10px 24px; min-width: 0; }
 .dfp-divisor-v { width: 1px; background: var(--ink-100); align-self: stretch; flex-shrink: 0; }
-.dfp-secao-titulo { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .18em; color: var(--ink-400); margin-bottom: 4px; }
-.dfp-linha { display: flex; align-items: center; justify-content: space-between; gap: 16px; border-bottom: 1px solid #EDF0F2; padding: 6px 0; }
+.dfp-secao-titulo { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--ink-500); margin-bottom: 4px; }
+.dfp-secao-titulo::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: var(--brand-500, #2D8AD8); flex-shrink: 0; }
+.dfp-linha { display: flex; align-items: center; justify-content: space-between; gap: 16px; border-bottom: 1px solid #EDF0F2; padding: 6px 8px; margin: 0 -8px; border-radius: var(--radius-sm, 4px); }
 .dfp-linha-last { border-bottom: none; }
-.dfp-rotulo { flex-shrink: 0; font-size: 10.5px; color: var(--ink-400); }
+.dfp-rotulo { flex-shrink: 0; font-size: 10.5px; color: var(--ink-600); }
 .dfp-valor { font-size: 11px; font-weight: 600; color: var(--ink-900); text-align: right; }
+.dfp-valor-truncar { max-width: 170px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dfp-valor-vazio { color: var(--ink-400, var(--ink-300)); font-weight: 500; }
 .dfp-mono { font-family: monospace; font-variant-numeric: tabular-nums; }
 
-.dfp-obra-wrap { display: flex; align-items: center; gap: 8px; }
-.obra-track { width: 64px; height: 6px; background: var(--ink-200); border-radius: var(--radius-full); overflow: hidden; flex-shrink: 0; }
-.obra-fill { height: 100%; background: var(--brand-700, #005CA9); border-radius: var(--radius-full); }
+/* Estas regras existiam só em DialogDesembolsoFpd.razor e "vazavam" pra cá
+   porque Blazor não isola o bloco de estilo por componente — funcionava só
+   quando os dois dialogs já tinham sido montados na mesma sessão. Copiadas
+   pra cá pra este arquivo não depender do outro estar carregado. */
+.dfp-perc-ok { color: var(--ok) !important; }
+.dfp-perc-alerta { color: var(--err) !important; }
+.dfp-resumo-perc { margin-top: 12px; border: 1px solid var(--ink-100); border-radius: var(--radius-lg); background: var(--ink-50); padding: 12px 16px; }
+.dfp-resumo-perc-titulo { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-600); margin-bottom: 4px; }
+.dfp-resumo-perc-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.dfp-resumo-perc-item { display: flex; flex-direction: column; gap: 3px; }
+.dfp-resumo-perc-rotulo { font-size: 11px; color: var(--ink-500); }
+.dfp-resumo-perc-item strong { display: inline-flex; align-items: center; gap: 5px; font-size: 16px; font-variant-numeric: tabular-nums; color: var(--ink-900); }
+.dfp-resumo-perc-icone { font-size: 13px; color: var(--brand-500, #2D8AD8); }
+
+/* Zebra striping pra facilitar achar o valor de um rótulo — cada coluna
+   (Contrato AF / Financiamento) risca par/ímpar normalmente. --ink-100 em vez
+   de --ink-50 porque --ink-50 (#f8fafc) é próximo demais do branco pra
+   perceber a listra num monitor comum. */
+.dfp-coluna .dfp-linha:nth-child(even):not(.dfp-linha-destaque) { background: var(--ink-100); }
 
 .dfp-valores { padding: 10px 24px 14px; }
 .dfp-linha-destaque { background: var(--brand-50); margin: 0 -8px; padding: 7px 8px; border-radius: var(--radius-md); border-bottom-color: transparent; }
-.dfp-linha-destaque .dfp-rotulo { color: var(--brand-700); font-weight: 600; }
 .dfp-valor-destaque { color: var(--brand-800); font-weight: 700; font-size: 12.5px; }
 
-/* ── Etapa 2 — Validações em acordeão ── */
-.dfp-etapa-validacoes { flex: 1; overflow-y: auto; padding: 16px 24px; background: #fff; }
+.dfp-valores-split { display: flex; gap: 24px; align-items: flex-start; }
+.dfp-valores-col { flex: 1; min-width: 0; }
+.dfp-valores-divisor { width: 1px; align-self: stretch; background: var(--ink-100); flex-shrink: 0; }
+.dfp-valores-col-titulo { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-500); margin-bottom: 4px; }
+/* Zebra dentro de cada coluna — mesmo padrão de .dfp-coluna (o título como 1º
+   filho desloca a contagem, então nth-child(even) cai certinho nas linhas de dado;
+   destaque fica de fora porque já tem o próprio fundo azul). */
+.dfp-valores-col .dfp-linha:nth-child(even):not(.dfp-linha-destaque) { background: var(--ink-100); }
+
+.dfp-etapa-validacoes { flex: 1; overflow-y: auto; padding: 16px 24px; max-height: 700px; background: #fff; }
 .dfp-etapa-validacoes-topo { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
 .dfp-etapa-validacoes-contagem { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 700; color: var(--ok); }
 
@@ -605,29 +637,23 @@
 
 .dfp-acc-header { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 14px; text-align: left; transition: background .12s; }
 .dfp-acc-header:hover { background: var(--ink-50); }
-.dfp-acc-num { font-size: 10px; font-weight: 800; color: var(--ink-400, var(--ink-300)); font-variant-numeric: tabular-nums; }
-.dfp-acc-titulo { flex: 1; font-size: 12.5px; font-weight: 600; color: var(--ink-900); }
+.dfp-acc-titulo { flex: 0 1 auto; min-width: 0; font-size: 12.5px; font-weight: 600; color: var(--ink-900); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dfp-acc-spacer { flex: 1; }
 
-/* Pílula Sim/Não — resposta que foi preenchida no formulário da FPD pra esse
-   item (mesmo padrão visual de DialogDesembolsoFpd/.dfp-ficha-pill). */
 .dfp-ficha-pill { flex-shrink: 0; padding: 3px 10px; border-radius: var(--radius-full); font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; }
 .dfp-ficha-pill.sim { background: var(--ok-bg); color: var(--ok); }
 .dfp-ficha-pill.nao { background: var(--err-bg); color: var(--err); }
 .dfp-ficha-pill.pendente { background: var(--warn-bg, #FFEFD6); color: #9A5B00; }
-.dfp-acc-comm { font-size: 11px; color: var(--brand-500); }
-.dfp-acc-chevron { font-size: 11px; color: var(--ink-400, var(--ink-300)); transition: transform .2s; }
+.dfp-acc-comm { flex-shrink: 0; font-size: 11px; color: var(--brand-500); }
+.dfp-acc-chevron { flex-shrink: 0; font-size: 11px; color: var(--ink-400, var(--ink-300)); transition: transform .2s; }
 .dfp-acc.aberta .dfp-acc-chevron { transform: rotate(180deg); }
 
-/* Acordeão animado por max-height (grid-template-rows 0fr→1fr colapsa pra 0
-   aqui: o tamanho mínimo automático do item vira zero com overflow:hidden e
-   conteúdo sem altura explícita — max-height evita essa armadilha). */
 .dfp-acc-body { max-height: 0; overflow: hidden; transition: max-height .25s ease; }
-.dfp-acc.aberta .dfp-acc-body { max-height: 600px; }
+.dfp-acc.aberta .dfp-acc-body { max-height: 1000px; }
 .dfp-acc-corpo { padding: 0 14px 14px; }
 .dfp-acc-detalhe { font-size: 12px; color: var(--ink-700); line-height: 1.55; margin: 0 0 10px; padding: 10px 12px; background: var(--ink-50); border-radius: var(--radius-md); }
 
-/* ── Etapa 3 — Histórico ── */
-.dfp-corpo { flex: 1; overflow-y: auto; padding: 16px 24px; min-height: 220px; background: #fff; }
+.dfp-corpo { flex: 1; overflow-y: auto; padding: 16px 24px; min-height: 220px; max-height: 700px; background: #fff; }
 
 .dfp-timeline { position: relative; padding-left: 6px; }
 .dfp-evento { display: flex; gap: 12px; padding-bottom: 18px; position: relative; }
@@ -641,7 +667,6 @@
 .dfp-evento-texto { font-size: 12.5px; color: var(--ink-700); line-height: 1.5; }
 .dfp-evento-quando { font-size: 10.5px; color: var(--ink-400, var(--ink-300)); margin-top: 3px; }
 
-/* ── Rodapé ── */
 .dfp-rodape { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-top: 1px solid var(--ink-200); flex-shrink: 0; background: var(--ink-50); }
 .dfp-rodape-status { flex: 1; display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--ink-500); min-width: 0; }
 .dfp-rodape-status .ok { color: var(--ok); }

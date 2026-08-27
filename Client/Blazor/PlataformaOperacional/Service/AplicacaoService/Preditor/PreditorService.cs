@@ -1,4 +1,4 @@
-﻿
+
 using PlataformaOperacional.Model.Aplicacao.Preditor;
 using PlataformaOperacional.Model.Plataforma;
 using PlataformaOperacional.Service.Middleware;
@@ -17,7 +17,6 @@ namespace PlataformaOperacional.Service.AplicacaoService.Preditor
 
 		public PreditorService(IHttpClientFactory httpClientFactory, BlazorMockService blazorMockService)
 		{
-			//_httpClient = httpClientFactory.CreateClient(ClientName);
 			_httpClient = httpClientFactory.CreateClient("Api");
 
 			_httpLocal = httpClientFactory.CreateClient("ApiLocal");				
@@ -137,79 +136,15 @@ namespace PlataformaOperacional.Service.AplicacaoService.Preditor
 
 
 
-		//public async Task<HistoricoPreditor?> ConsultarUltimoDesembolso()
-		//{
-		//	// Adicionei "api/preditor/" antes
-		//	return await _httpClient.GetFromJsonAsync<HistoricoPreditor?>("api/preditor/ultimo-desembolso");
-		//}
 
-		//public async Task<HttpStatusCode> AtualizarDesembolsoAsync(int id, AtualizarDesembolsoRequest request) // Ajuste o nome da classe se for AtualizarValorRequest
-		//{
-		//	var response = await _httpClient.PutAsJsonAsync($"api/preditor/atualizar-desembolso/{id}", request);
 
-		//	if (!response.IsSuccessStatusCode)
-		//	{
-		//		var erro = await response.Content.ReadAsStringAsync();
-		//		throw new Exception($"Erro ao atualizar: {erro}");
-		//	}
-		//	return response.StatusCode;
-		//}
 
-		//public async Task FinalizarDesembolsoAsync(int id)
-		//{
-		//	var response = await _httpClient.PostAsJsonAsync($"api/preditor/finalizar-desembolso/{id}", "");
-		//	if (!response.IsSuccessStatusCode)
-		//	{
-		//		var erro = await response.Content.ReadAsStringAsync();
-		//		throw new Exception($"Erro ao finalizar: {erro}");
-		//	}
-		//}
 
-		//public async Task EditarDesembolsoAsync(int id, string tipo)
-		//{
-		//	// CORREÇÃO CRÍTICA: Passando via Query String para bater com o [FromQuery] do controller
-		//	// Rota: api/preditor/editar-desembolso/1?tipo=publico
-		//	var response = await _httpClient.PatchAsync($"api/preditor/editar-desembolso/{id}?tipo={tipo}", null);
 
-		//	if (!response.IsSuccessStatusCode)
-		//	{
-		//		var erro = await response.Content.ReadAsStringAsync();
-		//		throw new Exception($"Erro ao editar: {erro}");
-		//	}
-		//}
-		//public async Task CriarPerfil(CriarPerfilAcessoRequest request)
-		//{
-		//	var response = await _httpClient.PostAsJsonAsync("api/preditor/criar-perfil-de-acesso", request);
-		//	if (!response.IsSuccessStatusCode)
-		//	{
-		//		var erro = await response.Content.ReadAsStringAsync();
-		//		throw new Exception($"Erro ao criar perfil: {erro}");
-		//	}
-		//}
 
-		//public async Task<List<PerfilAcesso>> BuscarPerfisAcesso()
-		//{
-		//	var response = await _httpClient.GetFromJsonAsync<List<PerfilAcesso>>("api/preditor/buscar-todos-perfis-de-acesso");
-		//	return response;
-		//}
 
-		//public async Task RemoverPerfil(string matricula)
-		//{
-		//	var response = await _httpClient.PostAsJsonAsync($"api/preditor/remover-perfil/{matricula}", "");
-		//}
-		//public async Task<HttpResponseMessage> AtualizarPerfil(AtualizarPerfiDto request)
-		//{
-		//	var response = await _httpClient.PatchAsJsonAsync($"api/preditor/atualizar-perfil/", request);
-		//	return response;
 
-		//}
 
-		//public async Task<ControleGeralDto> ConsultarControleGeral(string matricula)
-		//{
-		//	var response = await _httpClient.GetFromJsonAsync<ControleGeralDto>($"api/preditor/controle-geral/{matricula}");
-		//	if (response is null) throw new Exception("´Matrícula não localizada");
-		//	return response;
-		//}
 	}
 }
 

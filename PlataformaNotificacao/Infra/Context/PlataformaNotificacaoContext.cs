@@ -17,6 +17,8 @@ namespace PlataformaNotificacao.Infra.Context
 
         public DbSet<Notificacao> Notificacoes { get; set; }
         public DbSet<ControleVisualizacao> ControleVisualizacoes { get; set; }
+        public DbSet<EmpregadoAtivo> EmpregadosAtivos { get; set; }
+        public DbSet<EmpregadoGigov> EmpregadosGigov { get; set; }
 
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -27,6 +29,8 @@ namespace PlataformaNotificacao.Infra.Context
         {
             new NotificacaoConfig().Configure(builder.Entity<Notificacao>());
             new ControleVisualizacaoConfig().Configure(builder.Entity<ControleVisualizacao>());
+            new EmpregadoAtivoConfig().Configure(builder.Entity<EmpregadoAtivo>());
+            new EmpregadoGigovConfig().Configure(builder.Entity<EmpregadoGigov>());
         }
     }
 }

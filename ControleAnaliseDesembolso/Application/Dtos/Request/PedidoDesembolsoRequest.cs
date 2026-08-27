@@ -4,8 +4,9 @@ namespace ControleAnaliseDesembolso.Application.Dtos.Request
     {
         public string MatriculaSolicitante { get; set; } = string.Empty;
 
-        public string CoGigov { get; set; } = string.Empty; // string porque o código pode começar com zero
+        public string CoGigov { get; set; } = string.Empty;
         public string MatriculaGestor { get; set; } = string.Empty;
+        public int NuDesembolso { get; set; }
         public string CoContratoAf { get; set; } = string.Empty;
         public string CoContratoAfDv { get; set; } = string.Empty;
         public bool PrimeiroDesembolso { get; set; }
@@ -21,7 +22,7 @@ namespace ControleAnaliseDesembolso.Application.Dtos.Request
         public int Programa { get; set; }
         public bool UltimoDesembolso { get; set; }
         public bool? Funcionalidade { get; set; }
-        public DateTime? Concluido { get; set; }
+        public bool? Concluido { get; set; }
         public DateTime DtEngenharia { get; set; }
         public int SituacaoObra { get; set; }
 
@@ -32,6 +33,8 @@ namespace ControleAnaliseDesembolso.Application.Dtos.Request
         public bool? PlacaLocal { get; set; }
         public bool? LicensaInstalacao { get; set; }
         public bool? LicensaOperacao { get; set; }
+        public bool? CndValido { get; set; }
+        public bool? CrpValido { get; set; }
         public decimal SolicitadoVi { get; set; }
         public decimal GlossadoVi { get; set; }
         public decimal AceitoVi { get; set; }
@@ -44,10 +47,11 @@ namespace ControleAnaliseDesembolso.Application.Dtos.Request
         public bool? Excepcionalizado { get; set; }
         public decimal ContrapartidaAtual { get; set; }
         public decimal Integralizado { get; set; }
-        public decimal SaldoAIntegralizar { get; set; }
+        public decimal SaldoIntegralizar { get; set; }
         public bool? ContrapartidaAlterada { get; set; }
         public bool? Amortizacao { get; set; }
         public bool? Sanepar { get; set; }
+        public string? Mensagem { get; set; }
 
         public List<ValidacaoDesembolsoRequest> ValidacoesDesembolsoRequest { get; set; } = new();
     }

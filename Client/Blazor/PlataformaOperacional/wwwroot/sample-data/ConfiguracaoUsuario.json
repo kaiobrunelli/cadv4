@@ -1,0 +1,24 @@
+{
+  "matricula": "c151895",
+  "nome": "Kaio Brunelli",
+  "unidade": 7175,
+  "areas": [
+    {
+      "id": 1,
+      "deArea": "Análise de Desembolso",
+      "icon": "",
+      "pageInicial": "/cad",
+      "aplicativos": [
+        {
+          "id": 1,
+          "deAplicativo": "Controle de Análise de Desembolso",
+          "sigla": "CAD",
+          "iconAplicativo": "",
+          "idArea": 1,
+          "nomeCentralPermissoes": "CAD",
+          "href": "cad"
+        }
+      ]
+    }
+  ]
+}

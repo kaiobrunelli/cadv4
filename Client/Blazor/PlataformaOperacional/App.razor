@@ -1,31 +1,8 @@
-﻿@* 
-<CascadingAuthenticationState>
-     <Router AppAssembly="@typeof(App).Assembly">
-        <Found Context="routeData">
-            <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
-                <NotAuthorized>
-                    <PlataformaOperacional.Pages.AcessoNegado/>
-                </NotAuthorized>
-            </AuthorizeRouteView>
-            <FocusOnNavigate RouteData="@routeData" Selector="h1" />        
-      
-        </Found>
-        <NotFound>
-            <PageTitle>Not found</PageTitle>
-            <LayoutView Layout="@typeof(MainLayout)">
-                <p role="alert">Sorry, there's nothing at this address.</p>
-            </LayoutView>
-        </NotFound>
-    </Router> 
-</CascadingAuthenticationState>
- *@
 
 
  @inject NavigationManager Navigation
  @inject UsuarioService UsuarioService
 
-    @* <Router AppAssembly="@typeof(App).Assembly" OnNavigateAsync="VerificarPermissao"> *@
-    @* <Router AppAssembly="@typeof(App).Assembly" > *@
 <Router AppAssembly="@typeof(App).Assembly" AdditionalAssemblies="_assembliesDeModulos">
   
         <Found Context="routeData">
@@ -33,7 +10,6 @@
             <FocusOnNavigate RouteData="@routeData" Selector="h1" />
         </Found>
         <NotFound>
-       @*    <PlataformaOperacional.Pages.AcessoNegado></PlataformaOperacional.Pages.AcessoNegado> *@
         </NotFound>
     </Router>
 
@@ -44,7 +20,6 @@
     ];
     private async Task VerificarPermissao(Microsoft.AspNetCore.Components.Routing.NavigationContext context)
     {
-        // var usuario = await UsuarioService.ConsultaUsuario();
         var usuario = await UsuarioService.ConsultaConfiguracaoUsuario();
 
         var temAcesso = usuario != null && usuario.Areas.Any();
@@ -56,42 +31,9 @@
 
     }
 
-    // private async Task VerificarPermissao(Microsoft.AspNetCore.Components.Routing.NavigationContext context)
-    // {      
-    //     var usuario = await UsuarioService.ConsultaConfiguracaoUsuario();
-    //     var teste = 0;
-    //     // var temAcesso = usuario.ListaDeFuncionalidade != null && usuario.ListaDeFuncionalidade.Any();
 
-    //     // if (!temAcesso && !context.Path.Contains("acessonegado"))
-    //     // {       
-    //     //     Navigation.NavigateTo($"{Navigation.BaseUri}acessonegado", true);
-    //     //     Console.WriteLine("NÃO POSSO acessar!");           
-    //     // }
  
-    // }
 
-    // private async Task PodeNavegar()
-    // {
-    //     var usuario = await UsuarioService.ConsultaUsuario(); 
-    //     if (usuario.ListaDeFuncionalidade == null || !usuario.ListaDeFuncionalidade.Any())
-    //     {
-    //         usuarioVerificado = true;
-    //         Navigation.NavigateTo($"{Navigation.BaseUri}acessonegado", true);
-    //         Console.WriteLine("NÃO POSSO acessar!");
 
-    //     }
-    //     else if (quantidadeItens > 0)
-    //     {
-    //         usuarioVerificado = true;
-    //         Navigation.NavigateTo($"{Navigation.BaseUri}", true);
-    //         Console.WriteLine("Posso acessar!");
-    //     }
-    // }
 
-    // public Task NaoPodeNavegar()
-    // {
-    //     usuarioVerificado = true;
-    //     await Navigation.NavigateTo($"{Navigation.BaseUri}", true);
-    //     Console.WriteLine("Posso acessar!");
-    // }
 }

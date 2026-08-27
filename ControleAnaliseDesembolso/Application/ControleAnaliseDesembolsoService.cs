@@ -3,80 +3,87 @@ using ControleAnaliseDesembolso.Application.Dtos.Response;
 using ControleAnaliseDesembolso.Application.Interface;
 using ControleAnaliseDesembolso.Domain.Entitys;
 using ControleAnaliseDesembolso.Domain.Enums;
-using ControleAnaliseDesembolso.Hubs;
-using ControleAnaliseDesembolso.Infra.Data.Context;
+using ControleAnaliseDesembolso.Infra.Datas.Context;
 using ControleAnaliseDesembolso.Interface;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using PlataformaNotificacao.Application.Interface;
 using PlataformaNotificacao.Domain.Enum;
+using Utilitarios.Service;
 
 namespace ControleAnaliseDesembolso.Application
 {
-    public class ControleAnaliseDesembolsoService : IControleAnaliseDesembolso
+    public class ControleAnaliseDesembolsoService : IControleAnaliseDesembolsoService
     {
         private readonly ControleAnaliseDesembolsoContext _context;
         private readonly IValidadorDesembolsoService _validador;
         private readonly IEmpregadoCADService _empregados;
         private readonly INotificacaoService _notificacoes;
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly UtilitarioMapperServicecopy _mapperCopy;
 
-        // Código real da coordenação CEFGA junto ao PlataformaNotificacao —
-        // casa com Empregado.CodigoCoordenacao lá (mock ajustado pra todos
-        // pertencerem à "06").
-        private const string CodigoCoordenacaoCefga = "06";
+        private const string CodigoCoordenacaoCefga = "CEFGA06";
 
         public ControleAnaliseDesembolsoService(
             ControleAnaliseDesembolsoContext context,
             IValidadorDesembolsoService validador,
             IEmpregadoCADService empregados,
             INotificacaoService notificacoes,
-            SignalRNotificacaoService signalR)
+            IHttpContextAccessor httpContextAccessor,
+            UtilitarioMapperServicecopy mapperCopy)
         {
             _context = context;
             _validador = validador;
             _empregados = empregados;
             _notificacoes = notificacoes;
-
-            // Notificacoes é Scoped (uma instância nova por request, igual este
-            // serviço) — então inscrever aqui no construtor é seguro: o handler
-            // vive exatamente enquanto essa instância viver, sem vazar entre
-            // requisições. Fire-and-forget porque EventHandler<T> é void, não Task.
-            notificacoes.OnNotificacao += (sender, e) => _ = signalR.HandlerObserver(sender, e);
+            _httpContextAccessor = httpContextAccessor;
+            _mapperCopy = mapperCopy;
         }
 
-        // "contratoId" (não "desembolso") pra bater com o [SupplyParameterFromQuery]
-        // já existente em PaginaAnalise.razor, que auto-abre o dialog com esse nome.
-        private static string LinkDesembolso(int coDesembolso) => $"/cad?contratoId={coDesembolso}";
+   
+        private void RegistrarAuditoria(string? usuario, string evento, string descEvento, string? resposta = "ACATADO")
+        {
+            var enderecoLogico = _httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString();
 
+            _context.TrilhaAuditoria.Add(new TrilhaAuditoria
+            {
+                Usuario = string.IsNullOrWhiteSpace(usuario) ? "SISTEMA" : usuario,
+                EnderecoLogicoSolicitante = string.IsNullOrWhiteSpace(enderecoLogico) ? "desconhecido" : enderecoLogico,
+                DataSolicitacao = DateTime.Now,
+                Evento = evento,
+                DescEvento = descEvento,
+                Resposta = resposta,
+            });
+        }
+
+  
+        private static string LinkDesembolso(int coControleDesembolso) => $"/cad?contratoId={coControleDesembolso}";
+     
         public async Task<string?> ObterREsponsavelDesembolso(int coFpd, CancellationToken cancellationToken = default)
         {
-            var fpd = await _context.FichaPedidoDesembolsos
-                .Include(x => x.Desembolso)
-                .FirstOrDefaultAsync(x => x.CoFpd == coFpd, cancellationToken);
+            var fpd = await _context.Desembolso
+                .Include(x => x.ControleDesembolso)
+                .FirstOrDefaultAsync(x => x.CoDesembolso == coFpd, cancellationToken);
 
-            var response = fpd.Desembolso.ResponsavelAnalise;
+            var response = fpd.ControleDesembolso.ResponsavelAnalise;
             return response;
         }
 
-        // ── Busca o desembolso e devolve o histórico completo de comentários
-        // (TB006), de todas as validações, em ordem cronológica. Sem isso, o
-        // histórico só existe no estado local do front — some ao recarregar
-        // a página, porque nunca existiu um caminho de leitura de volta pro
-        // banco (só gravava, nunca relia).
-        public async Task<List<ComentarioValidacaoResponse>> ObterComentarios(int coDesembolso, CancellationToken cancellationToken = default)
+        public async Task<List<ComentarioValidacaoResponse>> ObterComentarios(int coControleDesembolso, CancellationToken cancellationToken = default)
         {
-            var existe = await _context.Desembolsos.AnyAsync(x => x.CoDesembolso == coDesembolso, cancellationToken);
+            var existe = await _context.ControleDesembolso.AnyAsync(x => x.CoControleDesembolso == coControleDesembolso, cancellationToken);
             if (!existe)
-                throw new Exception($"Desembolso {coDesembolso} não encontrado.");
+                throw new Exception($"Desembolso {coControleDesembolso} não encontrado.");
 
-            return await _context.RegistroValidacoes
-                .Where(x => x.CoDesembolso == coDesembolso && x.Ativo)
+            return await _context.Mensagem
+                .Where(x => x.CoControleDesembolso == coControleDesembolso && x.Ativo)
                 .OrderBy(x => x.DtCriacao)
                 .Select(x => new ComentarioValidacaoResponse
                 {
-                    CoRegistroValidacao = x.CoRegistroValidacao,
+                    CoMensagem = x.CoMensagem,
                     CoValidacao = x.CoValidacao,
-                    Texto = x.DeRegistro,
-                    TipoRegistro = x.TipoRegistro,
+                    Texto = x.DeMensagem,
+                    TipoMensagem = x.TipoMensagem,
                     MatriculaAutor = x.CoUsuario,
                     NomeAutor = x.DeUsuario,
                     UnidadeAutor = x.UnidadeUsuario,
@@ -86,32 +93,26 @@ namespace ControleAnaliseDesembolso.Application
                 .ToListAsync(cancellationToken);
         }
 
-        // ── Junta ficha + checklist (com status) + comentários de cada item
-        // numa resposta só — é o que o dialog de detalhes da Home precisa
-        // pra abrir sem ficar disparando uma chamada por seção. Não existe FK
-        // entre RegistroValidacao e ValidacaoDesembolso no banco (é só um
-        // filtro por CoDesembolso/CoValidacao, igual ObterComentarios já
-        // fazia), então o agrupamento por validação é feito em memória.
-        public async Task<DesembolsoDetalheResponse> ObterDetalheDesembolso(int coDesembolso, CancellationToken cancellationToken = default)
+        public async Task<DesembolsoDetalheResponse> ObterDetalheDesembolso(int coControleDesembolso, CancellationToken cancellationToken = default)
         {
-            var desembolso = await _context.Desembolsos
-                .Include(x => x.FichaPedidoDesembolso)
-                .Include(x => x.ValidacoesDesembolso)
-                    .ThenInclude(x => x.CadastroValidacao)
-                .FirstOrDefaultAsync(x => x.CoDesembolso == coDesembolso, cancellationToken);
+            var desembolso = await _context.ControleDesembolso
+                .Include(x => x.Desembolso)
+                .Include(x => x.ValidacaoControleDesembolso)
+                    .ThenInclude(x => x.Validacao)
+                .FirstOrDefaultAsync(x => x.CoControleDesembolso == coControleDesembolso, cancellationToken);
 
             if (desembolso is null)
-                throw new Exception($"Desembolso {coDesembolso} não encontrado.");
+                throw new Exception($"Desembolso {coControleDesembolso} não encontrado.");
 
-            var comentarios = await _context.RegistroValidacoes
-                .Where(x => x.CoDesembolso == coDesembolso && x.Ativo)
+            var comentarios = await _context.Mensagem
+                .Where(x => x.CoControleDesembolso == coControleDesembolso && x.Ativo)
                 .OrderBy(x => x.DtCriacao)
                 .Select(x => new ComentarioValidacaoResponse
                 {
-                    CoRegistroValidacao = x.CoRegistroValidacao,
+                    CoMensagem = x.CoMensagem,
                     CoValidacao = x.CoValidacao,
-                    Texto = x.DeRegistro,
-                    TipoRegistro = x.TipoRegistro,
+                    Texto = x.DeMensagem,
+                    TipoMensagem = x.TipoMensagem,
                     MatriculaAutor = x.CoUsuario,
                     NomeAutor = x.DeUsuario,
                     UnidadeAutor = x.UnidadeUsuario,
@@ -124,24 +125,30 @@ namespace ControleAnaliseDesembolso.Application
                 .GroupBy(c => c.CoValidacao)
                 .ToDictionary(g => g.Key, g => g.ToList());
 
-            var coValidacoesDoChecklist = desembolso.ValidacoesDesembolso
+            var coValidacoesDoChecklist = desembolso.ValidacaoControleDesembolso
                 .Select(v => v.CoValidacao)
                 .ToHashSet();
 
-            var fpd = desembolso.FichaPedidoDesembolso;
+            var fpd = desembolso.Desembolso;
 
             return new DesembolsoDetalheResponse
             {
+                CoControleDesembolso = desembolso.CoControleDesembolso,
                 CoDesembolso = desembolso.CoDesembolso,
-                CoFpd = desembolso.CoFpd,
                 Status = desembolso.StatusDesembolso,
                 DtSolicitado = fpd.DtSolicitado,
                 DtPrazo = desembolso.DtPrazo,
                 DtConclusao = desembolso.DtConclusao,
                 ResponsavelAnalise = desembolso.ResponsavelAnalise,
                 ResponsavelBaixa = desembolso.ResponsavelBaixa,
+                NuDesembolso = fpd.NuDesembolso,
+                CndValido = fpd.CndValido,
+                CrpValido = fpd.CrpValido,
+                Mensagem = fpd.Mensagem,
+                MotivoRejeicao = fpd.MotivoRejeicao,
                 CoContratoAf = fpd.CoContratoAf,
                 CoContratoAfDv = fpd.CoContratoAfDv,
+                ContratoAo = fpd.ContratoAo,
                 CoGigov = fpd.CoGigov,
                 MutuarioFinal = fpd.MutuarioFinal,
                 CnpjMutuarioFinal = fpd.CnpjMutuarioFinal,
@@ -173,21 +180,21 @@ namespace ControleAnaliseDesembolso.Application
                 Excepcionalizado = fpd.Excepcionalizado,
                 ContrapartidaAtual = fpd.ContrapartidaAtual,
                 Integralizado = fpd.Integralizado,
-                SaldoAIntegralizar = fpd.SaldoAIntegralizar,
+                SaldoIntegralizar = fpd.SaldoIntegralizar,
                 ContrapartidaAlterada = fpd.ContrapartidaAlterada,
-                Amortizacao = fpd.Amortizacao,
+                //Amortizacao = fpd.Amortizacao,
                 Sanepar = fpd.Sanepar,
                 RetornoParcial = fpd.RetornoParcial,
                 PlacaLocal = fpd.PlacaLocal,
                 LicensaInstalacao = fpd.LicensaInstalacao,
                 LicensaOperacao = fpd.LicensaOperacao,
                 Funcionalidade = fpd.Funcionalidade,
-                Checklist = desembolso.ValidacoesDesembolso
+                Checklist = desembolso.ValidacaoControleDesembolso
                     .OrderBy(v => v.CoValidacao)
                     .Select(v => new ChecklistItemResponse
                     {
                         CoValidacao = v.CoValidacao,
-                        DeValidacao = v.CadastroValidacao?.DeValidacao ?? v.DeValidacao,
+                        DeValidacao = v.Validacao?.DeValidacao ?? v.DeValidacao,
                         Situacao = v.Situacao,
                         Comentarios = comentariosPorValidacao.TryGetValue(v.CoValidacao, out var lista) ? lista : new(),
                     })
@@ -198,114 +205,41 @@ namespace ControleAnaliseDesembolso.Application
             };
         }
 
-        public async Task SalvarFichaPedidoDesembolso(PedidoDesembolsoRequest request)
-        {
-            //_context.FichaPedidoDesembolsos
-        }
 
-        // Monta uma FichaPedidoDesembolso nova a partir do request — mesmo
-        // conjunto de campos usado em AtualizarDadosFicha (reenvio), só que
-        // construindo o objeto do zero em vez de atualizar um existente.
-        private static FichaPedidoDesembolso MapearParaFicha(PedidoDesembolsoRequest request)
-        {
-            return new FichaPedidoDesembolso
-            {
-                MatriculaSolicitante = request.MatriculaSolicitante,
-                CoGigov = request.CoGigov,
-                MatriculaGestor = request.MatriculaGestor,
-                CoContratoAf = request.CoContratoAf,
-                CoContratoAfDv = request.CoContratoAfDv,
-                PrimeiroDesembolso = request.PrimeiroDesembolso,
-                AgenteFinanceiro = request.AgenteFinanceiro,
-                CnpjAf = request.CnpjAf,
-                MutuarioFinal = request.MutuarioFinal,
-                CnpjMutuarioFinal = request.CnpjMutuarioFinal,
-                AgenteTecnicoOperador = request.AgenteTecnicoOperador,
-                CnpjAgenteTecnicoOperador = request.CnpjAgenteTecnicoOperador,
-                AgentePromotor = request.AgentePromotor,
-                CnpjAgentePromotor = request.CnpjAgentePromotor,
-                Programa = (Programa)request.Programa,
-                UltimoDesembolso = request.UltimoDesembolso,
-                Funcionalidade = request.Funcionalidade,
-                Concluido = request.Concluido,
-                DtEngenharia = request.DtEngenharia,
-                SituacaoObra = (TipoSituacaoObra)request.SituacaoObra,
-                DtSocioAmbiental = request.DtSocioAmbiental,
-                PercentualObra = request.PercentualObra,
-                TipoDesembolso = (TipoDesembolso)request.TipoDesembolso,
-                RetornoParcial = request.RetornoParcial,
-                PlacaLocal = request.PlacaLocal,
-                LicensaInstalacao = request.LicensaInstalacao,
-                LicensaOperacao = request.LicensaOperacao,
-                SolicitadoVi = request.SolicitadoVi,
-                GlossadoVi = request.GlossadoVi,
-                AceitoVi = request.AceitoVi,
-                ParticipacaoFgts = request.ParticipacaoFgts,
-                Contrapartida = request.Contrapartida,
-                ValorEmprestimo = request.ValorEmprestimo,
-                Desembolsado = request.Desembolsado,
-                SaldoADesembolsar = request.SaldoADesembolsar,
-                Excepcionalizado = request.Excepcionalizado,
-                ContrapartidaAtual = request.ContrapartidaAtual,
-                Integralizado = request.Integralizado,
-                SaldoAIntegralizar = request.SaldoAIntegralizar,
-                ContrapartidaAlterada = request.ContrapartidaAlterada,
-                Amortizacao = request.Amortizacao,
-                Sanepar = request.Sanepar,
-            };
-        }
 
         public async Task CriarFichaPedidoDesembolso(PedidoDesembolsoRequest request, CancellationToken cancellationToken = default)
         {
             await using var transaction =
                 await _context.Database.BeginTransactionAsync(cancellationToken);
 
-            int coDesembolso;
+            int coControleDesembolso;
 
             try
             {
-                var fpd = MapearParaFicha(request);
+                var fpd = _mapperCopy.Map<Desembolso>(request);
                 fpd.DtSolicitado = DateTime.UtcNow;
-                fpd.Desembolso = new Desembolso
+                fpd.ControleDesembolso = new ControleDesembolso
                 {
                     DtPrazo = AdicionarDiasUteis(DateTime.Today),
-                    StatusDesembolso = TipoStatusDesembolso.Validar,
+                    StatusDesembolso = TipoStatusDesembolso.PENDENTE,
                     ResponsavelAnalise = null,
                     ResponsavelBaixa = null,
                     Gestor = null,
                 };
 
-                _context.FichaPedidoDesembolsos.Add(fpd);
+                _context.Desembolso.Add(fpd);
                 await _context.SaveChangesAsync(cancellationToken);
 
-                var desembolsoEntrada = new DesembolsoEntrada
-                {
-                    CoGigov = request.CoGigov,
-                    CoFpd = fpd.CoFpd,
-                    DeTomador = request.MutuarioFinal,
-                    CoTomador = request.CnpjMutuarioFinal,
-                    DeAgentePromotor = request.AgentePromotor,
-                    CoAgentePromotor = request.CnpjAgentePromotor,
-                    ContratoAf = request.CoContratoAf,
-                    DvAf = request.CoContratoAfDv,
-                    DtEngenharia = request.DtEngenharia,
-                    PercentualObra = (float)request.PercentualObra
-                };
-                _context.DesembolsoEntradas.Add(desembolsoEntrada);
-                await _context.SaveChangesAsync(cancellationToken);
+                coControleDesembolso = fpd.ControleDesembolso.CoControleDesembolso;
 
-                coDesembolso = fpd.Desembolso.CoDesembolso;
-
-                var validacoesModelo = await _context.CadastroValidacoes
+                var validacoesModelo = await _context.Validacao
                     .Where(x => !x.Desativado)
                     .OrderBy(x => x.CoValidacao)
                     .ToListAsync(cancellationToken);
 
-                // Agrupa por validação SEM descartar — uma validação pode vir com mais
-                // de um comentário (ex.: vários itens comentados na etapa Verificações).
                 var registrosPorValidacao = request.ValidacoesDesembolsoRequest
                     .Where(x => x.ValidacaoRegistro is not null &&
-                                !string.IsNullOrWhiteSpace(x.ValidacaoRegistro.DeRegistro))
+                                !string.IsNullOrWhiteSpace(x.ValidacaoRegistro.DeMensagem))
                     .GroupBy(x => x.CoValidacao)
                     .ToDictionary(x => x.Key, x => x.ToList());
 
@@ -313,41 +247,42 @@ namespace ControleAnaliseDesembolso.Application
                 {
                     registrosPorValidacao.TryGetValue(modelo.CoValidacao, out var registrosDoItem);
 
-                    // Mesma regra do AdicionarComentario avulso: se algum dos comentários
-                    // já vier como Justificativa, o item nasce aprovado.
                     var temJustificativa = registrosDoItem?.Any(
-                        r => r.ValidacaoRegistro.TipoRegistro == TipoRegistro.Justificativa) ?? false;
+                        r => r.ValidacaoRegistro.TipoMensagem == TipoMensagem.JUSTIFICATIVA) ?? false;
 
-                    var validacaoDesembolso = new ValidacaoDesembolso
+                    var validacaoDesembolso = new ValidacaoControleDesembolso
                     {
                         CoValidacao = modelo.CoValidacao,
-                        CoDesembolso = coDesembolso,
+                        CoControleDesembolso = coControleDesembolso,
                         DeValidacao = modelo.DeValidacao,
-                        CampoVinculado = null, // analisar depois se precisa!
-                        Situacao = temJustificativa ? TipoSituacaoValidacao.Aprovado : TipoSituacaoValidacao.Analisar,
+                        CampoVinculado = null,
+                        Situacao = temJustificativa ? TipoSituacaoValidacao.APROVADO : TipoSituacaoValidacao.ANALISAR,
                     };
 
-                    _context.ValidacaoDesembolsos.Add(validacaoDesembolso);
+                    _context.ValidacaoControleDesembolso.Add(validacaoDesembolso);
 
                     if (registrosDoItem is null) continue;
 
                     foreach (var validacaoDesembolsoRequest in registrosDoItem)
                     {
-                        var registro = new ValidacaoRegistro()
+                        var registro = new Mensagem()
                         {
                             CoValidacao = validacaoDesembolsoRequest.CoValidacao,
-                            CoDesembolso = coDesembolso,
+                            CoControleDesembolso = coControleDesembolso,
                             CoUsuario = validacaoDesembolsoRequest.ValidacaoRegistro.MatriculaAutor,
                             DeUsuario = validacaoDesembolsoRequest.ValidacaoRegistro.NomeAutor,
                             UnidadeUsuario = validacaoDesembolsoRequest.ValidacaoRegistro.UnidadeAutor,
                             DtCriacao = DateTime.Now,
-                            DeRegistro = validacaoDesembolsoRequest.ValidacaoRegistro.DeRegistro,
-                            TipoRegistro = validacaoDesembolsoRequest.ValidacaoRegistro.TipoRegistro,
+                            DeMensagem = validacaoDesembolsoRequest.ValidacaoRegistro.DeMensagem,
+                            TipoMensagem = validacaoDesembolsoRequest.ValidacaoRegistro.TipoMensagem,
                         };
 
-                        _context.RegistroValidacoes.Add(registro);
+                        _context.Mensagem.Add(registro);
                     }
                 }
+
+                RegistrarAuditoria(request.MatriculaSolicitante, "Criar FPD",
+                    $"Solicitou novo desembolso pro contrato {request.CoContratoAf}-{request.CoContratoAfDv}");
 
                 await _context.SaveChangesAsync(cancellationToken);
 
@@ -362,15 +297,11 @@ namespace ControleAnaliseDesembolso.Application
                 throw new Exception($"Erro: {erroCompleto}");
             }
 
-            // Fora do try/catch de propósito: a essa altura a FPD já foi
-            // commitada — cair no catch acima tentaria dar rollback numa
-            // transação já concluída. Notifica só quem pode agir (coordenação
-            // 06/CEFGA) — GIGOV não precisa saber que uma FPD entrou na fila.
             await _notificacoes.EnviarCoordenacaoAsync(
                 CodigoCoordenacaoCefga,
                 "Novo desembolso inserido",
-                $"Contrato {request.CoContratoAf}/{request.CoContratoAfDv} entrou na fila de análise.",
-                link: LinkDesembolso(coDesembolso),
+                $"Contrato {request.CoContratoAf}-{request.CoContratoAfDv} entrou na fila de análise.",
+                link: LinkDesembolso(coControleDesembolso),
                 cancellationToken: cancellationToken);
         }
 
@@ -379,72 +310,56 @@ namespace ControleAnaliseDesembolso.Application
             await using var transaction =
                 await _context.Database.BeginTransactionAsync(cancellationToken);
 
-            FichaPedidoDesembolso fpd;
+            Desembolso fpd;
 
             try
             {
-                fpd = await _context.FichaPedidoDesembolsos
-                    .Include(x => x.Desembolso)
-                        .ThenInclude(d => d.ValidacoesDesembolso)
-                    .FirstOrDefaultAsync(x => x.CoFpd == coFpd, cancellationToken);
+                fpd = await _context.Desembolso
+                    .Include(x => x.ControleDesembolso)
+                        .ThenInclude(d => d.ValidacaoControleDesembolso)
+                    .FirstOrDefaultAsync(x => x.CoDesembolso == coFpd, cancellationToken);
 
                 if (fpd is null)
                     throw new Exception($"FPD {coFpd} não encontrada.");
 
-                // ── Atualiza os dados da ficha (CoFpd e DtSolicitado não mudam) ──
                 AtualizarDadosFicha(fpd, request);
 
-                // ── Volta o status pro início — precisa validar tudo de novo ──
-                fpd.Desembolso.StatusDesembolso = TipoStatusDesembolso.Validar;
-                fpd.Desembolso.DtConclusao = null;
+                fpd.ControleDesembolso.StatusDesembolso = TipoStatusDesembolso.PENDENTE;
+                fpd.ControleDesembolso.DtConclusao = null;
 
-                // ── Renova o prazo (D+2 dias úteis) — só acontece aqui, porque
-                // só quem preenche/edita a FPD (empregado do setor que solicita)
-                // dispara isso. Ações do analista (comentar, aprovar, rejeitar)
-                // não passam por este método e não mexem no prazo.
-                fpd.Desembolso.DtPrazo = AdicionarDiasUteis(DateTime.Today);
+                fpd.ControleDesembolso.DtPrazo = AdicionarDiasUteis(DateTime.Today);
 
-                // ── Reseta o checklist (TB005). O histórico de comentários em
-                //    TB006 não é apagado nem alterado aqui. ──
-                foreach (var validacao in fpd.Desembolso.ValidacoesDesembolso)
+                foreach (var validacao in fpd.ControleDesembolso.ValidacaoControleDesembolso)
                 {
-                    validacao.Situacao = TipoSituacaoValidacao.Analisar;
+                    validacao.Situacao = TipoSituacaoValidacao.ANALISAR;
                 }
 
-                // ── Sincroniza com o catálogo atual: itens de validação ativos
-                // criados DEPOIS da FPD original (ex.: novas regras) não existem
-                // ainda na TB005 dela — sem isso, o checklist do reenvio ficava
-                // congelado no conjunto de itens de quando a FPD foi criada. ──
-                var coValidacaoJaExistentes = fpd.Desembolso.ValidacoesDesembolso
+                var coValidacaoJaExistentes = fpd.ControleDesembolso.ValidacaoControleDesembolso
                     .Select(v => v.CoValidacao)
                     .ToHashSet();
 
-                var novosModelos = await _context.CadastroValidacoes
+                var novosModelos = await _context.Validacao
                     .Where(x => !x.Desativado && !coValidacaoJaExistentes.Contains(x.CoValidacao))
                     .ToListAsync(cancellationToken);
 
                 foreach (var modelo in novosModelos)
                 {
-                    _context.ValidacaoDesembolsos.Add(new ValidacaoDesembolso
+                    _context.ValidacaoControleDesembolso.Add(new ValidacaoControleDesembolso
                     {
                         CoValidacao = modelo.CoValidacao,
-                        CoDesembolso = fpd.Desembolso.CoDesembolso,
+                        CoControleDesembolso = fpd.ControleDesembolso.CoControleDesembolso,
                         DeValidacao = modelo.DeValidacao,
-                        Situacao = TipoSituacaoValidacao.Analisar,
+                        Situacao = TipoSituacaoValidacao.ANALISAR,
                     });
                 }
 
-                // ── Comentário(s) novo(s) enviados junto da correção (opcional) ──
-                // Agrupa sem descartar — pode vir mais de um comentário por validação.
-                // Situação continua sempre resetada pra Analisar (bloco acima): reenvio
-                // de FPD precisa ser revalidado do zero, não aprova nada automaticamente.
                 var registrosPorValidacao = request.ValidacoesDesembolsoRequest
                     .Where(x => x.ValidacaoRegistro is not null &&
-                                !string.IsNullOrWhiteSpace(x.ValidacaoRegistro.DeRegistro))
+                                !string.IsNullOrWhiteSpace(x.ValidacaoRegistro.DeMensagem))
                     .GroupBy(x => x.CoValidacao)
                     .ToDictionary(x => x.Key, x => x.ToList());
 
-                foreach (var validacao in fpd.Desembolso.ValidacoesDesembolso)
+                foreach (var validacao in fpd.ControleDesembolso.ValidacaoControleDesembolso)
                 {
                     if (!registrosPorValidacao.TryGetValue(validacao.CoValidacao, out var registrosDoItem))
                     {
@@ -453,20 +368,23 @@ namespace ControleAnaliseDesembolso.Application
 
                     foreach (var validacaoRequest in registrosDoItem)
                     {
-                        var registro = new ValidacaoRegistro
+                        var registro = new Mensagem
                         {
                             CoValidacao = validacao.CoValidacao,
-                            CoDesembolso = validacao.CoDesembolso,
-                            DeRegistro = validacaoRequest.ValidacaoRegistro.DeRegistro,
-                            TipoRegistro = validacaoRequest.ValidacaoRegistro.TipoRegistro,
+                            CoControleDesembolso = validacao.CoControleDesembolso,
+                            DeMensagem = validacaoRequest.ValidacaoRegistro.DeMensagem,
+                            TipoMensagem = validacaoRequest.ValidacaoRegistro.TipoMensagem,
                             CoUsuario = validacaoRequest.ValidacaoRegistro.MatriculaAutor,
                             DeUsuario = validacaoRequest.ValidacaoRegistro.NomeAutor,
                             UnidadeUsuario = validacaoRequest.ValidacaoRegistro.UnidadeAutor,
                             DtCriacao = DateTime.Now,
                         };
-                        _context.RegistroValidacoes.Add(registro);
+                        _context.Mensagem.Add(registro);
                     }
                 }
+
+                RegistrarAuditoria(request.MatriculaSolicitante, "Reenviar FPD",
+                    $"Reenviou a FPD {coFpd} pra nova análise");
 
                 await _context.SaveChangesAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
@@ -477,24 +395,20 @@ namespace ControleAnaliseDesembolso.Application
                 throw new Exception($"Erro ao reenviar FPD {coFpd}: {ex.Message}");
             }
 
-            // Fora do try/catch pelo mesmo motivo do CriarFichaPedidoDesembolso.
-            // GIGOV corrigiu e reenviou — volta pro início do ciclo, CEFGA
-            // precisa saber que tem análise nova esperando de novo.
             await _notificacoes.EnviarCoordenacaoAsync(
                 CodigoCoordenacaoCefga,
                 "Ficha reenviada para nova análise",
-                $"Contrato {fpd.CoContratoAf}/{fpd.CoContratoAfDv} foi corrigido e voltou para análise.",
-                link: LinkDesembolso(fpd.Desembolso.CoDesembolso),
+                $"Contrato {fpd.CoContratoAf}-{fpd.CoContratoAfDv} foi corrigido e voltou para análise.",
+                link: LinkDesembolso(fpd.ControleDesembolso.CoControleDesembolso),
                 cancellationToken: cancellationToken);
         }
 
-        // ── Copia os dados editáveis do request pra ficha já existente.
-        // CoFpd e DtSolicitado ficam de fora de propósito (não mudam no reenvio). ──
-        private static void AtualizarDadosFicha(FichaPedidoDesembolso fpd, PedidoDesembolsoRequest request)
+        private static void AtualizarDadosFicha(Desembolso fpd, PedidoDesembolsoRequest request)
         {
             fpd.MatriculaSolicitante = request.MatriculaSolicitante;
             fpd.CoGigov = request.CoGigov;
             fpd.MatriculaGestor = request.MatriculaGestor;
+            fpd.NuDesembolso = request.NuDesembolso;
             fpd.CoContratoAf = request.CoContratoAf;
             fpd.CoContratoAfDv = request.CoContratoAfDv;
             fpd.PrimeiroDesembolso = request.PrimeiroDesembolso;
@@ -519,6 +433,8 @@ namespace ControleAnaliseDesembolso.Application
             fpd.PlacaLocal = request.PlacaLocal;
             fpd.LicensaInstalacao = request.LicensaInstalacao;
             fpd.LicensaOperacao = request.LicensaOperacao;
+            fpd.CndValido = request.CndValido;
+            fpd.CrpValido = request.CrpValido;
             fpd.SolicitadoVi = request.SolicitadoVi;
             fpd.GlossadoVi = request.GlossadoVi;
             fpd.AceitoVi = request.AceitoVi;
@@ -530,10 +446,11 @@ namespace ControleAnaliseDesembolso.Application
             fpd.Excepcionalizado = request.Excepcionalizado;
             fpd.ContrapartidaAtual = request.ContrapartidaAtual;
             fpd.Integralizado = request.Integralizado;
-            fpd.SaldoAIntegralizar = request.SaldoAIntegralizar;
+            fpd.SaldoIntegralizar = request.SaldoIntegralizar;
             fpd.ContrapartidaAlterada = request.ContrapartidaAlterada;
-            fpd.Amortizacao = request.Amortizacao;
+            //fpd.Amortizacao = request.Amortizacao;
             fpd.Sanepar = request.Sanepar;
+            fpd.Mensagem = request.Mensagem;
         }
 
         public async Task AdicionarComentario(ValidacaoDesembolsoRequest request, CancellationToken cancellationToken = default)
@@ -542,75 +459,96 @@ namespace ControleAnaliseDesembolso.Application
                 throw new ArgumentNullException(nameof(request));
 
             if (request.ValidacaoRegistro is null ||
-                string.IsNullOrWhiteSpace(request.ValidacaoRegistro.DeRegistro))
+                string.IsNullOrWhiteSpace(request.ValidacaoRegistro.DeMensagem))
             {
                 throw new Exception("O comentário não pode ser vazio.");
             }
 
-            var validacao = await _context.ValidacaoDesembolsos
+            var validacao = await _context.ValidacaoControleDesembolso
                 .FirstOrDefaultAsync(x => x.CoValidacao == request.CoValidacao
-                                        && x.CoDesembolso == request.CoDesembolso, cancellationToken);
+                                        && x.CoControleDesembolso == request.CoControleDesembolso, cancellationToken);
 
             if (validacao is null)
-                throw new Exception($"Validação {request.CoValidacao} do desembolso {request.CoDesembolso} não encontrada.");
+                throw new Exception($"Validação {request.CoValidacao} do desembolso {request.CoControleDesembolso} não encontrada.");
 
 
-            if (request.ValidacaoRegistro.TipoRegistro == TipoRegistro.Justificativa)
+            if (request.ValidacaoRegistro.TipoMensagem == TipoMensagem.JUSTIFICATIVA)
             {
-                validacao.Situacao = TipoSituacaoValidacao.Aprovado;
+                validacao.Situacao = TipoSituacaoValidacao.APROVADO;
             }
 
-            var registro = new ValidacaoRegistro
+            var registro = new Mensagem
             {
                 CoValidacao = request.CoValidacao,
-                CoDesembolso = request.CoDesembolso,
+                CoControleDesembolso = request.CoControleDesembolso,
 
-                DeRegistro = request.ValidacaoRegistro.DeRegistro.Trim(),
-                TipoRegistro = request.ValidacaoRegistro.TipoRegistro,
+                DeMensagem = request.ValidacaoRegistro.DeMensagem.Trim(),
+                TipoMensagem = request.ValidacaoRegistro.TipoMensagem,
                 CoUsuario = request.ValidacaoRegistro.MatriculaAutor,
                 DeUsuario = request.ValidacaoRegistro.NomeAutor,
                 UnidadeUsuario = request.ValidacaoRegistro.UnidadeAutor,
                 DtCriacao = DateTime.Now,
             };
 
-            await _context.RegistroValidacoes.AddAsync(registro, cancellationToken);
+            await _context.Mensagem.AddAsync(registro, cancellationToken);
+
+            RegistrarAuditoria(request.ValidacaoRegistro.MatriculaAutor, "Adicionar comentário",
+                $"Comentou a validação {request.CoValidacao} do desembolso {request.CoControleDesembolso}");
+
             await _context.SaveChangesAsync(cancellationToken);
 
-            await NotificarComentarioInserido(request.CoDesembolso, request.ValidacaoRegistro.UnidadeAutor, cancellationToken);
+            await NotificarComentarioInserido(request.CoControleDesembolso, request.ValidacaoRegistro.UnidadeAutor, cancellationToken);
         }
 
-        // Notifica sempre o "outro lado" de quem comentou: CEFGA comentou →
-        // avisa o solicitante (GIGOV) da FPD, individualmente; GIGOV comentou →
-        // avisa a coordenação CEFGA inteira (não tem um analista único fixo até
-        // alguém se vincular como ResponsavelAnalise).
-        private async Task NotificarComentarioInserido(int coDesembolso, int unidadeAutor, CancellationToken cancellationToken = default)
+        private async Task NotificarComentarioInserido(int coControleDesembolso, int unidadeAutor, CancellationToken cancellationToken = default)
         {
+            var controle = await _context.ControleDesembolso
+                .Where(x => x.CoControleDesembolso == coControleDesembolso)
+                .Select(x => new
+                {
+                    Contrato = x.Desembolso.CoContratoAf + "-" + x.Desembolso.CoContratoAfDv,
+                    x.Desembolso.CoGigov,
+                    x.ResponsavelAnalise,
+                })
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (controle is null)
+                return;
+
             if (unidadeAutor == 7175)
             {
-                var matriculaSolicitante = await _context.Desembolsos
-                    .Where(x => x.CoDesembolso == coDesembolso)
-                    .Select(x => x.FichaPedidoDesembolso.MatriculaSolicitante)
-                    .FirstOrDefaultAsync(cancellationToken);
-
-                if (string.IsNullOrWhiteSpace(matriculaSolicitante))
+                if (string.IsNullOrWhiteSpace(controle.CoGigov))
                     return;
 
-                await _notificacoes.EnviarIndividualAsync(
-                    "Novo comentário no seu desembolso",
+                await _notificacoes.EnviarParaGigovAsync(
+                    controle.CoGigov,
+                    $"Novo comentário no contrato {controle.Contrato}",
                     "A CEFGA registrou um comentário que precisa da sua atenção.",
-                    [matriculaSolicitante],
                     CodigoAplicativo.Cad,
-                    link: LinkDesembolso(coDesembolso),
+                    link: LinkDesembolso(coControleDesembolso),
                     cancellationToken: cancellationToken);
             }
             else
             {
-                await _notificacoes.EnviarCoordenacaoAsync(
-                    CodigoCoordenacaoCefga,
-                    "Novo comentário para análise",
-                    "O solicitante (GIGOV) registrou um comentário no desembolso.",
-                    link: LinkDesembolso(coDesembolso),
-                    cancellationToken: cancellationToken);
+                // Se precisarmos, mudamos a regra de notificação para ser responsável e gestor
+                if (!string.IsNullOrWhiteSpace(controle.ResponsavelAnalise))
+                {
+                    await _notificacoes.EnviarPorMatriculasAsync(
+                        [controle.ResponsavelAnalise],
+                        $"Novo comentário no contrato {controle.Contrato}",
+                        "O solicitante (GIGOV) registrou um comentário no desembolso.",
+                        link: LinkDesembolso(coControleDesembolso),
+                        cancellationToken: cancellationToken);
+                }
+                else
+                {
+                    await _notificacoes.EnviarCoordenacaoAsync(
+                        CodigoCoordenacaoCefga,
+                        $"Novo comentário no contrato {controle.Contrato}",
+                        "O solicitante (GIGOV) registrou um comentário no desembolso.",
+                        link: LinkDesembolso(coControleDesembolso),
+                        cancellationToken: cancellationToken);
+                }
             }
         }
 
@@ -618,35 +556,49 @@ namespace ControleAnaliseDesembolso.Application
         {
            if(request == null) throw new ArgumentNullException(nameof(request));
 
-            var validacao = await _context.ValidacaoDesembolsos
+            var validacao = await _context.ValidacaoControleDesembolso
                 .Where(v => v.CoValidacao  == request.CoValidacao
-                 && v.CoDesembolso == request.CoDesembolso)
+                 && v.CoControleDesembolso == request.CoControleDesembolso)
                 .FirstOrDefaultAsync();
 
             if (validacao == null) throw new Exception($"Desembolso não encontrado!");
 
-            if(request.ValidacaoRegistro.TipoRegistro == TipoRegistro.Justificativa)
+            if(request.ValidacaoRegistro.TipoMensagem == TipoMensagem.JUSTIFICATIVA)
             {
-                validacao.Situacao = TipoSituacaoValidacao.Aprovado;
+                validacao.Situacao = TipoSituacaoValidacao.APROVADO;
             }
         }
 
-        public async Task ValidarDesembolso(int coDesembolso, CancellationToken cancellationToken = default)
+        public async Task ValidarDesembolso(int coControleDesembolso, CancellationToken cancellationToken = default)
         {
             await using var transaction =
                 await _context.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
-                var desembolso = await _context.Desembolsos
-                    .Include(x => x.FichaPedidoDesembolso)
-                    .Include(x => x.ValidacoesDesembolso)
-                    .FirstOrDefaultAsync(x => x.CoDesembolso == coDesembolso, cancellationToken);
+                var desembolso = await _context.ControleDesembolso
+                    .Include(x => x.Desembolso)
+                    .Include(x => x.ValidacaoControleDesembolso)
+                    .FirstOrDefaultAsync(x => x.CoControleDesembolso == coControleDesembolso, cancellationToken);
 
                 if (desembolso is null)
-                    throw new Exception($"Desembolso {coDesembolso} não encontrado.");
+                    throw new Exception($"Desembolso {coControleDesembolso} não encontrado.");
+
+                // Método para atualizar a tabela de desembolso com o Contrato AO
+                // TODO: implementar a busca real assim que o acesso ao sistema externo estiver disponível.
+                // var contratoAo = await _sistemaExterno.ConsultarContratoAoAsync(
+                //     desembolso.Desembolso.CoContratoAf, desembolso.Desembolso.CoContratoAfDv, cancellationToken);
+                //
+                // -- consulta equivalente, caso a origem seja direto no banco do sistema externo:
+                // -- SELECT CONTRATO_AO FROM <TABELA_DO_SISTEMA_EXTERNO>
+                // -- WHERE CO_CONTRATO_AF = @CoContratoAf AND CO_CONTRATO_AF_DV = @CoContratoAfDv
+                //
+                // if (!string.IsNullOrWhiteSpace(contratoAo))
+                //     desembolso.Desembolso.ContratoAo = contratoAo;
 
                 await ExecutarValidacaoDesembolso(desembolso);
+
+                RegistrarAuditoria(null, "Validar", $"Validou o desembolso {coControleDesembolso}");
 
                 await _context.SaveChangesAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
@@ -654,16 +606,16 @@ namespace ControleAnaliseDesembolso.Application
             catch (Exception ex)
             {
                 await transaction.RollbackAsync(cancellationToken);
-                throw new Exception($"Erro ao validar automaticamente o desembolso {coDesembolso}: {ex.Message}");
+                throw new Exception($"Erro ao validar automaticamente o desembolso {coControleDesembolso}: {ex.Message}");
             }
         }
 
         public async Task ValidarTodosPendentes(CancellationToken cancellationToken = default)
         {
-            var desembolsos = await _context.Desembolsos
-                .Include(x => x.FichaPedidoDesembolso)
-                .Include(x => x.ValidacoesDesembolso)
-                .Where(x => x.StatusDesembolso == TipoStatusDesembolso.Validar)
+            var desembolsos = await _context.ControleDesembolso
+                .Include(x => x.Desembolso)
+                .Include(x => x.ValidacaoControleDesembolso)
+                .Where(x => x.StatusDesembolso == TipoStatusDesembolso.PENDENTE)
                 .ToListAsync(cancellationToken);
 
             if (desembolsos.Count == 0)
@@ -679,6 +631,9 @@ namespace ControleAnaliseDesembolso.Application
                     await ExecutarValidacaoDesembolso(desembolso);
                 }
 
+                RegistrarAuditoria(null, "Validar todos pendentes",
+                    $"Validou em lote {desembolsos.Count} desembolso(s) pendente(s): {string.Join(", ", desembolsos.Select(d => d.CoControleDesembolso))}");
+
                 await _context.SaveChangesAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
             }
@@ -689,82 +644,73 @@ namespace ControleAnaliseDesembolso.Application
             }
         }
 
-        // Versão simplificada, a pedido do usuário: só empurra o status adiante
-        // (Validar/pendência → Analisar), sem rodar a avaliação real por regra.
-        // A chamada de verdade fica comentada abaixo — é só descomentar pra
-        // voltar ao comportamento original (cada item do checklist
-        // Aprovado/Analisar conforme o resultado da regra).
-        private async Task ExecutarValidacaoDesembolso(Desembolso desembolso)
+        private async Task ExecutarValidacaoDesembolso(ControleDesembolso desembolso)
         {
-            // var resultados = await _validador.Validar(desembolso.FichaPedidoDesembolso);
-            //
-            // foreach (var resultado in resultados)
-            // {
-            //     var validacao = desembolso.ValidacoesDesembolso
-            //         .FirstOrDefault(x => x.CoValidacao == resultado.CoValidacao);
-            //
-            //     if (validacao is null)
-            //         continue; // código que o validador não reconhece nesse desembolso
-            //
-            //     validacao.Situacao = resultado.Aprovado
-            //         ? TipoSituacaoValidacao.Aprovado
-            //         : TipoSituacaoValidacao.Analisar;
-            // }
+            var resultados = await _validador.Validar(desembolso.Desembolso);
 
-            desembolso.StatusDesembolso = TipoStatusDesembolso.Analisar;
+            foreach (var resultado in resultados)
+            {
+                var validacao = desembolso.ValidacaoControleDesembolso
+                    .FirstOrDefault(x => x.CoValidacao == resultado.CoValidacao);
+
+                if (validacao is null)
+                    continue;
+
+                // aqui será a lógica do SIAPF para validar item a item
+                validacao.Situacao = TipoSituacaoValidacao.APROVADO;
+
+            }
+
+            // validacao.Situacao acima sempre vira Aprovado (stub — aqui será a
+            var todosAprovados = desembolso.ValidacaoControleDesembolso.Count > 0
+                && desembolso.ValidacaoControleDesembolso.All(v => v.Situacao == TipoSituacaoValidacao.APROVADO);
+
+            if (todosAprovados)
+            {
+                desembolso.StatusDesembolso = TipoStatusDesembolso.DESEMBOLSAR;
+                desembolso.DtConclusao = DateTime.Now;
+            }
+            else
+            {
+                desembolso.StatusDesembolso = TipoStatusDesembolso.ANALISAR;
+            }
         }
 
         public async Task<List<DesembolsoResponse>> ObterTodosDesembolsos(CancellationToken cancellationToken = default)
         {
-            var desembolsos = await _context.Desembolsos
-                .Include(x => x.FichaPedidoDesembolso)
-                .Include(x => x.ValidacoesDesembolso)
+            var desembolsos = await _context.ControleDesembolso
+                .Include(x => x.Desembolso)
+                .Include(x => x.ValidacaoControleDesembolso)
                 .ToListAsync(cancellationToken);
 
             return desembolsos.Select(d =>
             {
-                var totalValidacoes = d.ValidacoesDesembolso.Count;
-                var totalAprovadas = d.ValidacoesDesembolso.Count(v => v.Situacao == TipoSituacaoValidacao.Aprovado);
+                var totalValidacoes = d.ValidacaoControleDesembolso.Count;
+                var totalAprovadas = d.ValidacaoControleDesembolso.Count(v => v.Situacao == TipoSituacaoValidacao.APROVADO);
 
                 return new DesembolsoResponse
                 {
-                    CoDesembolso = d.CoDesembolso,
-                    Id = $"Desembolso-{d.CoDesembolso}",
-                    NumId = d.CoFpd.ToString(),
-                    DtSolicitado = d.FichaPedidoDesembolso.DtSolicitado,
-                    Contrato = $"{d.FichaPedidoDesembolso.CoContratoAf}/{d.FichaPedidoDesembolso.CoContratoAfDv}",
-                    Mutuario = d.FichaPedidoDesembolso.MutuarioFinal,
-                    Gigov = d.FichaPedidoDesembolso.CoGigov,
-                    PrimeiroDesembolso = d.FichaPedidoDesembolso.PrimeiroDesembolso,
-                    Adiantamento = d.FichaPedidoDesembolso.TipoDesembolso == TipoDesembolso.Adiantamento,
-                    UltimoDesembolso = d.FichaPedidoDesembolso.UltimoDesembolso,
-                    Valor = d.FichaPedidoDesembolso.ParticipacaoFgts,
+                    CoControleDesembolso = d.CoControleDesembolso,
+                    Id = $"Desembolso-{d.CoControleDesembolso}",
+                    NumId = d.CoDesembolso.ToString(),
+                    DtSolicitado = d.Desembolso.DtSolicitado,
+                    Contrato = $"{d.Desembolso.CoContratoAf}-{d.Desembolso.CoContratoAfDv}",
+                    Mutuario = d.Desembolso.MutuarioFinal,
+                    Gigov = d.Desembolso.CoGigov,
+                    AgenteFinanceiro = d.Desembolso.AgenteFinanceiro,
+                    AgentePromotor = d.Desembolso.AgentePromotor,
+                    MatriculaSolicitante = d.Desembolso.MatriculaSolicitante,
+                    PrimeiroDesembolso = d.Desembolso.PrimeiroDesembolso,
+                    Adiantamento = d.Desembolso.TipoDesembolso == TipoDesembolso.ADIANTAMENTO,
+                    UltimoDesembolso = d.Desembolso.UltimoDesembolso,
+                    Valor = d.Desembolso.ParticipacaoFgts,
                     ValidacoesOk = totalAprovadas,
                     ValidacoesTotal = totalValidacoes,
                     Status = d.StatusDesembolso,
                     PrazoFinal = d.DtPrazo,
                     ResponsavelAnalise = d.ResponsavelAnalise,
                     DtConclusao = d.DtConclusao,
-                    // Sanepar entra direto no filtro "Agendado" da Home — não
-                    // muda o StatusDesembolso (segue Validar/Analisar/BaixarDRP
-                    // normal por trás).
-                    //
-                    // REGRA AINDA NÃO IMPLEMENTADA (pedido do usuário: deixar
-                    // comentada por enquanto): desembolsos Sanepar são
-                    // adicionados em qualquer dia, mas só devem sair da lista
-                    // "Agendado" e entrar na lista normal de análise no dia 20
-                    // de cada mês. Quando for implementar, algo como:
-                    //
-                    //   if (d.FichaPedidoDesembolso.Sanepar == true
-                    //       && DateTime.Today.Day >= 20
-                    //       && d.StatusDesembolso == TipoStatusDesembolso.Validar)
-                    //   {
-                    //       // mover pra fila normal — mudar o status (ou um
-                    //       // campo à parte, tipo LiberadoParaAnalise) pra
-                    //       // ObterTodosDesembolsos parar de tratar como
-                    //       // agendado a partir daqui.
-                    //   }
-                    DataAgendamento = d.FichaPedidoDesembolso.Sanepar == true,
+                    DataAgendamento = d.Desembolso.Sanepar == true,
                 };
             }).ToList();
         }
@@ -773,29 +719,30 @@ namespace ControleAnaliseDesembolso.Application
 
         public async Task EditarComentario(EditarComentarioRequest request, CancellationToken cancellationToken = default)
         {
-            if (string.IsNullOrWhiteSpace(request.Texto))
+            if (string.IsNullOrWhiteSpace(request.DeMensagem))
                 throw new Exception("O comentário não pode ser vazio.");
 
-            var registro = await _context.RegistroValidacoes
-                .FirstOrDefaultAsync(x => x.CoRegistroValidacao == request.CoRegistroValidacao, cancellationToken);
+            var registro = await _context.Mensagem
+                .FirstOrDefaultAsync(x => x.CoMensagem == request.CoMensagem, cancellationToken);
 
             if (registro is null)
-                throw new Exception($"Comentário {request.CoRegistroValidacao} não encontrado.");
+                throw new Exception($"Comentário {request.CoMensagem} não encontrado.");
 
             if (string.IsNullOrEmpty(registro.CoUsuario) || registro.CoUsuario != request.MatriculaSolicitante)
                 throw new UnauthorizedAccessException("Apenas o autor do comentário pode editá-lo.");
 
-            registro.DeRegistro = request.Texto.Trim();
+            registro.DeMensagem = request.DeMensagem.Trim();
+
+            RegistrarAuditoria(request.MatriculaSolicitante, "Editar comentário",
+                $"Editou o comentário {request.CoMensagem}");
+
             await _context.SaveChangesAsync(cancellationToken);
         }
 
-        // Soft-delete: nunca apaga a linha (histórico fica intacto pra
-        // auditoria), só marca Ativo=false — ObterComentarios/ObterDetalheDesembolso
-        // já filtram por isso, então some do front imediatamente.
         public async Task RemoverComentario(int coRegistroValidacao, string matriculaSolicitante, CancellationToken cancellationToken = default)
         {
-            var registro = await _context.RegistroValidacoes
-                .FirstOrDefaultAsync(x => x.CoRegistroValidacao == coRegistroValidacao, cancellationToken);
+            var registro = await _context.Mensagem
+                .FirstOrDefaultAsync(x => x.CoMensagem == coRegistroValidacao, cancellationToken);
 
             if (registro is null)
                 throw new Exception($"Comentário {coRegistroValidacao} não encontrado.");
@@ -805,44 +752,41 @@ namespace ControleAnaliseDesembolso.Application
 
             registro.Ativo = false;
 
-            // Se esse comentário era uma Justificativa (o tipo que aprova o item
-            // sozinho — ver AdicionarComentario) e não sobrou nenhuma outra
-            // Justificativa ativa pra essa validação, desfaz a aprovação
-            // automática: volta pra Analisar. Conservador de propósito — nunca
-            // reprova (Negado) sozinho, só desfaz o que tinha sido aprovado só
-            // por causa desse comentário que acabou de sumir.
-            if (registro.TipoRegistro == TipoRegistro.Justificativa)
+            if (registro.TipoMensagem == TipoMensagem.JUSTIFICATIVA)
             {
-                var aindaTemJustificativaAtiva = await _context.RegistroValidacoes
+                var aindaTemJustificativaAtiva = await _context.Mensagem
                     .AnyAsync(x => x.CoValidacao == registro.CoValidacao
-                                && x.CoDesembolso == registro.CoDesembolso
+                                && x.CoControleDesembolso == registro.CoControleDesembolso
                                 && x.Ativo
-                                && x.TipoRegistro == TipoRegistro.Justificativa
-                                && x.CoRegistroValidacao != registro.CoRegistroValidacao, cancellationToken);
+                                && x.TipoMensagem == TipoMensagem.JUSTIFICATIVA
+                                && x.CoMensagem != registro.CoMensagem, cancellationToken);
 
                 if (!aindaTemJustificativaAtiva)
                 {
-                    var validacao = await _context.ValidacaoDesembolsos
+                    var validacao = await _context.ValidacaoControleDesembolso
                         .FirstOrDefaultAsync(x => x.CoValidacao == registro.CoValidacao
-                                                && x.CoDesembolso == registro.CoDesembolso, cancellationToken);
+                                                && x.CoControleDesembolso == registro.CoControleDesembolso, cancellationToken);
 
-                    if (validacao is not null && validacao.Situacao == TipoSituacaoValidacao.Aprovado)
+                    if (validacao is not null && validacao.Situacao == TipoSituacaoValidacao.APROVADO)
                     {
-                        validacao.Situacao = TipoSituacaoValidacao.Analisar;
+                        validacao.Situacao = TipoSituacaoValidacao.ANALISAR;
                     }
                 }
             }
 
+            RegistrarAuditoria(matriculaSolicitante, "Remover comentário",
+                $"Removeu o comentário {coRegistroValidacao}");
+
             await _context.SaveChangesAsync(cancellationToken);
         }
 
-        public async Task VincularResponsavel(int coDesembolso, string? matriculaResponsavel, CancellationToken cancellationToken = default)
+        public async Task VincularResponsavel(int coControleDesembolso, string? matriculaResponsavel, CancellationToken cancellationToken = default)
         {
-            var desembolso = await _context.Desembolsos
-                .FirstOrDefaultAsync(x => x.CoDesembolso == coDesembolso, cancellationToken);
+            var desembolso = await _context.ControleDesembolso
+                .FirstOrDefaultAsync(x => x.CoControleDesembolso == coControleDesembolso, cancellationToken);
 
             if (desembolso is null)
-                throw new Exception($"Desembolso {coDesembolso} não encontrado.");
+                throw new Exception($"Desembolso {coControleDesembolso} não encontrado.");
 
             if (!string.IsNullOrWhiteSpace(matriculaResponsavel))
             {
@@ -852,12 +796,18 @@ namespace ControleAnaliseDesembolso.Application
             }
 
             desembolso.ResponsavelAnalise = matriculaResponsavel;
+
+            RegistrarAuditoria(matriculaResponsavel, string.IsNullOrWhiteSpace(matriculaResponsavel) ? "Remover responsável" : "Vincular responsável",
+                string.IsNullOrWhiteSpace(matriculaResponsavel)
+                    ? $"Removeu o responsável pela análise do desembolso {coControleDesembolso}"
+                    : $"Vinculou {matriculaResponsavel} como responsável pela análise do desembolso {coControleDesembolso}");
+
             await _context.SaveChangesAsync(cancellationToken);
         }
 
         public async Task<List<ValidacaoTemplateResponse>> ObterValidacoesTemplate(CancellationToken cancellationToken = default)
         {
-            return await _context.CadastroValidacoes
+            return await _context.Validacao
                 .Where(x => !x.Desativado)
                 .OrderBy(x => x.CoValidacao)
                 .Select(x => new ValidacaoTemplateResponse
@@ -869,90 +819,83 @@ namespace ControleAnaliseDesembolso.Application
         }
         #endregion
 
-        public async Task AprovarDesembolso(int coDesembolso, AprovarDesembolsoRequest request, CancellationToken cancellationToken = default)
+        public async Task AprovarDesembolso(int coControleDesembolso, AprovarDesembolsoRequest request, CancellationToken cancellationToken = default)
         {
-            var desembolso = await _context.Desembolsos
-                .Include(x => x.ValidacoesDesembolso)
-                .Include(x => x.FichaPedidoDesembolso)
-                .FirstOrDefaultAsync(x => x.CoDesembolso == coDesembolso, cancellationToken);
+            var desembolso = await _context.ControleDesembolso
+                .Include(x => x.ValidacaoControleDesembolso)
+                .Include(x => x.Desembolso)
+                .FirstOrDefaultAsync(x => x.CoControleDesembolso == coControleDesembolso, cancellationToken);
 
             if (desembolso is null)
-                throw new Exception($"Desembolso {coDesembolso} não encontrado.");
+                throw new Exception($"Desembolso {coControleDesembolso} não encontrado.");
 
-            var pendencias = desembolso.ValidacoesDesembolso
-                .Where(x => x.Situacao != TipoSituacaoValidacao.Aprovado)
+            var pendencias = desembolso.ValidacaoControleDesembolso
+                .Where(x => x.Situacao != TipoSituacaoValidacao.APROVADO)
                 .ToList();
 
             if (pendencias.Count > 0)
                 throw new Exception(
                     $"Não é possível aprovar: {pendencias.Count} validação(ões) ainda não aprovada(s).");
 
-            desembolso.StatusDesembolso = TipoStatusDesembolso.BaixarDRP;
+            desembolso.StatusDesembolso = TipoStatusDesembolso.DESEMBOLSAR;
             desembolso.DtConclusao = DateTime.Now;
             desembolso.ResponsavelBaixa = request.MatriculaUsuario;
 
+            RegistrarAuditoria(request.MatriculaUsuario, "Aprovar desembolso",
+                $"Aprovou o desembolso {coControleDesembolso}, aguardando baixa da DRP");
+
             await _context.SaveChangesAsync(cancellationToken);
 
-            await _notificacoes.EnviarIndividualAsync(
+            await _notificacoes.EnviarParaGigovAsync(
+                desembolso.Desembolso.CoGigov,
                 "Desembolso aprovado",
-                $"Contrato {desembolso.FichaPedidoDesembolso.CoContratoAf}/{desembolso.FichaPedidoDesembolso.CoContratoAfDv} foi aprovado e aguarda baixa da DRP.",
-                [desembolso.FichaPedidoDesembolso.MatriculaSolicitante],
+                $"Contrato {desembolso.Desembolso.CoContratoAf}-{desembolso.Desembolso.CoContratoAfDv} foi aprovado e aguarda baixa da DRP.",
                 CodigoAplicativo.Cad,
-                link: LinkDesembolso(coDesembolso),
+                link: LinkDesembolso(coControleDesembolso),
                 cancellationToken: cancellationToken);
         }
 
-        public async Task BaixarDRP(int coDesembolso, CancellationToken cancellationToken = default)
+        public async Task BaixarDRP(int coControleDesembolso, CancellationToken cancellationToken = default)
         {
-            var desembolso = await _context.Desembolsos
-                .Include(x => x.FichaPedidoDesembolso)
-                .FirstOrDefaultAsync(x => x.CoDesembolso == coDesembolso, cancellationToken);
+            var desembolso = await _context.ControleDesembolso
+                .Include(x => x.Desembolso)
+                .FirstOrDefaultAsync(x => x.CoControleDesembolso == coControleDesembolso, cancellationToken);
 
             if (desembolso is null)
-                throw new Exception($"Desembolso {coDesembolso} não encontrado.");
+                throw new Exception($"Desembolso {coControleDesembolso} não encontrado.");
 
-            desembolso.StatusDesembolso = TipoStatusDesembolso.Finalizado;
+            desembolso.StatusDesembolso = TipoStatusDesembolso.FINALIZAR;
+
+            RegistrarAuditoria(null, "Baixar DRP", $"Baixou a DRP do desembolso {coControleDesembolso}");
 
             await _context.SaveChangesAsync(cancellationToken);
 
-            await _notificacoes.EnviarIndividualAsync(
-                "DRP baixada",
-                $"A DRP do contrato {desembolso.FichaPedidoDesembolso.CoContratoAf}/{desembolso.FichaPedidoDesembolso.CoContratoAfDv} foi baixada.",
-                [desembolso.FichaPedidoDesembolso.MatriculaSolicitante],
-                CodigoAplicativo.Cad,
-                link: LinkDesembolso(coDesembolso),
-                cancellationToken: cancellationToken);
         }
 
-        // Aba DRP (controle de baixa): todo desembolso que já foi aprovado —
-        // aguardando baixa (BaixarDRP) ou já baixado (Finalizado). Antes disso
-        // (Validar/Analisar) não entra aqui; é a lista de análise normal.
         public async Task<List<RegistroDrpResponse>> ObterRegistrosDrp(CancellationToken cancellationToken = default)
         {
-            var desembolsos = await _context.Desembolsos
-                .Include(x => x.FichaPedidoDesembolso)
-                .Where(x => x.StatusDesembolso == TipoStatusDesembolso.BaixarDRP
-                         || x.StatusDesembolso == TipoStatusDesembolso.Finalizado)
+            var desembolsos = await _context.ControleDesembolso
+                .Include(x => x.Desembolso)
+                .Where(x => x.StatusDesembolso == TipoStatusDesembolso.DESEMBOLSAR
+                         || x.StatusDesembolso == TipoStatusDesembolso.FINALIZAR
+                         || x.StatusDesembolso == TipoStatusDesembolso.NEGAR)
                 .ToListAsync(cancellationToken);
 
             return desembolsos.Select(d => new RegistroDrpResponse
             {
-                Id = d.CoDesembolso,
-                Gigov = d.FichaPedidoDesembolso.CoGigov,
-                ContratoDv = $"{d.FichaPedidoDesembolso.CoContratoAf}-{d.FichaPedidoDesembolso.CoContratoAfDv}",
-                TipoDesembolso = d.FichaPedidoDesembolso.TipoDesembolso == TipoDesembolso.Adiantamento ? "adiantamento" : "normal",
-                ValorFgts = d.FichaPedidoDesembolso.ParticipacaoFgts,
-                DataSolicitacao = d.FichaPedidoDesembolso.DtSolicitado,
-                Responsavel = d.ResponsavelBaixa ?? string.Empty,
-                Gestor = d.FichaPedidoDesembolso.MatriculaGestor,
-                Baixa = d.MatriculaBaixa,
+                Id = d.CoControleDesembolso,
+                Gigov = d.Desembolso.CoGigov,
+                ContratoDv = $"{d.Desembolso.CoContratoAf}-{d.Desembolso.CoContratoAfDv}",
+                TipoDesembolso = d.Desembolso.TipoDesembolso == TipoDesembolso.ADIANTAMENTO ? "ADIANTAMENTO" : "NORMAL",
+                ValorFgts = d.Desembolso.ParticipacaoFgts,
+                DataSolicitacao = d.Desembolso.DtSolicitado,
+                ResponsavelBaixa = d.ResponsavelBaixa ?? string.Empty,
+                Gestor = d.Desembolso.MatriculaGestor,
+                ResponsavelDesembolso = d.ResponsavelDesembolso,
+                Status = (int)d.StatusDesembolso,
             }).ToList();
         }
 
-        // Confirma a baixa de um ou mais registros da aba DRP. Só desembolsos
-        // ainda em BaixarDRP (aguardando) podem ser baixados — ids em qualquer
-        // outro status são ignorados silenciosamente (ex.: duplo clique, ou
-        // seleção que já incluía um item baixado por outra pessoa entretanto).
         public async Task BaixarDrpEmLote(BaixarDrpRequest request, CancellationToken cancellationToken = default)
         {
             if (request.Ids.Count == 0)
@@ -961,33 +904,26 @@ namespace ControleAnaliseDesembolso.Application
             if (string.IsNullOrWhiteSpace(request.MatriculaUsuario))
                 throw new Exception("Matrícula do usuário é obrigatória para confirmar a baixa.");
 
-            var desembolsos = await _context.Desembolsos
-                .Include(x => x.FichaPedidoDesembolso)
-                .Where(x => request.Ids.Contains(x.CoDesembolso)
-                         && x.StatusDesembolso == TipoStatusDesembolso.BaixarDRP)
+            var desembolsos = await _context.ControleDesembolso
+                .Include(x => x.Desembolso)
+                .Where(x => request.Ids.Contains(x.CoControleDesembolso)
+                         && x.StatusDesembolso == TipoStatusDesembolso.DESEMBOLSAR)
                 .ToListAsync(cancellationToken);
 
             foreach (var desembolso in desembolsos)
             {
-                desembolso.StatusDesembolso = TipoStatusDesembolso.Finalizado;
-                desembolso.MatriculaBaixa = request.MatriculaUsuario;
+                desembolso.StatusDesembolso = TipoStatusDesembolso.FINALIZAR;
+                desembolso.ResponsavelDesembolso = request.MatriculaUsuario;
             }
+
+            RegistrarAuditoria(request.MatriculaUsuario, "Baixar DRP em lote",
+                $"Baixou a DRP de {desembolsos.Count} desembolso(s): {string.Join(", ", desembolsos.Select(d => d.CoControleDesembolso))}");
 
             await _context.SaveChangesAsync(cancellationToken);
 
-            foreach (var desembolso in desembolsos)
-            {
-                await _notificacoes.EnviarIndividualAsync(
-                    "DRP baixada",
-                    $"A DRP do contrato {desembolso.FichaPedidoDesembolso.CoContratoAf}/{desembolso.FichaPedidoDesembolso.CoContratoAfDv} foi baixada.",
-                    [desembolso.FichaPedidoDesembolso.MatriculaSolicitante],
-                    CodigoAplicativo.Cad,
-                    link: LinkDesembolso(desembolso.CoDesembolso),
-                    cancellationToken: cancellationToken);
-            }
         }
 
-        public async Task RejeitarDesembolso(int coDesembolso, RejeitarDesembolsoRequest request, CancellationToken cancellationToken = default)
+        public async Task RejeitarDesembolso(int coControleDesembolso, RejeitarDesembolsoRequest request, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(request.CodigoCoordenacao))
                 throw new Exception("Código da coordenação é obrigatório para rejeitar.");
@@ -995,71 +931,40 @@ namespace ControleAnaliseDesembolso.Application
             if (string.IsNullOrWhiteSpace(request.Justificativa))
                 throw new Exception("A justificativa da rejeição é obrigatória.");
 
-            var desembolso = await _context.Desembolsos
-                .Include(x => x.FichaPedidoDesembolso)
-                .FirstOrDefaultAsync(x => x.CoDesembolso == coDesembolso, cancellationToken);
+            var desembolso = await _context.ControleDesembolso
+                .Include(x => x.Desembolso)
+                .FirstOrDefaultAsync(x => x.CoControleDesembolso == coControleDesembolso, cancellationToken);
 
             if (desembolso is null)
-                throw new Exception($"Desembolso {coDesembolso} não encontrado.");
+                throw new Exception($"Desembolso {coControleDesembolso} não encontrado.");
 
-            desembolso.StatusDesembolso = TipoStatusDesembolso.Negado;
+            desembolso.StatusDesembolso = TipoStatusDesembolso.NEGAR;
             desembolso.DtConclusao = DateTime.Now;
             desembolso.ResponsavelBaixa = request.MatriculaUsuario;
+            desembolso.Desembolso.MotivoRejeicao = request.Justificativa.Trim();
 
-            // Justificativa vira um ValidacaoRegistro normal (mesma tabela/rastro de
-            // autoria dos comentários de checklist). CoValidacao aponta pro
-            // cadastro real "Pedido Negado" (desativado de propósito — não é
-            // item de checklist, só uma âncora no catálogo pra não usar um
-            // CoValidacao = 0 inventado, que não correspondia a nada em
-            // CadastroValidacao e não tinha FK nenhuma garantindo isso).
-            var validacaoPedidoNegado = await _context.CadastroValidacoes
-                .FirstOrDefaultAsync(x => x.DeValidacao == PedidoNegadoDeValidacao, cancellationToken);
-
-            if (validacaoPedidoNegado is null)
-                throw new Exception(
-                    $"Cadastro de validação '{PedidoNegadoDeValidacao}' não encontrado — necessário para registrar a justificativa da rejeição.");
-
-            _context.RegistroValidacoes.Add(new ValidacaoRegistro
-            {
-                CoValidacao = validacaoPedidoNegado.CoValidacao,
-                CoDesembolso = coDesembolso,
-                DeRegistro = request.Justificativa.Trim(),
-                TipoRegistro = TipoRegistro.Rejeicao,
-                CoUsuario = request.MatriculaUsuario,
-                DeUsuario = request.UsuarioNome,
-                // Rejeitar é ação exclusiva de CEFGA (regra de negócio — o botão nem
-                // aparece pra GIGOV no front). Fixo em 7175 aqui: não depende do que
-                // o cliente manda, e RejeitarDesembolsoRequest não precisa de mais um campo.
-                UnidadeUsuario = 7175,
-                DtCriacao = DateTime.Now,
-            });
+            RegistrarAuditoria(request.MatriculaUsuario, "Rejeitar desembolso",
+                $"Rejeitou o desembolso {coControleDesembolso}: {request.Justificativa.Trim()}");
 
             await _context.SaveChangesAsync(cancellationToken);
 
-            await _notificacoes.EnviarIndividualAsync(
+            await _notificacoes.EnviarParaGigovAsync(
+                desembolso.Desembolso.CoGigov,
                 "Desembolso rejeitado",
-                $"Contrato {desembolso.FichaPedidoDesembolso.CoContratoAf}/{desembolso.FichaPedidoDesembolso.CoContratoAfDv} foi rejeitado.",
-                [desembolso.FichaPedidoDesembolso.MatriculaSolicitante],
+                $"Contrato {desembolso.Desembolso.CoContratoAf}-{desembolso.Desembolso.CoContratoAfDv} foi rejeitado.",
                 CodigoAplicativo.Cad,
-                link: LinkDesembolso(coDesembolso),
+                link: LinkDesembolso(coControleDesembolso),
                 cancellationToken: cancellationToken);
         }
 
-        // Nome fixo usado pra localizar o cadastro-âncora de "Pedido Negado"
-        // em CadastroValidacoes — cadastrado como Desativado=true (não vira
-        // item de checklist nem aparece em ObterValidacoesTemplate).
-        private const string PedidoNegadoDeValidacao = "Pedido Negado";
-
         public async Task RejeitarDesembolsoTeste(int idDesembolso)
         {
-            var desembolso = await _context.Desembolsos
-            .FirstOrDefaultAsync(d => d.CoDesembolso == idDesembolso);
+            var desembolso = await _context.ControleDesembolso
+            .FirstOrDefaultAsync(d => d.CoControleDesembolso == idDesembolso);
             if (desembolso is null)
                 throw new Exception($"Desembolso {idDesembolso} não encontrado.");
         }
 
-        // Prazo do desembolso é sempre D+2 dias úteis — regra fixa do sistema,
-        // não varia por tipo de fluxo nem por configuração.
         private const int PrazoDesembolsoDiasUteis = 2;
 
         private static DateTime AdicionarDiasUteis(DateTime dataBase)

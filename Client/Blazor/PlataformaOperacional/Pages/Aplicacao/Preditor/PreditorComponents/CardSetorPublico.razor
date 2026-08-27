@@ -1,4 +1,4 @@
-﻿@using System.Globalization
+@using System.Globalization
 @inject PreditorService PreditorService
 <style>
     :root {
@@ -33,9 +33,9 @@
     .currency-symbol {
         position: absolute;
         left: 12px;
-        color: #64748b; /* slate-500 */
+        color: #64748b;
         font-weight: 500;
-        pointer-events: none; /* impede que o usuário clique no R$ */
+        pointer-events: none;
     }
 
     .input-field::-webkit-outer-spin-button,
@@ -44,7 +44,6 @@
         margin: 0;
     }
 
-    /* Remove as setas no Firefox */
     .input-field {
         -moz-appearance: textfield;
         appearance: textfield;
@@ -52,9 +51,9 @@
 
     .input-field {
         width: 100%;
-        padding: 12px 12px 12px 35px; /* O padding-left (35px) abre espaço para o R$ */
-        border-radius: 0.75rem; /* rounded-xl */
-        background-color: #f8fafc; /* bg-slate-50 */
+        padding: 12px 12px 12px 35px;
+        border-radius: 0.75rem;
+        background-color: #f8fafc;
         border: 1px solid #e2e8f0;
         border-radius: 8px;
         font-size: 0.95rem;
@@ -64,7 +63,7 @@
     }
 
         .input-field:focus {
-            border-color: #594AE2; /* Seu azul muddraw */
+            border-color: #594AE2;
             box-shadow: 0 0 0 2px rgba(0, 92, 169, 0.1);
         }
 </style>
@@ -77,7 +76,6 @@
 
             <MudStack Row="true" AlignItems="AlignItems.Start" Class="gap-3" Justify="Justify.SpaceBetween">
                 <MudStack Row="true" AlignItems="AlignItems.Center">
-                    @* <div class="d-flex align-center gap-3"> *@
                     <MudAvatar Color="@IconColor" Variant="Variant.Filled" Size="Size.Medium" Class="rounded-icon">
                         <MudIcon Icon="@Icon" />
                     </MudAvatar>
@@ -98,15 +96,6 @@
 
         <MudItem md="6" lg="6" xs="12">
             <MudText Typo="Typo.body2" Class="mb-2" Style="font-weight:600">AF Caixa</MudText>
-            @* 	<div class="input-wrapper">
-				<span class="currency-symbol" style="font-weight:600">R$</span>
-				<input class="input-field" readonly="@_desabilitarInputValor"
-					   type="number"
-					value="@(AnalisarSetorPublico.ValorSaneamento.HasValue 
-						? AnalisarSetorPublico.ValorSaneamento.Value.ToString(CultureInfo.InvariantCulture) 
-						: 0.00)"				
-					   @oninput="@(e => OnInputChanged(e, "Saneamento"))" />
-			</div> *@
             <div class="input-wrapper">
                 <span class="currency-symbol" style="font-weight:600">R$</span>
                 <input class="input-field" readonly="@_desabilitarInputValor"
@@ -135,7 +124,6 @@
             <MudItem md="6" lg="6" xs="12">
                 <MudPaper Class="pa-3 rounded-lg border-solid mud-border-lines-default valores-detalhes valores-preditor" Elevation="0">
                     <MudText Typo="Typo.caption" Color="Color.Primary" Style="font-weight:500;">Calculado Inicial</MudText>
-                    @* <MudText Typo="Typo.body1" Style="font-weight:600;">R$ @(AnalisarSetorPublico.ValorCalculado?.ToString("N2") ?? "0,00")</MudText> *@
                     <MudText Typo="Typo.body1" Style="font-weight:600;">R$ @(AnalisarSetorPublico.ValorCalculado.HasValue? FmtValor(AnalisarSetorPublico.ValorCalculado.Value): "0")
                     </MudText>
                 </MudPaper>
@@ -143,7 +131,6 @@
             <MudItem md="6" lg="6" xs="12">
                 <MudPaper Class="pa-3 rounded-lg border-solid mud-border-lines-default valores-detalhes valores-preditor" Elevation="0">
                     <MudText Typo="Typo.caption" Color="Color.Primary" Style="font-weight:500;">Total Previsto</MudText>
-                    @* 		<MudText Typo="Typo.body1" Style="font-weight:600;">R$ @(AnalisarSetorPublico.ValorTotal?.ToString("N2") ?? "0,00")</MudText> *@
                     <MudText Typo="Typo.body1" Style="font-weight:600;">R$ @(AnalisarSetorPublico.ValorTotal.HasValue? FmtValor(AnalisarSetorPublico.ValorTotal.Value) : "0")</MudText>
               
 
@@ -181,10 +168,6 @@
             </MudButton>
         </MudStack>
     </div>
-    @*  	<MudText>ValorCalculado @AnalisarSetorPublico.ValorCalculado</MudText>
-	<MudText>VrOutrosAF @AnalisarSetorPublico.VrOutrosAF</MudText>
-	<MudText>ValorTotal @AnalisarSetorPublico.ValorTotal</MudText>
-	<MudText>VrAFCaixa @AnalisarSetorPublico.VrAFCaixa</MudText>  *@
 
 </MudPaper>
 
@@ -222,7 +205,7 @@
 
     private CultureInfo culturaBR = new CultureInfo("pt-BR");
 
-    private string FmtValor(decimal valor) => valor.ToString("N0", culturaBR); // ex: 1.250
+    private string FmtValor(decimal valor) => valor.ToString("N0", culturaBR);
 
     private string formatarDinamicamente(decimal valor, string inputOriginal)
     {
@@ -233,11 +216,9 @@
     }
     private string LimparInput(string input)
     {
-        // Remove tudo que não é dígito ou vírgula
         var regex = new System.Text.RegularExpressions.Regex(@"[^0-9,]");
         string limpo = regex.Replace(input, "");
 
-        // Garante que só exista uma vírgula
         int primeiraVirgula = limpo.IndexOf(',');
         if (primeiraVirgula != -1)
         {
@@ -269,7 +250,6 @@
     {
        
 
-        // remove tudo que não seja número
         string input = e.Value?.ToString() ?? "";
         string apenasNumerosEVirgula = LimparInput(input);
         switch (campo)
@@ -284,7 +264,6 @@
                 }
                
 
-                // 2. Tenta converter para decimal usando a cultura brasileira
                 if (decimal.TryParse(apenasNumerosEVirgula, out decimal resultadoAFCaixa))
                 {
                  
@@ -339,11 +318,9 @@
      
         if (AnalisarSetorPublico is not null)
         {
-            // Outros AFs
             if (AnalisarSetorPublico.VrOutrosAF.HasValue)
             {
                 valorDecimalOutrosAFs = AnalisarSetorPublico.VrOutrosAF.Value;             
-                // AnalisarSetorPublico.VrOutrosAF.Value.ToString("N2", culturaBR);                
                 valorExibicaoOutrosAFs = AnalisarSetorPublico.VrOutrosAF.Value.ToString("N0", culturaBR);
                    
 
@@ -354,11 +331,9 @@
                 valorExibicaoOutrosAFs = "";
             }
 
-            // AF Caixa
             if (AnalisarSetorPublico.VrAFCaixa.HasValue)
             {
                 valorDecimalAFCaixa = AnalisarSetorPublico.VrAFCaixa.Value;
-                // valorExibicaoAFCaixa =AnalisarSetorPublico.VrAFCaixa.Value.ToString("N2", culturaBR);
                 valorExibicaoAFCaixa = FmtValor(AnalisarSetorPublico.VrAFCaixa.Value);
             }
             else
@@ -367,13 +342,11 @@
                 valorExibicaoAFCaixa = "";
             }
 
-            // Total público (sempre decimal)
             AnalisarSetorPublico.ValorTotal =
                 (AnalisarSetorPublico.VrAFCaixa ?? 0m) +
                 (AnalisarSetorPublico.VrOutrosAF ?? 0m);
         }
 
-        // mantém o resto do seu fluxo
         AtualizarStatusDoSetor();
     }
 

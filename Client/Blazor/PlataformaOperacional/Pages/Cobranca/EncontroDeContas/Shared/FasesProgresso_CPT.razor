@@ -402,7 +402,6 @@
     {
         if (Fases.Count == 0) { _inicioJanela = 0; return; }
 
-        // 1) Nova lista de fases (referência diferente) → volta para o início
         var listaMudou = !ReferenceEquals(_ultimaRefFases, Fases);
         if (listaMudou)
         {
@@ -411,14 +410,12 @@
             _ultimaFaseSincronizada = null;
         }
 
-        // 2) Nova demanda (IdDemanda mudou) → também volta para o início
         if (_ultimoIdDemandaSincronizado != IdDemanda)
         {
             _ultimoIdDemandaSincronizado = IdDemanda;
             if (!listaMudou) _inicioJanela = 0;
         }
 
-        // 3) FaseAtual mudou → auto-centra (ou volta ao início se 0)
         if (_ultimaFaseSincronizada != FaseAtual)
         {
             _ultimaFaseSincronizada = FaseAtual;

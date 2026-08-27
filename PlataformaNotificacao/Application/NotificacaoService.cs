@@ -11,12 +11,13 @@ namespace PlataformaNotificacao.Application
     {
 
         public event EventHandler<MensagemNotificacao>? OnNotificacao;
-        public EmpregadoService empregados = new EmpregadoService();
+        public EmpregadoService empregados;
         private readonly PlataformaNotificacaoContext db;
 
         public NotificacaoService(string chave)
         {
             db = new PlataformaNotificacaoContext(chave);
+            empregados = new EmpregadoService(db);
         }
 
         public async Task EnviarGeralX(string matricula)
@@ -38,7 +39,7 @@ namespace PlataformaNotificacao.Application
        string? link = null, int? dias = null, int? horas = null,
        CancellationToken cancellationToken = default)
         {
-            var matriculas = empregados.ObterMatriculasTodos();
+            var matriculas = await empregados.ObterTodasMatriculas();
             var notif = CriarNotificacao(titulo, mensagem, tipo, null, dias, horas);
 
             notif.Destinatarios = matriculas
@@ -76,7 +77,7 @@ namespace PlataformaNotificacao.Application
             string? link = null, int? dias = null, int? horas = null,
             CancellationToken cancellationToken = default)
         {
-            var matriculas = empregados.ObterMatriculasPorCoordenacao(codigoCoordenacao);
+            var matriculas = await empregados.ObterMatriculasPorCoordenacao(codigoCoordenacao);
             await EnviarIndividualAsync(titulo, mensagem, matriculas, null, link, dias, horas, tipo, cancellationToken);
         }
 
@@ -87,7 +88,6 @@ namespace PlataformaNotificacao.Application
             int? dias = null, int? horas = null,
             CancellationToken cancellationToken = default)
         {
-            //var validas = empregados.FiltrarMatriculasValidas(matriculas);
             await EnviarIndividualAsync(titulo, mensagem, matriculas, codigoAplicativo, link, dias, horas, tipo, cancellationToken);
         }
 
@@ -108,6 +108,39 @@ namespace PlataformaNotificacao.Application
             await db.SaveChangesAsync(cancellationToken);
 
             OnNotificacao?.Invoke(this, ToMensagem(notif, link, EscopoNotificacao.Individual, matriculas));
+        }
+
+        public async Task EnviarParaGigovAsync(
+            string codigoGigov,
+            string titulo, string mensagem, CodigoAplicativo? codigoAplicativo = null,
+            string? link = null, int? dias = null, int? horas = null,
+            TipoNotificacao tipo = TipoNotificacao.Normal,
+            CancellationToken cancellationToken = default)
+        {
+            var matriculas = await empregados.ObterMatriculasGigovPorNumero(codigoGigov);
+            if (matriculas.Count == 0) return;
+
+            await EnviarIndividualAsync(titulo, mensagem, matriculas, codigoAplicativo, link, dias, horas, tipo, cancellationToken);
+        }
+
+        public async Task EnviarParaResponsavelEGestorAsync(
+            string? matriculaResponsavel, string codigoCoordenacao,
+            string titulo, string mensagem, CodigoAplicativo? codigoAplicativo = null,
+            string? link = null, int? dias = null, int? horas = null,
+            TipoNotificacao tipo = TipoNotificacao.Normal,
+            CancellationToken cancellationToken = default)
+        {
+            var destinatarios = new List<string>();
+            if (!string.IsNullOrWhiteSpace(matriculaResponsavel))
+                destinatarios.Add(matriculaResponsavel);
+
+            var gestor = await empregados.ObterGestorAtivoOuEventualAsync(codigoCoordenacao);
+            if (gestor is not null && !destinatarios.Contains(gestor))
+                destinatarios.Add(gestor);
+
+            if (destinatarios.Count == 0) return;
+
+            await EnviarIndividualAsync(titulo, mensagem, destinatarios, codigoAplicativo, link, dias, horas, tipo, cancellationToken);
         }
 
         public async Task<List<NotificacaoDto>> ObterNotificacaoPorMatriculaAsync(
@@ -172,7 +205,6 @@ namespace PlataformaNotificacao.Application
             await db.SaveChangesAsync(cancellationToken);
         }
 
-        // ── helpers ───────────────────────────────────────────────────────────────
 
         private static Notificacao CriarNotificacao(
             string titulo, string mensagem, TipoNotificacao tipo,
@@ -205,7 +237,6 @@ namespace PlataformaNotificacao.Application
             CriadaEm = n.DataCriacao,
             DataValidade = n.DataValidade,
             Destinatarios = matriculas
-            // ChaveConexao fica no default ("ReceberNotificacao")
         };
     }
 }

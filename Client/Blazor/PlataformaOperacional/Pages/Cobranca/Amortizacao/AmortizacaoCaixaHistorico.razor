@@ -1,4 +1,4 @@
-﻿@page "/amortizacaocaixarelatorio"
+@page "/amortizacaocaixarelatorio"
 @inherits AmortizacaoCaixaHome
 @inject CobrancaService CobrancaService
 @inject IDialogService DialogService
@@ -95,18 +95,6 @@
 				</MudItem>
 			}
 			
-			@* <MudItem lg="12" md="12">
-			<MudStack Row="true" Justify="Justify.Center" AlignItems="AlignItems.Center">
-			<MudText Typo="Typo.h4" Style="color: #64748B;">Histórico Amortização Caixa</MudText>
-			</MudStack>
-			</MudItem> *@
-			@* 	<MudItem xs="12" lg="12" md="12">
-			<div class="header-content">
-			<MudText Typo="Typo.h4" Style="color: #64748B;">Amortização Caixa</MudText>
-			<MudText Typo="Typo.body1" Style="color: #64748B;">Relatórios</MudText>
-			</div>
-			</MudItem> *@
-			@*### 	Cards ###*@
 			<MudItem xs="12" sm="9" lg="9" md="9" Class="mt-n3">
 				<MudGrid>
 					<MudItem xs="12" lg="4" md="4">
@@ -189,7 +177,6 @@
 				</MudPaper>
 			</MudItem>
 		</MudGrid>
-					@*### 	Tabelas ###*@
 		<MudItem xs="12" lg="12" md="12" Class="@(_mostrarTabelaMovimentacoes ? "d-block" : "d-none")">
 			<TabelaMovimentacaoGeral Items="_movimentacaoesGeraisData"
 									 Loading="_processandoMovimentacao" />
@@ -215,7 +202,6 @@
 		PaletteLight = new PaletteLight()
 			{
 				Primary = "#005ca9",
-				// Secondary = "#D87B00",
 				Secondary = "#f39200",
 				Tertiary = "#FF0000",
 				Background = "#EDF2FF"
@@ -234,7 +220,6 @@
 		DRP, AE_CAIXA, DEV_CAIXA, TODAS, CCI, ANALISAR, OUTRO
 	}
 
-	// Propriedades para Cards e Tabelas
 	private List<MovimentacaoGeral> _movimentacaoesGeraisData = [];
 	private List<MovimentacaoDrp> _movimentacoesDrpData = [];
 	private List<MovimentacaoCCI> _movimentacaoesCCI = [];
@@ -246,7 +231,6 @@
 	private ControleGeralAmortizacaoCaixa _movimentacaoControleGeralAmortizacaoCaixa = new();
 	private Dictionary<TipoDeMovimentacaoAmortizacaoCaixa, List<MovimentacaoGeral>> _movimentacoesGeraisDataCache = [];
 
-	// CONTROLE DE ESTADO DE EXIBIÇÃO
 	private TipoDeMovimentacaoAmortizacaoCaixa _controleTabela = TipoDeMovimentacaoAmortizacaoCaixa.OUTRO;
 	private bool _mostrarTabelaMovimentacoes = false;
 	private bool _mostrarTabelaDrp = false;
@@ -307,10 +291,6 @@
 	private bool _processandoMovimentacao = false;
 	#region Métodos Gerenciar Movimentações (Service e Tabelas)
 
-	/// <summary>
-	/// Fluxo de controle UI/Service: Gerencia a exibição/alternância das tabelas a serem exibidas ao clicar no cards.
-	///
-	/// <param name="tipoMovimentacao">O tipo de movimentação/tabela a ser exibida.</param>
 	public async Task MostrarTabelaMovimentacao(TipoDeMovimentacaoAmortizacaoCaixa tipoMovimentacao)
 	{
 		if (_controleTabela == tipoMovimentacao)
@@ -324,7 +304,6 @@
 			return;
 		}
 
-		//Armazena qual tabela está aberta.
 		_controleTabela = tipoMovimentacao;
 		_processandoMovimentacao = true;
 
@@ -353,11 +332,6 @@
 		_processandoMovimentacao = false;
 		StateHasChanged();
 	}
-	/// <summary>
-	/// Controle dos dados e mapeamento para cache. Caso a tabela já tenha sido carregada inicialmente,
-	///  evita nova chamada ao endpoint ao  buscar os registros no cache.//.
-	/// </summary>
-	/// <param name="tipoMovimentacao">O tipo de movimentação a ser carregado.</param>
 	private async Task CarregarMovimentacaoGeral(TipoDeMovimentacaoAmortizacaoCaixa tipoMovimentacao)
 	{
 		_tabelaIsLoading = true;
@@ -416,7 +390,6 @@
 		}
 		_tabelaIsLoading = false;
 	}
-	//Metodos que invocam o Service da Amortização para carregar dados nas tabelas ao clicar nos cards	
 	private async Task CarregarMovimentacaoDRP()
 	{
 		_tabelaIsLoading = true;

@@ -1,7 +1,7 @@
 @using ControleAnaliseDesembolso.Modelos
 @using ControleAnaliseDesembolso.Service
-@* Fio de comentários de uma validação *@
 @inject ServicoUsuarioUI ServicoUsuario
+@inject IJSRuntime JS
 
 <div class="fio">
     @foreach (var c in Comentarios)
@@ -11,7 +11,7 @@
         var podeEditar = !ApenasLeitura && c.MatriculaAutor == ServicoUsuario.Matricula;
         @if (emEdicao)
         {
-            <div class="form-tratativa form-tratativa-foco">
+            <div id="@("fio-edit-" + c.Id)" class="form-tratativa form-tratativa-foco">
                 <textarea class="form-textarea" rows="3" @bind="_textoEdicao" @bind:event="oninput"></textarea>
                 <div class="form-acoes-bar">
                     <span></span>
@@ -54,7 +54,7 @@
 
     @if (_adicionando)
     {
-        <div class="form-tratativa @(_comFoco ? "form-tratativa-foco" : "")">
+        <div id="@_idFormAdicionar" class="form-tratativa @(_comFoco ? "form-tratativa-foco" : "")">
 
             <textarea class="form-textarea"
                       placeholder="Descreva a tratativa ou observação..."
@@ -65,11 +65,10 @@
                       @onblur="() => _comFoco = false"></textarea>
 
             <div class="form-acoes-bar">
-                <!-- Pills de tipo (ocultas quando o comentário é informativo apenas) -->
                 @if (!ApenasInformativo)
                 {
                     <div class="seletor-tipo">
-                        @foreach (var tipo in new[] { "positivo", "informativo", "negativo" })
+                        @foreach (var tipo in new[] { "justificativa", "informativo", "parecer" })
                         {
                             var cfg2 = TiposComentario.Configs[tipo];
                             var ativo = _novoTipo == tipo;
@@ -87,7 +86,6 @@
                     <span></span>
                 }
 
-                <!-- Ações direita -->
                 <div class="form-acoes-dir">
                     <button class="btn-cancelar" @onclick="CancelarAdicao">Cancelar</button>
                     <button class="btn-salvar-tratativa"
@@ -101,7 +99,7 @@
     }
     else if (!ApenasLeitura && !(LimitarUmComentario && Comentarios.Any()))
     {
-        <button class="btn-adicionar-comentario" @onclick="() => _adicionando = true">
+        <button class="btn-adicionar-comentario" @onclick="AbrirAdicionar">
             <i class="bi bi-plus"></i> Adicionar comentário
         </button>
     }
@@ -118,9 +116,6 @@
     [Parameter] public EventCallback<Comentario>        AoRemoverComentario   { get; set; }
     [Parameter] public bool                             ApenasLeitura         { get; set; }
     [Parameter] public bool                             ApenasInformativo     { get; set; }
-    // Ficha de entrada da FPD: só 1 comentário por item — pra escrever mais,
-    // edita o que já existe em vez de empilhar um novo. Não afeta o dialog de
-    // análise do desembolso (lá comentários múltiplos continuam permitidos).
     [Parameter] public bool                             LimitarUmComentario   { get; set; }
 
     private bool   _adicionando = false;
@@ -130,6 +125,8 @@
 
     private int?   _editandoId;
     private string _textoEdicao = "";
+
+    private readonly string _idFormAdicionar = $"fio-add-{Guid.NewGuid():N}";
 
     protected override void OnParametersSet()
     {
@@ -162,14 +159,23 @@
         _comFoco     = false;
     }
 
-    private void IniciarEdicao(Comentario c)
+    private async Task AbrirAdicionar()
+    {
+        _adicionando = true;
+        StateHasChanged();
+        await Task.Delay(120);
+        await JS.InvokeVoidAsync("scrollSubItemIntoView", _idFormAdicionar);
+    }
+
+    private async Task IniciarEdicao(Comentario c)
     {
         _editandoId  = c.Id;
         _textoEdicao = c.Texto;
+        StateHasChanged();
+        await Task.Delay(120);
+        await JS.InvokeVoidAsync("scrollSubItemIntoView", $"fio-edit-{c.Id}");
     }
 
-    // Soft-delete: quem chama (DialogDesembolsoFpd) que decide como persistir
-    // — aqui só avisa qual comentário foi removido e recarrega a lista.
     private async Task RemoverComentario(Comentario c) => await AoRemoverComentario.InvokeAsync(c);
 
     private void CancelarEdicao()
@@ -191,9 +197,9 @@
 
     private static string NomeTipo(string tipo) => tipo switch
     {
-        "positivo" => "Positivo",
-        "negativo" => "Negativo",
-        _          => "Informativo"
+        "justificativa" => "Justificativa",
+        "parecer"       => "Parecer",
+        _               => "Informativo"
     };
 }
 
@@ -201,7 +207,6 @@
 <style>
 .fio { display: flex; flex-direction: column; gap: 8px; }
 
-/* ── Comentários existentes ── */
 .comentario {
     border-radius: var(--radius-md);
     padding: 8px 10px;
@@ -241,7 +246,6 @@
 }
 .btn-editar-comentario:hover { background: rgba(0,0,0,.06); color: var(--ink-900); }
 
-/* ── Form TRATATIVA ── */
 .form-tratativa {
     display: flex;
     flex-direction: column;
@@ -251,13 +255,11 @@
     overflow: hidden;
     transition: border-color .15s, box-shadow .15s;
 }
-/* Efeito de foco igual ao da imagem — borda azul + anel */
 .form-tratativa-foco {
     border-color: var(--brand-300);
     box-shadow: 0 0 0 3px var(--brand-50);
 }
 
-/* Rótulo "TRATATIVA" dentro do card */
 .form-rotulo {
     padding: 8px 12px 0;
     font-size: 10px;
@@ -267,7 +269,6 @@
     color: var(--ink-500);
 }
 
-/* Textarea sem bordas próprias — a borda é do card */
 .form-textarea {
     resize: none;
     border: none;
@@ -282,7 +283,6 @@
 .form-textarea:focus { outline: none; }
 .form-textarea::placeholder { color: var(--ink-300); }
 
-/* Barra de ações — separada por borda topo */
 .form-acoes-bar {
     display: flex;
     align-items: center;
@@ -294,7 +294,6 @@
     flex-wrap: wrap;
 }
 
-/* Pills de tipo */
 .seletor-tipo { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 
 .btn-tipo {
@@ -323,7 +322,6 @@
     display: inline-block;
 }
 
-/* Ações direita */
 .form-acoes-dir { display: flex; align-items: center; gap: 6px; }
 
 .btn-cancelar {
@@ -339,7 +337,6 @@
 }
 .btn-cancelar:hover { background: var(--ink-50); color: var(--ink-700); }
 
-/* Botão "Salvar comentário" — estilo outlined suave */
 .btn-salvar-tratativa {
     display: inline-flex;
     align-items: center;
@@ -365,7 +362,6 @@
 .btn-salvar-tratativa:disabled { opacity: .4; cursor: not-allowed; }
 .btn-salvar-tratativa i { font-size: 12px; }
 
-/* ── Botão "Adicionar comentário" ── */
 .btn-adicionar-comentario {
     height: 28px;
     padding: 0 10px;

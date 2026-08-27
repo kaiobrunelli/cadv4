@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using MudBlazor;
 using PlataformaOperacional.Components.BlazorComponentes.Dialog;
@@ -59,10 +59,6 @@ partial class ContratacaoAtualizarContrato
     {
         var response = await ContratacaoServiceInject.FinalizarContrato(numeroContrato);
 		await HttpResponseHandler.ResponseHandler(response, Snackbar);
-		//if (response)
-  //      {
-  //          Snackbar.Add("Contrato finalizado com sucesso.");
-  //      }
     }
 
 	private async Task DialogoCancelarFinalizacaoContrato(string numeroContrato)
@@ -145,7 +141,6 @@ partial class ContratacaoAtualizarContrato
 			await HttpResponseHandler.ResponseHandler(
 					await ContratacaoServiceInject.FinalizarRessalva(contratacaoRessalva.Id, value, observacaoPreenchida), Snackbar);
 		}
-		//ContratoPreencher = await ContratacaoServiceInject.ConsultarContratoPorId(NumeroDoContrato);
 
 		var resalvaPorContrato = await ContratacaoServiceInject.ConsultarRessalvaPorContrato(NumeroDoContrato);
 		ListaDeRessalvasPorContrato = await HttpResponseHandler.ResponseHandler<List<ContratacaoRessalva>>(resalvaPorContrato, Snackbar);
@@ -165,10 +160,6 @@ partial class ContratacaoAtualizarContrato
     {       
         var response = await ContratacaoServiceInject.AtualizarCheckList(id, resposta);
 		await HttpResponseHandler.ResponseHandler(response, Snackbar);
-		//if (response)
-  //      {
-  //          respostaRessalva = "";
-  //      }
         await OnInitializedAsync();
         await InvokeAsync(StateHasChanged);
     }
@@ -177,11 +168,6 @@ partial class ContratacaoAtualizarContrato
     {
         UsuarioConclusaoRessalva = itemVerificacao.Usuario;
 
-		//if (itemVerificacao.TemRessalva)
-		//{
-		//	Snackbar.Add("Pergunta com ressalva não tratada.", Severity.Error);
-		//	return;
-		//}
 		if (value == 2 && itemVerificacao.TemObs == true)
         {
             var options = new DialogOptions { CloseButton = true, FullWidth = true, BackdropClick = false };
@@ -198,7 +184,6 @@ partial class ContratacaoAtualizarContrato
 				await AdicionarRessalvaCheckList(itemVerificacao.IdChecklist, itemVerificacao.IdVerificacao, observacaoPreenchida!, NumeroDoContrato, 0);
 				await HttpResponseHandler.ResponseHandler(response, Snackbar);
             
-                //Snackbar.Add("Ressalva incluída com sucesso!", Severity.Success);
                 await OnInitializedAsync();
 
             }
@@ -239,7 +224,7 @@ partial class ContratacaoAtualizarContrato
         Snackbar.Add(message, Severity.Normal);
     }
 
-    private async Task DialogAdicionarRessalva() // DA RESSALVA SEM VINCULAR
+    private async Task DialogAdicionarRessalva()
     {
         var options = new DialogOptions { CloseButton = true, FullWidth = true, BackdropClick = false };
 
@@ -272,7 +257,6 @@ partial class ContratacaoAtualizarContrato
 			var responseContratoId = await ContratacaoServiceInject.ConsultarContratoPorId(NumeroDoContrato);
 			ContratoPreencher = await HttpResponseHandler.ResponseHandler<ContratacaoContrato>(responseContratoId, Snackbar);
 
-            //ContratoPreencher = await ContratacaoServiceInject.ConsultarContratoPorId(NumeroDoContrato);
 		}
     }
 
@@ -282,21 +266,12 @@ partial class ContratacaoAtualizarContrato
 		await HttpResponseHandler.ResponseHandler(response, Snackbar);
         await OnInitializedAsync();
         await InvokeAsync(StateHasChanged);
-		//if (response.sucesso)
-  //      {
-  //          Snackbar.Add(response.mensagem, Severity.Success);
-  //      }
-  //      else
-  //      {
-  //          Snackbar.Add(response.mensagem, Severity.Error);
-  //      }
     }
 
     private async Task ResetProposta(ContratacaoVerificacao itemVerificacao)
     {
         if (itemVerificacao.Resposta is null) return;
 
-		//await ContratacaoServiceInject.AtualizarCheckList(itemVerificacao.IdChecklist, itemVerificacao.Resposta, itemVerificacao.Observacao);
 		var response = await ContratacaoServiceInject.AtualizarCheckList(itemVerificacao.IdChecklist, itemVerificacao.Resposta);
 		await HttpResponseHandler.ResponseHandler(response, Snackbar);
 
@@ -305,7 +280,6 @@ partial class ContratacaoAtualizarContrato
             itemVerificacao.Resposta = null;
             itemVerificacao.Usuario = null;
         }
-		//await OnInitializedAsync();
 		await InvokeAsync(StateHasChanged);
     }
 

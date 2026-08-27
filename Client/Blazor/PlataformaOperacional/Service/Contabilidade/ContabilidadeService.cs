@@ -1,4 +1,4 @@
-﻿using PlataformaOperacional.Model.Contabilidade;
+using PlataformaOperacional.Model.Contabilidade;
 using System.Net.Http.Json;
 using System.Text.Json;
 
@@ -70,7 +70,6 @@ namespace PlataformaOperacional.Service.Contabilidade
         }
 
 
-        //Metodos - ATUALIZAR # BAIXAR # REMOVER da coluna AÇÕES da tabela.
         public async Task AtualizarLote(int idParcelaContabilidade)
         {
             await _dialogServicePlataformaOperacional.OpenDialogAsync();

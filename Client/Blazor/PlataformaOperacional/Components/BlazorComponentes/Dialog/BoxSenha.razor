@@ -1,4 +1,4 @@
-﻿@implements IDisposable
+@implements IDisposable
 
 <MudDialog Class="blur dialog-background"
 		   TitleClass="dialog-background-title"
@@ -87,7 +87,6 @@
 	public string? Icon { get; set; }
 
 
-	//Configura campo de senha
 	private bool _senhaVisivel;
 	private InputType _passwordInput = InputType.Password;
 	private string _passwordInputIcon = Icons.Material.Filled.VisibilityOff;
@@ -108,17 +107,15 @@
 		}
 	}
 
-	//Variaveis
 
 	private MudTextField<char[]> _mudTextField = new();
 	private bool _validado = false;
-	private char[] _senha = Array.Empty<char>(); //bind feito com char[] type para possibilitar reescritura na memória.
+	private char[] _senha = Array.Empty<char>();
 	private string _senhaCriptografada = string.Empty;
 	private Timer? _clearTimer;
 	private bool _sessaoExpirada = true;
 
 
-	//Função para converter valor digitado em char[] (converte caracteres um a um).
 
 	private sealed class CharArrayConverter : MudBlazor.IReversibleConverter<char[]?, string?>
 	{
@@ -130,7 +127,6 @@
 	}
 
 
-	//Criptografa e encaminha senha para a aplicação
 	class PublicKeyDto { public string Key { get; set; } = ""; }
 	private async Task CriptografarEnviar()
 	{
@@ -147,8 +143,8 @@
 
 		_senhaCriptografada = await EncryptionService.EncriptarAsync(new string(_senha));
 
-		Array.Clear(_senha, 0, _senha.Length); //Senha zerada.
-		_senha = Array.Empty<char>(); //Senha limpa da memória.
+		Array.Clear(_senha, 0, _senha.Length);
+		_senha = Array.Empty<char>();
 		await _mudTextField.ResetAsync();
 		MudDialog?.Close(DialogResult.Ok(_senhaCriptografada)); 
 		_sessaoExpirada = false;
@@ -160,7 +156,6 @@
 		public bool UtilizarMyExtra { get; set; }
 	}
 
-	//Botão cancelar
 	private void Cancel()
 	{
 		_sessaoExpirada = false;
@@ -178,7 +173,6 @@
 		MudDialog?.Cancel();
 	}
 
-	//Timer de segurança para limpar senha.
 	private void LimparMemoria()
 	{
 		if (!_sessaoExpirada)

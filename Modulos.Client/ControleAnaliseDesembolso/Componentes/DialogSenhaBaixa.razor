@@ -20,7 +20,7 @@
     <div class="dialog-baixa-corpo">
         <p class="dialog-baixa-info">
             <i class="bi bi-info-circle"></i>
-            Informe sua senha para registrar a baixa. Esta ação será auditada com sua matrícula.
+            Informe sua senha para registrar a baixa.
         </p>
 
         <label class="dialog-baixa-label">Senha</label>
@@ -76,9 +76,8 @@
         _erro = null;
         StateHasChanged();
 
-        await Task.Delay(900);   // simula validação da senha no servidor
+        await Task.Delay(900);
 
-        // Mock: senha "1234" falha para demonstrar o caminho de erro
         if (_senha == "1234")
         {
             _erro = "Senha inválida.";

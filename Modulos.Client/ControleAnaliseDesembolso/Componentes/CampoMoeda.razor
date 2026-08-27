@@ -1,8 +1,5 @@
 @using System.Globalization
 
-@* Campo monetário pt-BR (padrão "centavos primeiro"): digita só dígitos e o
-   valor cresce da direita para a esquerda. Encapsula a máscara + sync no DOM.
-   Uso:  <CampoMoeda @bind-Value="_fpd.Ve" ReadOnly="true" /> *@
 
 <div class="campo-moeda-wrap @Class">
     <span class="campo-moeda-prefixo">R$</span>
@@ -28,7 +25,6 @@
 
     protected override void OnParametersSet()
     {
-        // Reflete mudanças externas (ex.: preenchido pela busca do contrato)
         if (Value != _ultimoValor)
         {
             _ultimoValor = Value;
@@ -57,16 +53,6 @@
         _ultimoValor = valor;
         Value = valor;
 
-        // BUG REAL CORRIGIDO: esta linha chamava uma função JS
-        // ("sipubSetInputValor") que nunca existiu em lugar nenhum do
-        // projeto — toda vez que alguém digitava aqui, o JSException não
-        // tratado abortava o método ANTES do ValueChanged.InvokeAsync
-        // abaixo, então _fpd.SolicitadoVi/Ve/ParticipacaoFgts/Contrapartida
-        // nunca eram atualizados no componente pai: a tela mostrava o valor
-        // digitado (só porque _texto já tinha mudado localmente antes do
-        // erro), mas ao enviar a FPD ia tudo como 0. O re-render normal do
-        // Blazor já mantém o input sincronizado com _texto sem precisar de
-        // JS interop nenhum.
         await ValueChanged.InvokeAsync(valor);
         await AoAlterar.InvokeAsync();
     }

@@ -1,4 +1,4 @@
-﻿
+
 @page "/ect3"
 @using MudBlazor
 
@@ -6,7 +6,6 @@
 @inject IDialogService DialogService
 
 <style>
-    /* Mantendo suas definições de variáveis e estilos base */
     :root {
         --text-main: #111827;
         --text-muted: #6B7280;
@@ -21,7 +20,6 @@
         box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02) !important;
     }
 
-    /* Estilos dos ícones 3D */
     .icon-3d {
         width: 48px;
         height: 48px;
@@ -52,7 +50,6 @@
         box-shadow: 0 4px 12px rgba(234, 179, 8, 0.2);
     }
 
-    /* Seção de lista técnica */
     .data-section-box {
         background: #F9FAFB;
         border-radius: 16px;
@@ -96,13 +93,9 @@
 <MudThemeProvider Theme="_customTheme"></MudThemeProvider>
 
 <MudContainer Class="pt-6 pb-8">
-    @* <MudContainer MaxWidth="MaxWidth.Large"> *@
-    @* <MudContainer > *@
 
-        @* Único Card Principal que "Upa" a Página *@
         <MudPaper Elevation="0" Class="glass-panel pa-8">
 
-            @* Header Interno do Card *@
             <div class="d-flex justify-space-between align-start ">
                 <div>
 
@@ -130,9 +123,7 @@
             </div>
 
             <MudGrid Gutter="4">
-                @* COLUNA ESQUERDA: Listagem de Dados (Topificada) *@
                 <MudItem lg="12" md="12">
-                    @* <MudPaper Elevation="25" Class="glass-panel p-8 " Style="background: #ffffff; border: 1px solid #f0f0f0; border-radius: 24px; width: 100%;"> *@
                
 
                         <MudGrid Spacing="12">
@@ -140,7 +131,6 @@
                                 <MudText Typo="Typo.h5" Style="color: #3D4B63; font-weight: 600; margin-left: 4px;">Setor Público</MudText>
                                 <div class="mt-2 mb-6" style="background: #fcfcfc; border-radius: 16px; padding: 16px;">
 
-                                    @* Item 1 *@
                                     <div class="d-flex align-center justify-space-between py-3">
                                         <div class="d-flex align-center gap-3">
                                             <MudIcon Icon="@Icons.Material.Filled.AccountBalance" Style="color: #3b82f6;" Size="Size.Small" />
@@ -150,7 +140,6 @@
                                     </div>
                                     <MudDivider Style="background-color: #f1f5f9; opacity: 0.6;" />
 
-                                    @* Item 2 *@
                                     <div class="d-flex align-center justify-space-between py-3">
                                         <div class="d-flex align-center gap-3">
                                             <MudIcon Icon="@Icons.Material.Filled.Description" Style="color: #f59e0b;" Size="Size.Small" />
@@ -160,7 +149,6 @@
                                     </div>
                                     <MudDivider Style="background-color: #f1f5f9; opacity: 0.6;" />
 
-                                    @* Item 3 *@
                                     <div class="d-flex align-center justify-space-between py-3">
                                         <div class="d-flex align-center gap-3">
                                             <MudIcon Icon="@Icons.Material.Filled.Percent" Style="color: #10b981;" Size="Size.Small" />
@@ -170,7 +158,6 @@
                                     </div>
                                 </div>
 
-                                @* Seção de Dados: Área Privada *@
                                 <MudText Typo="Typo.overline" Style="color: #94a3b8; font-weight: 800; margin-left: 4px;">ÁREA PRIVADA</MudText>
                                 <div class="mt-2" style="background: #fcfcfc; border-radius: 16px; padding: 16px;">
 
@@ -239,7 +226,6 @@
                                     </MudItem>
                                 </MudGrid>
 
-                                @* Nota de rodapé opcional para preencher o espaço *@
                                 <div class="mt-6 pa-4" style="border: 1px dashed #E5E7EB; border-radius: 12px;">
                                     <MudText Typo="Typo.caption" Style="color:#94a3b8; line-height:1.2;">
                                         * Os dados acima são consolidados em tempo real baseados nas últimas operações contabilizadas no sistema.
@@ -248,17 +234,14 @@
                             </MudItem>
                         </MudGrid>
 
-                        @* Seção de Dados: Área Pública *@
 
                   
                 </MudItem>
 
-                @* COLUNA DIREITA: Cards de Status Integrados *@
 
             </MudGrid>
 
         </MudPaper>
-  @*   </MudContainer> *@
 </MudContainer>
 
 @code {

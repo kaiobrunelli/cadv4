@@ -1,4 +1,3 @@
-@* Status: pendente | aprovado | pendencia *@
 <span class="pilulha pilulha-@Status @(Tamanho == "lg" ? "pilulha-lg" : "pilulha-sm")">
     <span class="pilulha-dot pilulha-dot-@Status"></span>
     @TextoStatus
@@ -6,17 +5,17 @@
 
 @code {
     [Parameter, EditorRequired] public string Status  { get; set; } = "";
-    [Parameter] public string Tamanho { get; set; } = "sm"; // sm | lg
+    [Parameter] public string Tamanho { get; set; } = "sm";
 
     private string TextoStatus => Status switch
     {
         "pendente"  => "Analisar",
-        "aprovado"  => "Aprovado",
-        "pendencia" => "Aguardando",
+        "aprovado"  => "Aguardando Baixa",
+        "pendencia" => "Pendente",
         "negado"    => "Rejeitado",
         "valido"    => "Aprovado",
         "invalido"  => "Inválido",
-        "baixado"   => "Baixado",
+        "baixado"   => "Finalizado",
         "neutro"    => "Informativo",
         _           => Status
     };
@@ -43,10 +42,9 @@
 .pilulha-negado    { background: #F1D9D6; color: #7A1F16; }
 .pilulha-valido    { background: #E0F2E7; color: #1A7A4A; }
 .pilulha-invalido  { background: #FCE6E3; color: #9A2A1F; }
-.pilulha-baixado   { background: #E0F2E7; color: #1A7A4A; }
+.pilulha-baixado   { background: #E5F1FC; color: #00437A; }
 .pilulha-neutro    { background: #EDEFF2; color: #4B5563; }
 
-/* Dot */
 .pilulha-dot {
     width: 6px;
     height: 6px;
@@ -59,6 +57,6 @@
 .pilulha-dot-pendencia { background: #C0392B; }
 .pilulha-dot-valido    { background: #1A7A4A; }
 .pilulha-dot-invalido  { background: #C0392B; }
-.pilulha-dot-baixado   { background: #1A7A4A; }
+.pilulha-dot-baixado   { background: #005CA9; }
 .pilulha-dot-neutro    { background: #6B7280; }
 </style>

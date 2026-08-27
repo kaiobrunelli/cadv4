@@ -8,58 +8,230 @@ public class DesembolsoConfig : IEntityTypeConfiguration<Desembolso>
 {
     public void Configure(EntityTypeBuilder<Desembolso> builder)
     {
-        builder.ToTable("CAD_TB003_DESEMBOLSO");
+        builder.ToTable("CAD_TB001_DESEMBOLSO");
 
         builder.HasKey(x => x.CoDesembolso)
-            .HasName("PK_CAD_TB003_DESEMBOLSO");
+            .HasName("PK_CAD_TB001_DESEMBOLSO");
 
         builder.Property(x => x.CoDesembolso)
             .HasColumnName("CO_DESEMBOLSO")
-            .ValueGeneratedOnAdd()
             .IsRequired();
 
-        builder.Property(x => x.CoFpd)
-            .HasColumnName("CO_FPD")
+        builder.Property(x => x.MatriculaSolicitante)
+            .HasColumnName("MATRICULA_SOLICITANTE")
+            .HasMaxLength(7)
             .IsRequired();
 
-        builder.Property(x => x.ResponsavelAnalise)
-            .HasColumnName("RESPONSAVEL_ANALISE")
-            .HasMaxLength(7);
+        builder.Property(x => x.CoGigov)
+            .HasColumnName("CO_GIGOV")
+            .HasMaxLength(4)
+            .IsFixedLength()
+            .IsRequired();
 
-        builder.Property(x => x.ResponsavelBaixa)
-            .HasColumnName("RESPONSAVEL_BAIXA")
-            .HasMaxLength(7);
+        builder.Property(x => x.MatriculaGestor)
+            .HasColumnName("MATRICULA_GESTOR")
+            .HasMaxLength(7)
+            .IsRequired();
 
-        builder.Property(x => x.MatriculaBaixa)
-            .HasColumnName("MATRICULA_BAIXA")
-            .HasMaxLength(7);
-
-        builder.Property(x => x.Gestor)
-            .HasColumnName("GESTOR")
-            .HasMaxLength(7);
-
-        builder.Property(x => x.DtPrazo)
-            .HasColumnName("DT_PRAZO")
+        builder.Property(x => x.DtSolicitado)
+            .HasColumnName("DT_SOLICITADO")
             .HasColumnType("date")
             .IsRequired();
 
-        builder.Property(x => x.StatusDesembolso)
-            .HasColumnName("SITUACAO_DESEMBOLSO")
-            .IsRequired()
-            .HasConversion<int>();
+        builder.Property(x => x.NuDesembolso)
+            .HasColumnName("NU_DESEMBOLSO")
+            .IsRequired();
 
-        builder.Property(x => x.DtConclusao)
-            .HasColumnName("DT_CONCLUSAO")
+        builder.Property(x => x.CoContratoAf)
+            .HasColumnName("CO_CONTRATO_AF")
+            .HasMaxLength(20)
+            .IsRequired();
+
+        builder.Property(x => x.CoContratoAfDv)
+            .HasColumnName("CO_CONTRATO_AF_DV")
+            .HasMaxLength(10)
+            .IsRequired();
+
+        builder.Property(x => x.ContratoAo)
+            .HasColumnName("CONTRATO_AO")
+            .HasMaxLength(20);
+
+        builder.Property(x => x.PrimeiroDesembolso)
+            .HasColumnName("PRIMEIRO_DESEMBOLSO")
+            .IsRequired();
+
+        builder.Property(x => x.AgenteFinanceiro)
+            .HasColumnName("AGENTE_FINANCEIRO")
+            .HasMaxLength(255)
+            .IsRequired();
+
+        builder.Property(x => x.CnpjAf)
+            .HasColumnName("CNPJ_AF")
+            .HasMaxLength(14)
+            .IsFixedLength()
+            .IsRequired();
+
+        builder.Property(x => x.MutuarioFinal)
+            .HasColumnName("MUTUARIO_FINAL")
+            .HasMaxLength(255)
+            .IsRequired();
+
+        builder.Property(x => x.CnpjMutuarioFinal)
+            .HasColumnName("CNPJ_MUTUARIO_FINAL")
+            .HasMaxLength(14)
+            .IsFixedLength()
+            .IsRequired();
+
+        builder.Property(x => x.AgenteTecnicoOperador)
+            .HasColumnName("AGENTE_TECNICO_OPERADOR")
+            .HasMaxLength(255);
+
+        builder.Property(x => x.CnpjAgenteTecnicoOperador)
+            .HasColumnName("CNPJ_AGENTE_TECNICO_OPERADOR")
+            .HasMaxLength(14)
+            .IsFixedLength();
+
+        builder.Property(x => x.AgentePromotor)
+            .HasColumnName("AGENTE_PROMOTOR")
+            .HasMaxLength(255)
+            .IsRequired();
+
+        builder.Property(x => x.CnpjAgentePromotor)
+            .HasColumnName("CNPJ_AGENTE_PROMOTOR")
+            .HasMaxLength(14)
+            .IsFixedLength()
+            .IsRequired();
+
+        builder.Property(x => x.Programa)
+            .HasColumnName("CO_PROGRAMA")
+            .IsRequired();
+
+        builder.Property(x => x.UltimoDesembolso)
+            .HasColumnName("ULTIMO_DESEMBOLSO");
+
+        builder.Property(x => x.Funcionalidade)
+            .HasColumnName("FUNCIONALIDADE");
+
+        builder.Property(x => x.Concluido)
+            .HasColumnName("CONCLUIDO");
+
+        builder.Property(x => x.DtEngenharia)
+            .HasColumnName("DT_ENGENHARIA")
+            .HasColumnType("date")
+            .IsRequired();
+
+        builder.Property(x => x.SituacaoObra)
+            .HasColumnName("CO_SITUACAO_OBRA");
+
+        builder.Property(x => x.DtSocioAmbiental)
+            .HasColumnName("DT_SOCIO_AMBIENTAL")
             .HasColumnType("date");
 
-        builder.HasOne(x => x.FichaPedidoDesembolso)
-            .WithOne(x => x.Desembolso)
-            .HasForeignKey<Desembolso>(x => x.CoFpd)
-            .HasConstraintName("FK_CAD_TB002_FICHA_PEDIDO_DESEMBOLSO");
+        builder.Property(x => x.PercentualObra)
+            .HasColumnName("PERCENTUAL_OBRA")
+            .HasColumnType("decimal(18,4)")
+            .IsRequired();
 
-        builder.HasMany(x => x.ValidacoesDesembolso)
+        builder.Property(x => x.TipoDesembolso)
+            .HasColumnName("CO_TIPO_DESEMBOLSO")
+            .IsRequired();
+
+        builder.Property(x => x.RetornoParcial)
+            .HasColumnName("RETORNO_PARCIAL");
+
+        builder.Property(x => x.PlacaLocal)
+            .HasColumnName("PLACA_LOCAL");
+
+        builder.Property(x => x.LicensaInstalacao)
+            .HasColumnName("LICENSA_INSTALACAO");
+
+        builder.Property(x => x.LicensaOperacao)
+            .HasColumnName("LICENSA_OPERACAO");
+
+        builder.Property(x => x.CndValido)
+            .HasColumnName("CND_VALIDO");
+
+        builder.Property(x => x.CrpValido)
+            .HasColumnName("CRP_VALIDO");
+
+        builder.Property(x => x.SolicitadoVi)
+            .HasColumnName("SOLICITADO_VI")
+            .HasColumnType("decimal(18,2)")
+            .IsRequired();
+
+        builder.Property(x => x.GlossadoVi)
+            .HasColumnName("GLOSSADO_VI")
+            .HasColumnType("decimal(18,2)")
+            .IsRequired();
+
+        builder.Property(x => x.AceitoVi)
+            .HasColumnName("ACEITO_VI")
+            .HasColumnType("decimal(18,2)")
+            .IsRequired();
+
+        builder.Property(x => x.ParticipacaoFgts)
+            .HasColumnName("PARTICIPACAO_FGTS")
+            .HasColumnType("decimal(18,2)")
+            .IsRequired();
+
+        builder.Property(x => x.Contrapartida)
+            .HasColumnName("CONTRAPARTIDA")
+            .HasColumnType("decimal(18,2)")
+            .IsRequired();
+
+        builder.Property(x => x.ValorEmprestimo)
+            .HasColumnName("VALOR_EMPRESTIMO")
+            .HasColumnType("decimal(18,2)")
+            .IsRequired();
+
+        builder.Property(x => x.Desembolsado)
+            .HasColumnName("DESEMBOLSADO")
+            .HasColumnType("decimal(18,2)")
+            .IsRequired();
+
+        builder.Property(x => x.SaldoADesembolsar)
+            .HasColumnName("SALDO_DESEMBOLSAR")
+            .HasColumnType("decimal(18,2)")
+            .IsRequired();
+
+        builder.Property(x => x.Excepcionalizado)
+            .HasColumnName("EXCEPCIONALIZADO");
+
+        builder.Property(x => x.ContrapartidaAtual)
+            .HasColumnName("CONTRAPARTIDA_ATUAL")
+            .HasColumnType("decimal(18,2)")
+            .IsRequired();
+
+        builder.Property(x => x.Integralizado)
+            .HasColumnName("INTEGRALIZADO")
+            .HasColumnType("decimal(18,2)")
+            .IsRequired();
+
+        builder.Property(x => x.SaldoIntegralizar)
+            .HasColumnName("SALDO_INTEGRALIZAR")
+            .HasColumnType("decimal(18,2)")
+            .IsRequired();
+
+        builder.Property(x => x.ContrapartidaAlterada)
+            .HasColumnName("CONTRAPARTIDA_ALTERADA");
+
+        //builder.Property(x => x.Amortizacao)
+        //    .HasColumnName("AMORTIZACAO");
+
+        builder.Property(x => x.Sanepar)
+            .HasColumnName("SANEPAR");
+
+        builder.Property(x => x.Mensagem)
+            .HasColumnName("MENSAGEM")
+            .HasMaxLength(3000);
+
+        builder.Property(x => x.MotivoRejeicao)
+            .HasColumnName("MOTIVO_REJEICAO")
+            .HasMaxLength(3000);
+
+        builder.HasOne(x => x.ControleDesembolso)
             .WithOne(x => x.Desembolso)
-            .HasForeignKey(x => x.CoDesembolso)
-            .HasConstraintName("FK_VALIDACAO_DESEMBOLSO_DESEMBOLSO");
+            .HasForeignKey<ControleDesembolso>(x => x.CoDesembolso)
+            .HasConstraintName("FK_CAD_TB001_DESEMBOLSO");
     }
 }

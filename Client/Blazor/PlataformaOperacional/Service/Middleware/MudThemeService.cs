@@ -1,4 +1,4 @@
-﻿using MudBlazor;
+using MudBlazor;
 
 namespace PlataformaOperacional.Service.Middleware
 {
@@ -11,12 +11,10 @@ namespace PlataformaOperacional.Service.Middleware
 
         public MudThemeService()
         {
-            // Define o tema padrão inicial
             _defaultTheme = CreateDefaultTheme();
             _currentTheme = _defaultTheme;
         }
 
-        // 2. Criação do tema padrão (com sintaxe correta)
         private static MudTheme CreateDefaultTheme() => new()
         {
             PaletteLight = new PaletteLight
@@ -28,7 +26,6 @@ namespace PlataformaOperacional.Service.Middleware
             }
         };
 
-        // 3. Propriedade para acesso ao tema atual
         public MudTheme CurrentTheme
         {
             get => _currentTheme;
@@ -42,18 +39,11 @@ namespace PlataformaOperacional.Service.Middleware
             }
         }
 
-        /// <summary>
-        /// Define um novo tema e notifica os assinantes (layout).
-        /// </summary>
         public void SetTheme(MudTheme newTheme)
         {
             CurrentTheme = newTheme;
         }
 
-        /// <summary>
-        /// Retorna ao tema que foi definido como padrão na inicialização do serviço.
-        /// Chamado ao sair de uma página customizada.
-        /// </summary>
         public void SetDefaultTheme()
         {
             SetTheme(_defaultTheme);

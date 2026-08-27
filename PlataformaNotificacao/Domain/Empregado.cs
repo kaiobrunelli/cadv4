@@ -2,7 +2,6 @@ namespace PlataformaNotificacao.Domain;
 
 public class Empregado
 {
-    // Matrícula é a identidade única do empregado (formato c123456). Não há mais "Id".
     public string   Matricula         { get; set; } = "";
     public string   Nome              { get; set; } = "";
     public string   Iniciais          { get; set; } = "";

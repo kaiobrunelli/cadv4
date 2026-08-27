@@ -1,4 +1,4 @@
-﻿@page "/PreditorTeste"
+@page "/PreditorTeste"
 @using PlataformaOperacional.Pages.Aplicacao.Preditor
 
 
@@ -100,13 +100,6 @@
 
 		</MudContainer>
 	}
-	@* 	<div class="mt-6">
-	<MudButton OnClick=" AtivarMock">
-	Mockar
-	</MudButton>	<MudButton OnClick="  ConfiguracaoUsuario2">
-	Gerenciar
-	</MudButton>
-	</div> *@
 </MudContainer>
 
 @code {
@@ -124,7 +117,6 @@
 	#endregion
 	private bool _preditorFinalizado => _controlePreditor.IcStatus.ToUpper() == "FINALIZADO";
 	#region Propriedades e Metodos para mock
-	// private bool _mockEndPoint => Usuario.MockarDados();
 	private bool _ativarMock = false;
 	#endregion
 
@@ -247,7 +239,6 @@
 			{
 				CloseOnEscapeKey = true,
 			};
-		// await DialogService.ShowAsync<DialogPreditorTeste_CPT>("Inserir Observação", options);
 		await DialogService.ShowAsync<PreditorGerenciadorAutorizados>("Inserir Observação", options);
 	}
 	#endregion
