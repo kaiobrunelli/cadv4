@@ -1,0 +1,12 @@
+- Remover inputs da ficha de FPD:
+Parcel FGTS e  Integralizar
+-implementar o calculo automático no input de saldo a integralizar igual do saldo a desembolsar (e colocar como readonly, já que ele é a diferença do valor total a intralizar menos o saldo já integralizado).
+
+
+Corrigir o z-index do snackback quando o dialog estiver aberto. Está ficando por tras. 
+
+
+Contrapartida alterada não existe na FPD de preenchiemtno com validação de SIM ou NAO. Existe no banco de dados, mas falta no dialog de preencher FPD, e nos demais dialgos de desembolso e DRP. . 
+
+
+Verificar sobrea o glosado na parte do FPD AO. 
