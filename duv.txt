@@ -1,45 +1,16 @@
-dapException: The LDAP server is unavailable.
-System.DirectoryServices.Protocols.LdapConnection.Connect()
-System.DirectoryServices.Protocols.LdapConnection.SendRequestHelper(DirectoryRequest request, ref int messageID)
-System.DirectoryServices.Protocols.LdapConnection.SendRequest(DirectoryRequest request, TimeSpan requestTimeout)
-System.DirectoryServices.Protocols.LdapConnection.SendRequest(DirectoryRequest request)
-System.DirectoryServices.AccountManagement.PrincipalContext.ReadServerConfig(string serverName, ref ServerProperties properties)
-
-Show raw exception details
-PrincipalServerDownException: The server could not be contacted.
-System.DirectoryServices.AccountManagement.PrincipalContext.ReadServerConfig(string serverName, ref ServerProperties properties)
-System.DirectoryServices.AccountManagement.PrincipalContext.DoServerVerifyAndPropRetrieval()
-System.DirectoryServices.AccountManagement.PrincipalContext..ctor(ContextType contextType, string name, string container, ContextOptions options, string userName, string password)
-System.DirectoryServices.AccountManagement.PrincipalContext..ctor(ContextType contextType)
-Utilitarios.Service.UsuarioService.GetUserDistinguishedName(string matricula) in UsuarioService.cs
-+
-            var domain = new PrincipalContext(ContextType.Domain);
-Utilitarios.Service.UsuarioService.ConsultarUsuarioNt(string matricula) in UsuarioService.cs
-+
-            distinguishedName = GetUserDistinguishedName(matricula);
-Utilitarios.Service.UsuarioService.ConsultarUsuario(string senha) in UsuarioService.cs
-+
-            var usuario = ConsultarUsuarioNt(IdentificaMatriculaDoUsuario());
-PlataformaOperacional.Application.Service.PlataformaOperacionalService.GerarTrilhaDeAuditoria(string evento, string descEvneto, string respsota, string Endpoint) in PlataformaOperacionalService.cs
-+
-            var usuario = _usuarioService.ConsultarUsuario();
-PlataformaOperacionalAPI.Controllers.PlataformaController.ConsultaConfiguracoesUsuario() in PlataformaController.cs
-+
-            var trilha = _plataformaService
-Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor+TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, object controller, object[] arguments)
-System.Threading.Tasks.ValueTask<TResult>.get_Result()
-Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask<IActionResult> actionResultValueTask)
-Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, object state, bool isCompleted)
-Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
-Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(ref State next, ref Scope scope, ref object state, ref bool isCompleted)
-Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.InvokeInnerFilterAsync()
-Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, object state, bool isCompleted)
-Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
-Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
-Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
-Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
-Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)
-Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware.Invoke(HttpContext httpContext, ISwaggerProvider swaggerProvider)
-Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)
-Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware.Invoke(HttpContext httpContext, ISwaggerProvider swaggerProvider)
-Microsoft.AspNetCore.Diagnostics.DeveloperExceptionPageMiddlewareImpl.Invoke(HttpContext context)
+	
+negotiate?userId=c151896&negotiateVersion=1
+negotiate?userId=c151896&negotiateVersion=1
+5 solicitações  
+257 B transferidos  
+0 B recursos  
+URL da Solicitação
+https://localhost:7224/chatHub/negotiate?userId=c151896&negotiateVersion=1
+Método de Solicitação
+POST
+Código de Status
+405 Method Not Allowed
+Endereço Remoto
+[::1]:7224
+Política de referenciador
+strict-origin-when-cross-origin
