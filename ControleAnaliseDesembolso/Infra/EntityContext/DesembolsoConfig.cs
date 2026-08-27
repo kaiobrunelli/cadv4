@@ -53,12 +53,14 @@ public class DesembolsoConfig : IEntityTypeConfiguration<Desembolso>
             .IsRequired();
 
         builder.Property(x => x.ContratoAo)
-            .HasColumnName("CONTRATO_AO")
-            .HasMaxLength(20);
+            .HasColumnName("CO_CONTRATO_AO")
+            .HasMaxLength(20)
+            .IsRequired();
 
         builder.Property(x => x.ContratoAoDv)
-            .HasColumnName("CONTRATO_AO_DV")
-            .HasMaxLength(10);
+            .HasColumnName("CO_CONTRATO_AO_DV")
+            .HasMaxLength(10)
+            .IsRequired();
 
         builder.Property(x => x.PrimeiroDesembolso)
             .HasColumnName("PRIMEIRO_DESEMBOLSO")

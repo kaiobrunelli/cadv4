@@ -9,7 +9,16 @@ public class PreenchimentoFpd
     public string    NumeroFpd    { get; set; } = "";
     public int       NuDesembolso { get; set; }
     public string    ContratoAf   { get; set; } = "";
+    public string    ContratoAo   { get; set; } = "";
+    public string    ContratoAoDv { get; set; } = "";
     public DateTime? DataSolicitado { get; set; } = DateTime.Today;
+
+    // Somente leitura: combina Contrato AO + DV pra exibição; "Não informado" até
+    // a CEFGA validar (ver ValidarDesembolso em ControleAnaliseDesembolsoService).
+    public string ContratoAoExibicao =>
+        string.IsNullOrWhiteSpace(ContratoAo) ? "Não informado"
+        : string.IsNullOrWhiteSpace(ContratoAoDv) ? ContratoAo
+        : $"{ContratoAo}-{ContratoAoDv}";
 
     public string? OpcaoExclusiva { get; set; }
     public bool PrimeiroDesembolso => OpcaoExclusiva == "primeiro";

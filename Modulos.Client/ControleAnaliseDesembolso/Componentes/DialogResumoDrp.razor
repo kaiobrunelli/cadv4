@@ -209,6 +209,20 @@
                             </div>
                             </div>
                     </div>
+                    @if (!string.IsNullOrWhiteSpace(_detalheReal.Mensagem))
+                    {
+                        <div class="dfp-obs-af">
+                            <span class="dfp-obs-af-titulo"><i class="bi bi-chat-left-text"></i> OBS AF</span>
+                            <p class="dfp-obs-af-texto">@_detalheReal.Mensagem</p>
+                        </div>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(_detalheReal.MotivoRejeicao))
+                    {
+                        <div class="dfp-obs-af dfp-motivo-rejeicao">
+                            <span class="dfp-obs-af-titulo"><i class="bi bi-x-circle"></i> Motivo da rejeição</span>
+                            <p class="dfp-obs-af-texto">@_detalheReal.MotivoRejeicao</p>
+                        </div>
+                    }
                 </div>
             }
         }

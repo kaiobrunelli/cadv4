@@ -4,6 +4,7 @@ using ControleAnaliseDesembolso.Infra.Datas.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ControleAnaliseDesembolso.Migrations
 {
     [DbContext(typeof(ControleAnaliseDesembolsoContext))]
-    partial class ControleAnaliseDesembolsoContextModelSnapshot : ModelSnapshot
+    [Migration("20260827084400_AdicionarContratoAo")]
+    partial class AdicionarContratoAo
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

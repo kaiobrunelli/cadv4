@@ -18,9 +18,10 @@ namespace ControleAnaliseDesembolso.Domain.Entitys
 
         // Contrato AO — preenchido só quando o CEFGA clica em "Validar" (ver
         // ExecutarValidacaoDesembolso/ValidarDesembolso em ControleAnaliseDesembolsoService),
-        // que busca no sistema externo e grava aqui. Fica null até a primeira validação.
-        public string? ContratoAo { get; set; }
-        public string? ContratoAoDv { get; set; }
+        // que busca no sistema externo e grava aqui. Coluna NOT NULL no banco, então fica
+        // "" (não null) até a primeira validação — front trata "" igual a não informado.
+        public string ContratoAo { get; set; } = string.Empty;
+        public string ContratoAoDv { get; set; } = string.Empty;
 
         public bool PrimeiroDesembolso { get; set; }
         public string AgenteFinanceiro { get; set; } = string.Empty;
