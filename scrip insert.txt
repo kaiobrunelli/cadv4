@@ -1,0 +1,83 @@
+-- ============================================================
+-- 1) CAD_TB003_VALIDACAO — catálogo de validações
+-- Os 6 primeiros IDs são fixos porque ValidadorDesembolsoService.cs
+-- referencia esses números direto no código (RegraBooleana(coValidacao: X, ...)).
+-- Os outros 3 (Tomador adimplente, CND INSS, CRP) não têm regra automática
+-- hardcoded, então deixo identity gerar o número e guardo em variável.
+-- ============================================================
+
+SET IDENTITY_INSERT CAD_TB003_VALIDACAO ON;
+
+INSERT INTO CAD_TB003_VALIDACAO (CO_VALIDACAO, DE_VALIDACAO, DT_CRIACAO, CAMPO_VINCULADO, DESATIVADO)
+VALUES
+    (1,    'Licença de operação',    GETDATE(), NULL, 0),
+    (2,    'Licença de instalação',  GETDATE(), NULL, 0),
+    (7,    'Retorno parcial',        GETDATE(), NULL, 0),
+    (8,    'Placa local',            GETDATE(), NULL, 0),
+    (9,    'Excepcionalização',      GETDATE(), NULL, 0),
+    (1005, 'CP alterada',            GETDATE(), NULL, 0);
+
+SET IDENTITY_INSERT CAD_TB003_VALIDACAO OFF;
+
+DECLARE @CoTomadorAdimplente INT;
+DECLARE @CoCndInss INT;
+DECLARE @CoCrp INT;
+
+INSERT INTO CAD_TB003_VALIDACAO (DE_VALIDACAO, DT_CRIACAO, CAMPO_VINCULADO, DESATIVADO)
+VALUES ('Tomador adimplente', GETDATE(), NULL, 0);
+SET @CoTomadorAdimplente = SCOPE_IDENTITY();
+
+INSERT INTO CAD_TB003_VALIDACAO (DE_VALIDACAO, DT_CRIACAO, CAMPO_VINCULADO, DESATIVADO)
+VALUES ('CND INSS Válida', GETDATE(), NULL, 0);
+SET @CoCndInss = SCOPE_IDENTITY();
+
+INSERT INTO CAD_TB003_VALIDACAO (DE_VALIDACAO, DT_CRIACAO, CAMPO_VINCULADO, DESATIVADO)
+VALUES ('CRP Válida', GETDATE(), NULL, 0);
+SET @CoCrp = SCOPE_IDENTITY();
+
+
+-- ============================================================
+-- 2) CAD_TB002_CONTROLE_DESEMBOLSO — 1 linha por desembolso
+-- (CO_CONTROLE_DESEMBOLSO = 1 e 2, pareando com CO_DESEMBOLSO = 1 e 2)
+-- ============================================================
+
+SET IDENTITY_INSERT CAD_TB002_CONTROLE_DESEMBOLSO ON;
+
+INSERT INTO CAD_TB002_CONTROLE_DESEMBOLSO (
+    CO_CONTROLE_DESEMBOLSO, CO_DESEMBOLSO, RESPONSAVEL_ANALISE, RESPONSAVEL_BAIXA,
+    RESPONSAVEL_DESEMBOLSO, GESTOR, DT_PRAZO, CO_STATUS_DESEMBOLSO, DT_CONCLUSAO
+)
+VALUES
+    (1, 1, NULL, NULL, NULL, NULL, DATEADD(DAY, 21, '2026-08-26'), 1, NULL), -- 1 = PENDENTE
+    (2, 2, NULL, NULL, NULL, NULL, DATEADD(DAY, 21, '2026-08-26'), 1, NULL);
+
+SET IDENTITY_INSERT CAD_TB002_CONTROLE_DESEMBOLSO OFF;
+
+
+-- ============================================================
+-- 3) CAD_TB004_VALIDACAO_CONTROLE_DESEMBOLSO — checklist de cada desembolso
+-- Uma linha por validação ativa, pros dois desembolsos (1 e 2).
+-- SITUACAO: 0 = ANALISAR (pendente), estado inicial sem justificativa.
+-- ============================================================
+
+INSERT INTO CAD_TB004_VALIDACAO_CONTROLE_DESEMBOLSO (CO_VALIDACAO, CO_CONTROLE_DESEMBOLSO, DE_VALIDACAO, CAMPO_VINCULADO, SITUACAO)
+VALUES
+    (1,                     1, 'Licença de operação',   NULL, 0),
+    (2,                     1, 'Licença de instalação', NULL, 0),
+    (@CoTomadorAdimplente,  1, 'Tomador adimplente',    NULL, 0),
+    (7,                     1, 'Retorno parcial',       NULL, 0),
+    (8,                     1, 'Placa local',           NULL, 0),
+    (9,                     1, 'Excepcionalização',     NULL, 0),
+    (1005,                  1, 'CP alterada',           NULL, 0),
+    (@CoCndInss,            1, 'CND INSS Válida',       NULL, 0),
+    (@CoCrp,                1, 'CRP Válida',             NULL, 0),
+
+    (1,                     2, 'Licença de operação',   NULL, 0),
+    (2,                     2, 'Licença de instalação', NULL, 0),
+    (@CoTomadorAdimplente,  2, 'Tomador adimplente',    NULL, 0),
+    (7,                     2, 'Retorno parcial',       NULL, 0),
+    (8,                     2, 'Placa local',           NULL, 0),
+    (9,                     2, 'Excepcionalização',     NULL, 0),
+    (1005,                  2, 'CP alterada',           NULL, 0),
+    (@CoCndInss,            2, 'CND INSS Válida',       NULL, 0),
+    (@CoCrp,                2, 'CRP Válida',             NULL, 0);
