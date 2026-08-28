@@ -291,7 +291,7 @@ INSERT INTO [CAD_TB003_VALIDACAO] (CO_VALIDACAO, DE_VALIDACAO, DT_CRIACAO, DESAT
     (7,    N'Retorno parcial',                GETDATE(), 0),
     (8,    N'Placa local',                    GETDATE(), 0),
     (9,    N'Excepcionalização',              GETDATE(), 0),
-    (1005, N'CP alterada',                    GETDATE(), 1); -- toggle comentado no front
+    (1005, N'CP alterada',                    GETDATE(), 0);
 GO
 
 SET IDENTITY_INSERT [CAD_TB003_VALIDACAO] OFF;

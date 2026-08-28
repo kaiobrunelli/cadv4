@@ -115,7 +115,6 @@ namespace ControleAnaliseDesembolso.Application
                 AgentePromotor = FpdAnterior.AgentePromotor,
                 CnpjAgentePromotor = FpdAnterior.CnpjAgentePromotor,
                 Programa = FpdAnterior.Programa.ToString(),
-                RetornoParcial = FpdAnterior.RetornoParcial ?? false,
                 DtEngenharia = FpdAnterior.DtEngenharia,
                 SituacaoObra = FpdAnterior.SituacaoObra?.ToString(),
                 DtSocioAmbiental = FpdAnterior.DtSocioAmbiental,

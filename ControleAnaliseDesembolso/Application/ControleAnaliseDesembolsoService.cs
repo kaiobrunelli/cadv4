@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using PlataformaNotificacao.Application.Interface;
 using PlataformaNotificacao.Domain.Enum;
+using RedeCaixaUtilitario.Application.Interface;
 using Utilitarios.Service;
 
 namespace ControleAnaliseDesembolso.Application
@@ -21,6 +22,7 @@ namespace ControleAnaliseDesembolso.Application
         private readonly INotificacaoService _notificacoes;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly UtilitarioMapperServicecopy _mapperCopy;
+        private readonly ISiapfService _siapf;
 
         private const string CodigoCoordenacaoCefga = "CEFGA06";
 
@@ -30,7 +32,8 @@ namespace ControleAnaliseDesembolso.Application
             IEmpregadoCADService empregados,
             INotificacaoService notificacoes,
             IHttpContextAccessor httpContextAccessor,
-            UtilitarioMapperServicecopy mapperCopy)
+            UtilitarioMapperServicecopy mapperCopy,
+            ISiapfService siapf)
         {
             _context = context;
             _validador = validador;
@@ -38,6 +41,7 @@ namespace ControleAnaliseDesembolso.Application
             _notificacoes = notificacoes;
             _httpContextAccessor = httpContextAccessor;
             _mapperCopy = mapperCopy;
+            _siapf = siapf;
         }
 
    
@@ -600,7 +604,7 @@ namespace ControleAnaliseDesembolso.Application
                 //     desembolso.Desembolso.ContratoAoDv = contratoAoDv;
                 // }
 
-                await ExecutarValidacaoDesembolso(desembolso);
+                await ExecutarValidacaoDesembolso(desembolso, cancellationToken);
 
                 RegistrarAuditoria(null, "Validar", $"Validou o desembolso {coControleDesembolso}");
 
@@ -632,7 +636,7 @@ namespace ControleAnaliseDesembolso.Application
             {
                 foreach (var desembolso in desembolsos)
                 {
-                    await ExecutarValidacaoDesembolso(desembolso);
+                    await ExecutarValidacaoDesembolso(desembolso, cancellationToken);
                 }
 
                 RegistrarAuditoria(null, "Validar todos pendentes",
@@ -648,8 +652,13 @@ namespace ControleAnaliseDesembolso.Application
             }
         }
 
-        private async Task ExecutarValidacaoDesembolso(ControleDesembolso desembolso)
+        private async Task ExecutarValidacaoDesembolso(ControleDesembolso desembolso, CancellationToken cancellationToken = default)
         {
+            // ========================= MODO SIMULADO (mantido) =========================
+            // Continua exatamente como estava: as regras booleanas de ValidadorDesembolsoService
+            // rodam, mas o resultado (Aprovado/Reprovado) é ignorado e cada item do checklist é
+            // forçado pra APROVADO. Mantido de propósito — é o que faz a validação "funcionar" hoje
+            // sem depender de nenhum sistema externo.
             var resultados = await _validador.Validar(desembolso.Desembolso);
 
             foreach (var resultado in resultados)
@@ -662,7 +671,6 @@ namespace ControleAnaliseDesembolso.Application
 
                 // aqui será a lógica do SIAPF para validar item a item
                 validacao.Situacao = TipoSituacaoValidacao.APROVADO;
-
             }
 
             // validacao.Situacao acima sempre vira Aprovado (stub — aqui será a

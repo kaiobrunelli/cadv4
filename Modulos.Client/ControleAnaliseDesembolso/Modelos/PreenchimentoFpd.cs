@@ -36,7 +36,6 @@ public class PreenchimentoFpd
 
     public string? Funcionalidade      { get; set; }
     public string? Conclusao           { get; set; }
-    public string? TomadorAdimplente   { get; set; }
     public string? PromotorAdimplente  { get; set; }
     public string? RetornoParcial      { get; set; }
     public string? PlacaLocal          { get; set; }
@@ -44,7 +43,6 @@ public class PreenchimentoFpd
     public string? LicencaOperacao     { get; set; }
     public string? Excepcionalizacao   { get; set; }
     public string? CpAlterada          { get; set; }
-    public string? Amortizacao         { get; set; }
     public string? CndValido           { get; set; }
     public string? CrpValido           { get; set; }
     public string  Mensagem            { get; set; } = "";
@@ -69,14 +67,16 @@ public class PreenchimentoFpd
     public decimal?  CpAtual          { get; set; }
     public decimal?  Desembolsado     { get; set; }
     public decimal?  Integralizado    { get; set; }
-    public decimal?  ParcelaFgts      { get; set; }
-    public decimal?  Integralizar     { get; set; }
-    public decimal?  SaldoIntegralizar{ get; set; }
 
     // Somente leitura: sempre VE - Desembolsado (o que ainda falta desembolsar
     // do total do empréstimo).
     public decimal? SaldoDesembolsar => Ve is null && Desembolsado is null
         ? null : (Ve ?? 0) - (Desembolsado ?? 0);
+
+    // Somente leitura: sempre CP Atual - Integralizado (o que ainda falta
+    // integralizar da contrapartida).
+    public decimal? SaldoIntegralizar => CpAtual is null && Integralizado is null
+        ? null : (CpAtual ?? 0) - (Integralizado ?? 0);
 
     // Quanto do VE já foi (ou está sendo, com esse pedido) desembolsado —
     // comparado com PercObra pra ver se o pedido não está pedindo mais do

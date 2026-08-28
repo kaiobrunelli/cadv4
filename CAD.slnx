@@ -12,5 +12,6 @@
   <Project Path="Plataforma.UI.Shared/Plataforma.UI.Shared.csproj" />
   <Project Path="PlataformaNotificacao/PlataformaNotificacao.csproj" />
   <Project Path="PlataformaOperacional.Application/PlataformaOperacional.Application.csproj" />
+  <Project Path="RedeCaixaUtilitario/RedeCaixaUtilitario.csproj" />
   <Project Path="Utilitarios/Utilitarios.csproj" />
 </Solution>

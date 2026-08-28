@@ -20,7 +20,6 @@ public record ContratoAFResponse
 
     public string Programa { get; set; } = string.Empty;
 
-    public bool RetornoParcial { get; set; }
     public DateTime DtEngenharia { get; set; }
     public string? SituacaoObra { get; set; }
     public DateTime? DtSocioAmbiental { get; set; }

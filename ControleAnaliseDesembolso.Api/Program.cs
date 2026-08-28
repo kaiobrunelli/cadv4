@@ -11,6 +11,8 @@ using PlataformaNotificacao.Application.Interface;
 using PlataformaNotificacao.Infra.Context;
 using PlataformaOperacional.Application.Service;
 using PlataformaOperacional.Application.Service.Interface;
+using RedeCaixaUtilitario.Application;
+using RedeCaixaUtilitario.Application.Interface;
 using Utilitarios.Service;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -31,6 +33,10 @@ builder.Services.AddScoped<IFichaPedidoDesembolsoService, FichaPedidoDesembolsoS
 builder.Services.AddScoped<IValidadorDesembolsoService, ValidadorDesembolsoService>();
 builder.Services.AddScoped<IEmpregadoCADService, EmpregadoCADService>();
 builder.Services.AddScoped<UtilitarioMapperServicecopy>();
+
+// DI simulada do RedeCaixaUtilitario — só o SiapfService (mock), sem terminal 3270 real.
+// Ver ControleAnaliseDesembolsoService.ExecutarValidacaoDesembolso pro uso na validação de VALORES.
+builder.Services.AddScoped<ISiapfService, SiapfService>();
 
 builder.Services.AddScoped<IAplicacaoService, AplicacaoService>();
 

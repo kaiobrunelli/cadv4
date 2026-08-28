@@ -163,13 +163,12 @@
             <div class="fpd-arvore">
                 @ItemToggle("2.1", "licoperacao", "Licença de operação", () => _fpd.LicencaOperacao, v => _fpd.LicencaOperacao = v, true, null)
                 @ItemToggle("2.2", "licinstalacao", "Licença de instalação", () => _fpd.LicencaInstalacao, v => _fpd.LicencaInstalacao = v, true, null)
-                @ItemToggle("2.3", "tomadoradimp", "Tomador adimplente", () => _fpd.TomadorAdimplente, v => _fpd.TomadorAdimplente = v, false, null)
-                @ItemToggle("2.4", "amortizacao", "Amortização", () => _fpd.Amortizacao, v => _fpd.Amortizacao = v, false, null)
-                @ItemToggle("2.5", "retorno", "Retorno parcial", () => _fpd.RetornoParcial, v => _fpd.RetornoParcial = v, false, null)
-                @ItemToggle("2.6", "placa", "Placa local", () => _fpd.PlacaLocal, v => _fpd.PlacaLocal = v, false, null)
-                @ItemToggle("2.7", "excep", "Excepcionalização", () => _fpd.Excepcionalizacao, v => _fpd.Excepcionalizacao = v, false, null)
-                @ItemToggle("2.8", "cndinss", "CND INSS Válida", () => _fpd.CndValido, v => _fpd.CndValido = v, false, null)
-                @ItemToggle("2.9", "crp", "CRP Válida", () => _fpd.CrpValido, v => _fpd.CrpValido = v, false, null)
+                @ItemToggle("2.3", "retorno", "Retorno parcial", () => _fpd.RetornoParcial, v => _fpd.RetornoParcial = v, false, null)
+                @ItemToggle("2.4", "placa", "Placa local", () => _fpd.PlacaLocal, v => _fpd.PlacaLocal = v, false, null)
+                @ItemToggle("2.5", "excep", "Excepcionalização", () => _fpd.Excepcionalizacao, v => _fpd.Excepcionalizacao = v, false, null)
+                @ItemToggle("2.6", "cndinss", "CND INSS Válida", () => _fpd.CndValido, v => _fpd.CndValido = v, false, null)
+                @ItemToggle("2.7", "crp", "CRP Válida", () => _fpd.CrpValido, v => _fpd.CrpValido = v, false, null)
+                @ItemToggle("2.8", "cpalterada", "CP alterada", () => _fpd.CpAlterada, v => _fpd.CpAlterada = v, false, null)
             </div>
         }
         else
@@ -186,7 +185,6 @@
                             <div class="fpd-campo"><label class="fpd-label" title="Quanto do desembolso vem do FGTS">Participação FGTS</label><CampoMoeda @bind-Value="_fpd.ParticipacaoFgts" /></div>
                             <div class="fpd-campo"><label class="fpd-label" title="Valor total do empréstimo contratado, sem somar a contrapartida">VE (Valor Empréstimo)</label><CampoMoeda @bind-Value="_fpd.Ve" /></div>
                             <div class="fpd-campo"><label class="fpd-label" title="Total já desembolsado até agora (sigla Rede Caixa: VD)">Desembolsado</label><CampoMoeda @bind-Value="_fpd.Desembolsado" /></div>
-                            <div class="fpd-campo"><label class="fpd-label" title="Valor da parcela referente ao FGTS">Parcela FGTS</label><CampoMoeda @bind-Value="_fpd.ParcelaFgts" /></div>
                             <div class="fpd-campo"><label class="fpd-label" title="Calculado automaticamente: VE - Desembolsado">Saldo a desembolsar</label><CampoMoeda Value="_fpd.SaldoDesembolsar" ReadOnly="true" /></div>
                         </div>
                     </div>
@@ -196,8 +194,7 @@
                             <div class="fpd-campo"><label class="fpd-label" title="Valor da contrapartida desta parcela (recurso próprio do agente)">Contrapartida</label><CampoMoeda @bind-Value="_fpd.Contrapartida" /></div>
                             <div class="fpd-campo"><label class="fpd-label" title="Contrapartida total a ser integralizada até o fim do contrato">CP Atual</label><CampoMoeda @bind-Value="_fpd.CpAtual" /></div>
                             <div class="fpd-campo"><label class="fpd-label" title="Quanto da contrapartida já foi integralizado até agora (informado pela GIGOV)">Integralizado</label><CampoMoeda @bind-Value="_fpd.Integralizado" /></div>
-                            <div class="fpd-campo"><label class="fpd-label" title="Parcela de contrapartida que está sendo integralizada neste pedido de desembolso">Integralizar</label><CampoMoeda @bind-Value="_fpd.Integralizar" /></div>
-                            <div class="fpd-campo"><label class="fpd-label" title="Valor credor que ainda falta ser integralizado">Saldo a integralizar</label><CampoMoeda @bind-Value="_fpd.SaldoIntegralizar" /></div>
+                            <div class="fpd-campo"><label class="fpd-label" title="Calculado automaticamente: CP Atual - Integralizado">Saldo a integralizar</label><CampoMoeda Value="_fpd.SaldoIntegralizar" ReadOnly="true" /></div>
                         </div>
                     </div>
                 </div>
@@ -477,7 +474,6 @@
             : d.UltimoDesembolso ? "ultimo"
             : d.TipoDesembolso == "ADIANTAMENTO" ? "adiantamento"
             : null;
-        _fpd.Amortizacao = BoolParaSimNao(d.Amortizacao);
         _fpd.Sanepar = d.Sanepar ?? false;
 
         _fpd.AgenteFinanceiro = d.AgenteFinanceiro;
@@ -517,7 +513,6 @@
         _fpd.CpAtual = d.ContrapartidaAtual;
         _fpd.Desembolsado = d.Desembolsado;
         _fpd.Integralizado = d.Integralizado;
-        _fpd.SaldoIntegralizar = d.SaldoIntegralizar;
     }
 
     private RenderFragment StepHeader(int numero, string icone, string titulo) =>
@@ -714,7 +709,6 @@
             Integralizado = _fpd.Integralizado ?? 0,
             SaldoIntegralizar = _fpd.SaldoIntegralizar ?? 0,
             ContrapartidaAlterada = SimNaoParaBool(_fpd.CpAlterada),
-            Amortizacao = SimNaoParaBool(_fpd.Amortizacao),
             Sanepar = _fpd.Sanepar,
             Mensagem = _fpd.Mensagem,
             ValidacoesDesembolsoRequest = MontarComentariosParaEnvio(),
@@ -850,7 +844,7 @@
         return erros;
     }
 
-    // Os 7 itens sempre visíveis da Etapa 2 (ver ItemToggle em _etapaAtual == 2)
+    // Os 8 itens sempre visíveis da Etapa 2 (ver ItemToggle em _etapaAtual == 2)
     // — cada um precisa de Sim ou Não antes de enviar, senão a FPD ia pro
     // banco com validação em branco e ninguém percebia até abrir de novo.
     private List<string> ValidarChecklist()
@@ -858,11 +852,12 @@
         var pendentes = new List<string>();
         if (_fpd.LicencaOperacao is null) pendentes.Add("Licença de operação");
         if (_fpd.LicencaInstalacao is null) pendentes.Add("Licença de instalação");
-        if (_fpd.TomadorAdimplente is null) pendentes.Add("Tomador adimplente");
-        if (_fpd.Amortizacao is null) pendentes.Add("Amortização");
         if (_fpd.RetornoParcial is null) pendentes.Add("Retorno parcial");
         if (_fpd.PlacaLocal is null) pendentes.Add("Placa local");
         if (_fpd.Excepcionalizacao is null) pendentes.Add("Excepcionalização");
+        if (_fpd.CndValido is null) pendentes.Add("CND INSS Válida");
+        if (_fpd.CrpValido is null) pendentes.Add("CRP Válida");
+        if (_fpd.CpAlterada is null) pendentes.Add("CP alterada");
         return pendentes;
     }
 
@@ -945,7 +940,6 @@
 
         _fpd.Programa = response.Programa;
 
-        _fpd.RetornoParcial = response.RetornoParcial ? "sim" : "nao";
 
         _fpd.DataEmissaoEng = response.DtEngenharia;
         _fpd.SituacaoObra = response.SituacaoObra ?? "NORMAL";

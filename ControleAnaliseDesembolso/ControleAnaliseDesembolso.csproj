@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\PlataformaNotificacao\PlataformaNotificacao.csproj" />
+    <ProjectReference Include="..\RedeCaixaUtilitario\RedeCaixaUtilitario.csproj" />
     <ProjectReference Include="..\Utilitarios\Utilitarios.csproj" />
   </ItemGroup>
 

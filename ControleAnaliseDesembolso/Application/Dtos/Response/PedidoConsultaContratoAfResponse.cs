@@ -16,7 +16,6 @@ namespace ControleAnaliseDesembolso.Application.Dtos.Response
         public string AgentePromotor { get; set; } = string.Empty;
         public string CnpjAgentePromotor { get; set; } = string.Empty;
         public string Programa { get; set; } = string.Empty;
-        public bool RetornoParcial { get; set; }
         public DateTime DtEngenharia { get; set; }
         public string? SituacaoObra { get; set; }
         public DateTime? DtSocioAmbiental { get; set; }

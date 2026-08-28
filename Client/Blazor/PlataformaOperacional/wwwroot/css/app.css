@@ -6,17 +6,17 @@ html, body {
 
 :root {
     /* Paleta inspirada em interfaces modernas (Airbnb/Google) */
-    --bg-dark: #F7F9FC; /* Fundo da p·gina (Cinza muito claro) */
+    --bg-dark: #F7F9FC; /* Fundo da pÔøΩgina (Cinza muito claro) */
     --card-dark: #FFFFFF; /* Cards brancos puros */
     --success-blue: #00A699; /* Verde-azulado (Estilo Airbnb) */
     --tech-blue: #1877F2; /* Azul vibrante (Estilo Facebook/Google) */
-    --text-primary: #222222; /* Texto quase preto para leitura confort·vel */
-    --text-secondary: #717171; /* Cinza para textos secund·rios */
+    --text-primary: #222222; /* Texto quase preto para leitura confortÔøΩvel */
+    --text-secondary: #717171; /* Cinza para textos secundÔøΩrios */
     --border-subtle: #DDDDDD; /* Bordas suaves e finas */
     /* Adicional para profundidade */
     --shadow-soft: 0 4px 12px rgba(0, 0, 0, 0.05);
     --blue-glow: 0 4px 14px rgba(24, 119, 242, 0.3);
-    /* Novas Cores para ComposiÁ„o Moderno (Azul/Cinza/Branco) */
+    /* Novas Cores para ComposiÔøΩÔøΩo Moderno (Azul/Cinza/Branco) */
     --brand-primary: #007FFF;
     --brand-secondary: #0056b3;
     --neutral-gray-100: #F8FAFC;
@@ -27,13 +27,13 @@ html, body {
     --accent-blue-light: rgba(0, 127, 255, 0.1);
     --accent-blue-border: rgba(0, 127, 255, 0.2);
     /*###CSS para paginas Encontro de Contas###*/
-    /* Brand (primary ó blue) */
+    /* Brand (primary ÔøΩ blue) */
     --brand-600: #005ca9;
     --brand-700: #004a8a;
     --brand-500: #1a75c2;
     --brand-100: #e6f0f9;
     --brand-50: #f4f8fc;
-    /* Accent (secondary ó orange) */
+    /* Accent (secondary ÔøΩ orange) */
     --accent-600: #f39200;
     --accent-700: #cf7a00;
     --accent-500: #f7a733;
@@ -83,7 +83,7 @@ html, body {
 }
 
 /* ============================================================
-   UTILIT¡RIOS GLOBAIS
+   UTILITÔøΩRIOS GLOBAIS
    ============================================================ */
 .skeleton {
   background: linear-gradient(90deg, var(--ink-100) 0%, var(--ink-50) 50%, var(--ink-100) 100%);
@@ -197,7 +197,7 @@ a, .btn-link {
     .loading-progress-text:after {
         content: var(--blazor-load-percentage-text, "Loading");
     }
-/*####CSS PERSONALIZADO COME«A AQUI#####*/
+/*####CSS PERSONALIZADO COMEÔøΩA AQUI#####*/
 :root {
     --primary-background-color: #D87B00;
     --secondary-background-color: #005CA9;
@@ -249,11 +249,11 @@ nav {
 /*.mud-icon-button-label{
   color:red !important;
 }*/
-/*Icone data paginaÁ„o da tabela*/
+/*Icone data paginaÔøΩÔøΩo da tabela*/
 .mud-nav-link > .mud-icon-root.mud-svg-icon {
     fill: white !important;
 }
-/*icon da paginaÁ„o da tabela*/
+/*icon da paginaÔøΩÔøΩo da tabela*/
 .mud-icon-default {
     fill: white !important;
 }
@@ -267,7 +267,7 @@ mud-icon-root mud-svg-icon mud-error-text mud-icon-size-small mud-chip-icon {
     fill: red !important;
     color: red;
 }
-/*cor do numero paginaÁ„o da tabela*/
+/*cor do numero paginaÔøΩÔøΩo da tabela*/
 .mud-select .mud-select-input .mud-input-slot {
     color: white !important;
 }
@@ -476,9 +476,9 @@ mud-icon-root mud-svg-icon mud-error-text mud-icon-size-small mud-chip-icon {
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: #FAF8F5; /* Cor de fundo, vocÍ pode ajustar */
+    background-color: #FAF8F5; /* Cor de fundo, vocÔøΩ pode ajustar */
     border-radius: 50%;
-    width: 60px; /* Tamanho do cÌrculo */
+    width: 60px; /* Tamanho do cÔøΩrculo */
     height: 60px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Sombra opcional */
     transition: background-color 0.3s ease;
@@ -493,7 +493,7 @@ mud-icon-root mud-svg-icon mud-error-text mud-icon-size-small mud-chip-icon {
     background-color: var(--mud-palette-background) !important;
 }
 /* ============================================================
-   UTILIT¡RIOS GLOBAIS
+   UTILITÔøΩRIOS GLOBAIS
    ============================================================ */
 .skeleton {
     background: linear-gradient(90deg, var(--ink-100) 0%, var(--ink-50) 50%, var(--ink-100) 100%);
@@ -519,3 +519,14 @@ mud-icon-root mud-svg-icon mud-error-text mud-icon-size-small mud-chip-icon {
     .acc-body > .acc-inner {
         overflow: hidden;
     }
+
+/* Os di√°logos do CAD (fpd, DRP, etc.) usam z-index 2000/2001 no pr√≥prio
+   markup, acima do --mud-zindex-snackbar padr√£o do MudBlazor ‚Äî por isso o
+   snackbar ficava atr√°s deles quando um di√°logo estava aberto. O seletor √©
+   de id mesmo (MudBlazor 9.4.0 renderiza <div id="mud-snackbar-container">,
+   confirmado direto no MudBlazor.min.css oficial) ‚Äî o bug real nunca foi o
+   seletor, foi o navegador nunca buscar o app.css atualizado (ver ?v= no
+   index.html). */
+#mud-snackbar-container {
+    z-index: 2100 !important;
+}
