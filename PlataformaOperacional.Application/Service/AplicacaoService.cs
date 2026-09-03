@@ -43,12 +43,21 @@ namespace PlataformaOperacional.Application.Service
             => await _controleAnaliseDesembolso.BaixarDRP(coControleDesembolso, cancellationToken);
         public async Task RejeitarDesembolso(int coControleDesembolso, RejeitarDesembolsoRequest request, CancellationToken cancellationToken = default)
             => await _controleAnaliseDesembolso.RejeitarDesembolso(coControleDesembolso, request, cancellationToken);
+
+        public async Task CancelarDesembolso(int coControleDesembolso, CancelarDesembolsoRequest request, CancellationToken cancellationToken = default)
+            => await _controleAnaliseDesembolso.CancelarDesembolso(coControleDesembolso, request, cancellationToken);
+
+        public async Task AtualizarMensagemCefga(int coControleDesembolso, AtualizarMensagemCefgaRequest request, CancellationToken cancellationToken = default)
+            => await _controleAnaliseDesembolso.AtualizarMensagemCefga(coControleDesembolso, request, cancellationToken);
+
+        public async Task<List<ConferenciaCampoResponse>> ExecutarConferenciaCampos(int coControleDesembolso, CancellationToken cancellationToken = default)
+            => await _controleAnaliseDesembolso.ExecutarConferenciaCampos(coControleDesembolso, cancellationToken);
         public async Task VincularResponsavel(int coControleDesembolso, string? matriculaResponsavel, CancellationToken cancellationToken = default)
             => await _controleAnaliseDesembolso.VincularResponsavel(coControleDesembolso, matriculaResponsavel, cancellationToken);
-        public async Task ValidarDesembolso(int coControleDesembolso, CancellationToken cancellationToken = default)
-            => await _controleAnaliseDesembolso.ValidarDesembolso(coControleDesembolso, cancellationToken);
-        public async Task ValidarTodosPendentes(CancellationToken cancellationToken = default)
-            => await _controleAnaliseDesembolso.ValidarTodosPendentes(cancellationToken);
+        public async Task ValidarDesembolso(int coControleDesembolso, ValidarDesembolsoRequest request, CancellationToken cancellationToken = default)
+            => await _controleAnaliseDesembolso.ValidarDesembolso(coControleDesembolso, request, cancellationToken);
+        public async Task ValidarTodosPendentes(ValidarDesembolsoRequest request, CancellationToken cancellationToken = default)
+            => await _controleAnaliseDesembolso.ValidarTodosPendentes(request, cancellationToken);
         public async Task<List<ValidacaoTemplateResponse>> ObterValidacoesTemplate(CancellationToken cancellationToken = default)
             => await _controleAnaliseDesembolso.ObterValidacoesTemplate(cancellationToken);
         public async Task<PedidoConsultaContratoAfResponse> SolicitarDadosFPD(PedidoConsultaContratoAfRequest pedido, CancellationToken cancellationToken = default)

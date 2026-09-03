@@ -52,6 +52,46 @@ public class ControleDesembolsoConfig : IEntityTypeConfiguration<ControleDesembo
             .HasColumnName("DT_CONCLUSAO")
             .HasColumnType("date");
 
+        builder.Property(x => x.MotivoCancelamento)
+            .HasColumnName("MOTIVO_CANCELAMENTO")
+            .HasMaxLength(3000);
+
+        builder.Property(x => x.DtUltimaConferencia)
+            .HasColumnName("DT_ULTIMA_CONFERENCIA")
+            .HasColumnType("datetime");
+
+        builder.Property(x => x.NumeroDrp)
+            .HasColumnName("NUMERO_DRP")
+            .HasMaxLength(20);
+
+        builder.Property(x => x.DvDrp)
+            .HasColumnName("DV_DRP")
+            .HasMaxLength(5);
+
+        builder.Property(x => x.SenhaDrp)
+            .HasColumnName("SENHA_DRP")
+            .HasMaxLength(20);
+
+        builder.Property(x => x.DtDrp)
+            .HasColumnName("DT_DRP")
+            .HasColumnType("date");
+
+        builder.Property(x => x.CrfAf)
+            .HasColumnName("CRF_AF")
+            .HasColumnType("date");
+
+        builder.Property(x => x.CrfTomador)
+            .HasColumnName("CRF_TOMADOR")
+            .HasColumnType("date");
+
+        builder.Property(x => x.CrfAp)
+            .HasColumnName("CRF_AP")
+            .HasColumnType("date");
+
+        builder.Property(x => x.CrfAt)
+            .HasColumnName("CRF_AT")
+            .HasColumnType("date");
+
         builder.HasOne(x => x.Desembolso)
             .WithOne(x => x.ControleDesembolso)
             .HasForeignKey<ControleDesembolso>(x => x.CoDesembolso)

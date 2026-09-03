@@ -29,3 +29,10 @@ window.scrollSubItemIntoView = function (elementId) {
     // funciona, e a diferença visual aqui é imperceptível.
     el.scrollIntoView({ behavior: "auto", block: "nearest" });
 };
+
+// Dispara .click() num elemento a partir de uma ElementReference — usado pro
+// botão "Anexar arquivo" simulado abrir o seletor nativo do input[type=file]
+// escondido (ver PainelPreencherFpdEtapas.razor).
+window.clicarElemento = function (elemento) {
+    if (elemento) elemento.click();
+};

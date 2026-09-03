@@ -13,6 +13,7 @@ public class RegistroDrp
     public string?  ResponsavelDesembolso { get; set; }
     public int      Status        { get; set; }
 
-    public bool Baixado   => Status == 5;
-    public bool Rejeitado => Status == 4;
+    public bool Baixado    => Status == 5;
+    public bool Rejeitado  => Status == 4;
+    public bool Cancelado  => Status == 6;
 }

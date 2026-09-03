@@ -17,9 +17,12 @@ namespace PlataformaOperacional.Application.Service.Interface
         Task AprovarDesembolso(int coControleDesembolso, AprovarDesembolsoRequest request, CancellationToken cancellationToken = default);
         Task BaixarDRP(int coControleDesembolso, CancellationToken cancellationToken = default);
         Task RejeitarDesembolso(int coControleDesembolso, RejeitarDesembolsoRequest request, CancellationToken cancellationToken = default);
+        Task CancelarDesembolso(int coControleDesembolso, CancelarDesembolsoRequest request, CancellationToken cancellationToken = default);
+        Task AtualizarMensagemCefga(int coControleDesembolso, AtualizarMensagemCefgaRequest request, CancellationToken cancellationToken = default);
+        Task<List<ConferenciaCampoResponse>> ExecutarConferenciaCampos(int coControleDesembolso, CancellationToken cancellationToken = default);
         Task VincularResponsavel(int coControleDesembolso, string? matriculaResponsavel, CancellationToken cancellationToken = default);
-        Task ValidarDesembolso(int coControleDesembolso, CancellationToken cancellationToken = default);
-        Task ValidarTodosPendentes(CancellationToken cancellationToken = default);
+        Task ValidarDesembolso(int coControleDesembolso, ValidarDesembolsoRequest request, CancellationToken cancellationToken = default);
+        Task ValidarTodosPendentes(ValidarDesembolsoRequest request, CancellationToken cancellationToken = default);
         Task<List<ValidacaoTemplateResponse>> ObterValidacoesTemplate(CancellationToken cancellationToken = default);
         Task<PedidoConsultaContratoAfResponse> SolicitarDadosFPD(PedidoConsultaContratoAfRequest pedido, CancellationToken cancellationToken = default);
         Task CriarFichaPedidoDesembolso(PedidoDesembolsoRequest request, CancellationToken cancellationToken = default);

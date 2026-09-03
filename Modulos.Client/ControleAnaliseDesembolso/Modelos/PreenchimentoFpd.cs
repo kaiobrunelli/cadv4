@@ -23,6 +23,16 @@ public class PreenchimentoFpd
     public string? OpcaoExclusiva { get; set; }
     public bool PrimeiroDesembolso => OpcaoExclusiva == "primeiro";
     public bool UltimoDesembolsoSelecionado => OpcaoExclusiva == "ultimo";
+    public bool Recorrente => OpcaoExclusiva == "recorrente";
+
+    // Só se aplicam quando Programa == Pro_Transporte
+    public string? TemCarroceria { get; set; }
+    public string? VeiculoPossuiAdesivos { get; set; }
+
+    public DateTime? DataInicioObra { get; set; }
+
+    // Só se aplica quando PrimeiroDesembolso == true
+    public string? DestinacaoColetaResiduosSolidos { get; set; }
 
     public string AgenteFinanceiro     { get; set; } = "";
     public string CnpjAgenteFinanceiro { get; set; } = "";
@@ -73,19 +83,22 @@ public class PreenchimentoFpd
     public decimal? SaldoDesembolsar => Ve is null && Desembolsado is null
         ? null : (Ve ?? 0) - (Desembolsado ?? 0);
 
-    // Somente leitura: sempre CP Atual - Integralizado (o que ainda falta
-    // integralizar da contrapartida).
-    public decimal? SaldoIntegralizar => CpAtual is null && Integralizado is null
-        ? null : (CpAtual ?? 0) - (Integralizado ?? 0);
+    // Somente leitura: sempre CP Atual - (Contrapartida desta parcela + Integralizado
+    // histórico) — Integralizado é só o que já foi integralizado ANTES desta
+    // parcela (informado pela GIGOV); Contrapartida é o valor desta parcela que
+    // está sendo adicionado agora, então os dois precisam somar aqui.
+    public decimal? SaldoIntegralizar => CpAtual is null && Integralizado is null && Contrapartida is null
+        ? null : (CpAtual ?? 0) - ((Contrapartida ?? 0) + (Integralizado ?? 0));
 
     // Quanto do VE já foi (ou está sendo, com esse pedido) desembolsado —
     // comparado com PercObra pra ver se o pedido não está pedindo mais do
     // que já foi fisicamente executado na obra.
     public decimal? PercExecucaoFinanceira => Ve is > 0
-        ? Math.Round(((Desembolsado ?? 0) + (SolicitadoVi ?? 0)) / Ve.Value * 100, 3) : null;
+        ? Math.Round(((Desembolsado ?? 0) + (ParticipacaoFgts ?? 0)) / Ve.Value * 100, 3) : null;
 
-    // Quanto da contrapartida total do contrato (CpAtual) já foi
-    // integralizado até agora.
+    // Quanto da contrapartida total do contrato (CpAtual) já foi integralizado,
+    // somando a Contrapartida desta parcela ao histórico (Integralizado) — mesmo
+    // raciocínio do SaldoIntegralizar acima.
     public decimal? PercContrapartidaIntegralizada => CpAtual is > 0
-        ? Math.Round((Integralizado ?? 0) / CpAtual.Value * 100, 3) : null;
+        ? Math.Round(((Contrapartida ?? 0) + (Integralizado ?? 0)) / CpAtual.Value * 100, 3) : null;
 }

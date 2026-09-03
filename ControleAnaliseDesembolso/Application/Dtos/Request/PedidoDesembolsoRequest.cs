@@ -10,6 +10,7 @@ namespace ControleAnaliseDesembolso.Application.Dtos.Request
         public string CoContratoAf { get; set; } = string.Empty;
         public string CoContratoAfDv { get; set; } = string.Empty;
         public bool PrimeiroDesembolso { get; set; }
+        public bool Recorrente { get; set; }
         public string AgenteFinanceiro { get; set; } = string.Empty;
         public string CnpjAf { get; set; } = string.Empty;
         public string MutuarioFinal { get; set; } = string.Empty;
@@ -35,6 +36,7 @@ namespace ControleAnaliseDesembolso.Application.Dtos.Request
         public bool? LicensaOperacao { get; set; }
         public bool? CndValido { get; set; }
         public bool? CrpValido { get; set; }
+        public bool CrpNsa { get; set; }
         public decimal SolicitadoVi { get; set; }
         public decimal GlossadoVi { get; set; }
         public decimal AceitoVi { get; set; }
@@ -52,6 +54,21 @@ namespace ControleAnaliseDesembolso.Application.Dtos.Request
         public bool? Amortizacao { get; set; }
         public bool? Sanepar { get; set; }
         public string? Mensagem { get; set; }
+
+        public bool? TemCarroceria { get; set; }
+        public bool? VeiculoPossuiAdesivos { get; set; }
+        public DateTime? DataInicioObra { get; set; }
+        public bool? DestinacaoColetaResiduosSolidos { get; set; }
+
+        public string? NumeroDrp { get; set; }
+        public string? DvDrp { get; set; }
+        public string? SenhaDrp { get; set; }
+        public DateTime? DtDrp { get; set; }
+
+        public DateTime? CrfAf { get; set; }
+        public DateTime? CrfTomador { get; set; }
+        public DateTime? CrfAp { get; set; }
+        public DateTime? CrfAt { get; set; }
 
         public List<ValidacaoDesembolsoRequest> ValidacoesDesembolsoRequest { get; set; } = new();
     }

@@ -328,7 +328,7 @@
         "invalidos" => "Inválidos",
         "pendentes" => "Em Análise",
         "validos"   => "Aprovados",
-        "agendado"  => "Agendados",
+        "agendado"  => "SANEPAR",
         _           => "Geral"
     };
 
@@ -339,7 +339,7 @@
             "invalidos" => todos.Where(d => d.Status == "pendencia").ToList(),
             "pendentes" => todos.Where(d => d.Status == "pendente").ToList(),
             "validos"   => todos.Where(d => d.Status == "aprovado").ToList(),
-            "agendado"  => todos.Where(d => d.Status == "agendado").ToList(),
+            "agendado"  => todos.Where(d => d.Sanepar && d.Status is "pendencia" or "pendente").ToList(),
             _           => todos
         };
 

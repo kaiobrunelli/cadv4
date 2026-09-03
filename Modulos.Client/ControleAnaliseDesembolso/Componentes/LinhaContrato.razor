@@ -7,6 +7,15 @@
         <span class="contrato-mono">@Desembolso.Contrato</span>
     </div>
 
+    @if (!MostrarMutuario)
+    {
+    <div class="col-contrato">
+        <span class="contrato-mono @(string.IsNullOrWhiteSpace(Desembolso.ContratoAo) ? "contrato-mono-vazio" : "")">
+            @(string.IsNullOrWhiteSpace(Desembolso.ContratoAo) ? "—" : string.IsNullOrWhiteSpace(Desembolso.ContratoAoDv) ? Desembolso.ContratoAo : $"{Desembolso.ContratoAo}-{Desembolso.ContratoAoDv}")
+        </span>
+    </div>
+    }
+
     @if (MostrarMutuario)
     {
     <div class="col-mutuario">
@@ -103,6 +112,7 @@
         { Adiantamento: true }       => "Adiantamento",
         { PrimeiroDesembolso: true } => "1º Desembolso",
         { UltimoDesembolso: true }   => "Último Desembolso",
+        { Recorrente: true }         => "Recorrente",
         _                            => "Normal",
     };
 
@@ -146,6 +156,7 @@
     font-weight: 700;
     color: var(--brand-800);
 }
+.contrato-mono-vazio { color: var(--ink-300); font-weight: 500; }
 
 .col-mutuario { width: 208px; flex-shrink: 0; min-width: 0; overflow: hidden; }
 .mutuario-nome {

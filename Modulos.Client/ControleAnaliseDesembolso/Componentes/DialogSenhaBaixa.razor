@@ -7,10 +7,13 @@
             <i class="bi bi-shield-lock"></i>
         </div>
         <div>
-            <div class="dialog-baixa-titulo">Confirmar baixa</div>
-            <div class="dialog-baixa-subtitulo">
-                @Quantidade @(Quantidade == 1 ? "desembolso selecionado" : "desembolsos selecionados")
-            </div>
+            <div class="dialog-baixa-titulo">@TituloEfetivo</div>
+            @if (SenhaParaDrp)
+            {
+                <div class="dialog-baixa-subtitulo">
+                    @Quantidade @(Quantidade == 1 ? "desembolso selecionado" : "desembolsos selecionados")
+                </div>
+            }
         </div>
         <button class="dialog-baixa-fechar" @onclick="AoCancelar" disabled="@_processando">
             <i class="bi bi-x-lg"></i>
@@ -20,7 +23,7 @@
     <div class="dialog-baixa-corpo">
         <p class="dialog-baixa-info">
             <i class="bi bi-info-circle"></i>
-            Informe sua senha para registrar a baixa.
+            @MensagemEfetiva
         </p>
 
         <label class="dialog-baixa-label">Senha</label>
@@ -42,18 +45,19 @@
             @if (_processando)
             {
                 <i class="bi bi-arrow-repeat spin"></i>
-                <span>Baixando…</span>
+                <span>@TextoProcessandoEfetivo</span>
             }
             else
             {
                 <i class="bi bi-check2-circle"></i>
-                <span>Baixar</span>
+                <span>@TextoBotaoEfetivo</span>
             }
         </button>
     </div>
 </div>
 
 @code {
+    [Parameter] public bool SenhaParaDrp { get; set; } = true;
     [Parameter] public int Quantidade { get; set; }
     [Parameter, EditorRequired] public EventCallback AoCancelar { get; set; }
     [Parameter, EditorRequired] public EventCallback<string> AoConfirmar { get; set; }
@@ -63,6 +67,13 @@
     private bool _processando;
 
     private bool TemErro => !string.IsNullOrEmpty(_erro);
+
+    private string TituloEfetivo => SenhaParaDrp ? "Confirmar baixa" : "Confirmar senha";
+    private string MensagemEfetiva => SenhaParaDrp
+        ? "Informe sua senha para registrar a baixa."
+        : "Informe sua senha para continuar.";
+    private string TextoBotaoEfetivo => SenhaParaDrp ? "Baixar" : "Confirmar";
+    private string TextoProcessandoEfetivo => SenhaParaDrp ? "Baixando…" : "Confirmando…";
 
     private async Task Confirmar()
     {

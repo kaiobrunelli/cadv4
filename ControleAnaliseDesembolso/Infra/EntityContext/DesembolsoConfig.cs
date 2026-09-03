@@ -66,6 +66,10 @@ public class DesembolsoConfig : IEntityTypeConfiguration<Desembolso>
             .HasColumnName("PRIMEIRO_DESEMBOLSO")
             .IsRequired();
 
+        builder.Property(x => x.Recorrente)
+            .HasColumnName("RECORRENTE")
+            .IsRequired();
+
         builder.Property(x => x.AgenteFinanceiro)
             .HasColumnName("AGENTE_FINANCEIRO")
             .HasMaxLength(255)
@@ -160,6 +164,10 @@ public class DesembolsoConfig : IEntityTypeConfiguration<Desembolso>
         builder.Property(x => x.CrpValido)
             .HasColumnName("CRP_VALIDO");
 
+        builder.Property(x => x.CrpNsa)
+            .HasColumnName("CRP_NSA")
+            .IsRequired();
+
         builder.Property(x => x.SolicitadoVi)
             .HasColumnName("SOLICITADO_VI")
             .HasColumnType("decimal(18,2)")
@@ -231,9 +239,26 @@ public class DesembolsoConfig : IEntityTypeConfiguration<Desembolso>
             .HasColumnName("MENSAGEM")
             .HasMaxLength(3000);
 
+        builder.Property(x => x.MensagemCefga)
+            .HasColumnName("MENSAGEM_CEFGA")
+            .HasMaxLength(3000);
+
         builder.Property(x => x.MotivoRejeicao)
             .HasColumnName("MOTIVO_REJEICAO")
             .HasMaxLength(3000);
+
+        builder.Property(x => x.TemCarroceria)
+            .HasColumnName("TEM_CARROCERIA");
+
+        builder.Property(x => x.VeiculoPossuiAdesivos)
+            .HasColumnName("VEICULO_POSSUI_ADESIVOS");
+
+        builder.Property(x => x.DataInicioObra)
+            .HasColumnName("DATA_INICIO_OBRA")
+            .HasColumnType("date");
+
+        builder.Property(x => x.DestinacaoColetaResiduosSolidos)
+            .HasColumnName("DESTINACAO_COLETA_RESIDUOS_SOLIDOS");
 
         builder.HasOne(x => x.ControleDesembolso)
             .WithOne(x => x.Desembolso)

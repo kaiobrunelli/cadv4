@@ -6,4 +6,31 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Http.Connections" Version="1.2.11" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Core" Version="1.2.11" />
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <!--
+    Terminal 3270 real (mesmas DLLs do projeto original em
+    "XP Metodo nvoo/RedeCaixaUtilitario"), copiadas pra dentro do CAD em
+    dll/ pra esse projeto ficar autocontido — não depende de nenhuma pasta
+    fora do repositório do CAD.
+  -->
+  <ItemGroup>
+    <Reference Include="Helpers.RedeCaixa">
+      <HintPath>dll\Helpers.RedeCaixa.dll</HintPath>
+    </Reference>
+    <Reference Include="Helpers.RedeCaixa.Extra">
+      <HintPath>dll\Helpers.RedeCaixa.Extra.dll</HintPath>
+    </Reference>
+    <Reference Include="Helpers.RedeCaixa.RedeCaixaEmulator">
+      <HintPath>dll\Helpers.RedeCaixa.RedeCaixaEmulator.dll</HintPath>
+    </Reference>
+    <Reference Include="Open3270Caixa">
+      <HintPath>dll\Open3270Caixa.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
 </Project>

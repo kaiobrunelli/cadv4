@@ -12,6 +12,8 @@ namespace ControleAnaliseDesembolso.Infra.Datas.Context
         public DbSet<ValidacaoControleDesembolso> ValidacaoControleDesembolso { get; set; }
         public DbSet<Mensagem> Mensagem { get; set; }
         public DbSet<TrilhaAuditoria> TrilhaAuditoria { get; set; }
+        public DbSet<CampoConferencia> CampoConferencia { get; set; }
+        public DbSet<ConferenciaControleDesembolso> ConferenciaControleDesembolso { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -21,6 +23,8 @@ namespace ControleAnaliseDesembolso.Infra.Datas.Context
             new ValidacaoControleDesembolsoConfig().Configure(builder.Entity<ValidacaoControleDesembolso>());
             new MensagemConfig().Configure(builder.Entity<Mensagem>());
             new TrilhaAuditoriaConfig().Configure(builder.Entity<TrilhaAuditoria>());
+            new CampoConferenciaConfig().Configure(builder.Entity<CampoConferencia>());
+            new ConferenciaControleDesembolsoConfig().Configure(builder.Entity<ConferenciaControleDesembolso>());
         }
     }
 }

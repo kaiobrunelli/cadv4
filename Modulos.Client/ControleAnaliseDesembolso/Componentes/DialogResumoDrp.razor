@@ -44,7 +44,9 @@
             <div class="fpd-step-linha @(_etapaAtual > 1 ? "concluida" : "")"></div>
             @StepHeader(2, "bi-check2-square", "Validações")
             <div class="fpd-step-linha @(_etapaAtual > 2 ? "concluida" : "")"></div>
-            @StepHeader(3, "bi-clock-history", "Histórico")
+            @StepHeader(3, "bi-chat-square-text", "Observações e Conferência")
+            <div class="fpd-step-linha @(_etapaAtual > 3 ? "concluida" : "")"></div>
+            @StepHeader(4, "bi-clock-history", "Histórico")
         </div>
 
         @if (_etapaAtual == 1)
@@ -115,19 +117,19 @@
                                 <span class="dfp-rotulo">Agente Financeiro</span>
                                 <span class="dfp-valor dfp-valor-truncar @(string.IsNullOrWhiteSpace(_detalheReal.AgenteFinanceiro) ? "dfp-valor-vazio" : "")" title="@ExibirTexto(_detalheReal.AgenteFinanceiro)">@ExibirTexto(_detalheReal.AgenteFinanceiro)</span>
                             </div>
-                            <div class="dfp-linha dfp-linha-last">
+                            <div class="dfp-linha">
                                 <span class="dfp-rotulo">Agente Promotor</span>
                                 <span class="dfp-valor dfp-valor-truncar @(string.IsNullOrWhiteSpace(_detalheReal.AgentePromotor) ? "dfp-valor-vazio" : "")" title="@ExibirTexto(_detalheReal.AgentePromotor)">@ExibirTexto(_detalheReal.AgentePromotor)</span>
+                            </div>
+                            <div class="dfp-linha dfp-linha-last">
+                                <span class="dfp-rotulo">CNPJ Agente Promotor</span>
+                                <span class="dfp-valor dfp-mono @(string.IsNullOrWhiteSpace(_detalheReal.CnpjAgentePromotor) ? "dfp-valor-vazio" : "")">@ExibirTexto(_detalheReal.CnpjAgentePromotor)</span>
                             </div>
                         </div>
 
                         <div class="dfp-divisor-v"></div>
 
                         <div class="dfp-coluna">
-                            <div class="dfp-linha">
-                                <span class="dfp-rotulo">Agente Técnico</span>
-                                <span class="dfp-valor dfp-valor-truncar @(string.IsNullOrWhiteSpace(_detalheReal.AgenteTecnicoOperador) ? "dfp-valor-vazio" : "")" title="@ExibirTexto(_detalheReal.AgenteTecnicoOperador)">@ExibirTexto(_detalheReal.AgenteTecnicoOperador)</span>
-                            </div>
                             <div class="dfp-linha">
                                 <span class="dfp-rotulo">Tomador / Mutuário</span>
                                 <span class="dfp-valor dfp-valor-truncar @(string.IsNullOrWhiteSpace(_detalheReal.MutuarioFinal) ? "dfp-valor-vazio" : "")" title="@ExibirTexto(_detalheReal.MutuarioFinal)">@ExibirTexto(_detalheReal.MutuarioFinal)</span>
@@ -198,7 +200,7 @@
                                     <strong><i class="bi bi-graph-up dfp-resumo-perc-icone"></i>@_detalheReal.PercentualObra.ToString("0.000", new CultureInfo("pt-BR"))%</strong>
                                 </div>
                                 <div class="dfp-resumo-perc-item">
-                                    <span class="dfp-resumo-perc-rotulo" title="(Desembolsado + Solicitado VI) / VE">Execução financeira</span>
+                                    <span class="dfp-resumo-perc-rotulo" title="(Desembolsado + Participação FGTS) / VE">Execução financeira</span>
                                     <strong class="@ClassePercComparado(PercExecucaoFinanceira, _detalheReal.PercentualObra)"><i class="bi bi-graph-up dfp-resumo-perc-icone"></i>@FmtPerc(PercExecucaoFinanceira)</strong>
                                 </div>
                                 <div class="dfp-resumo-perc-item">
@@ -207,21 +209,21 @@
                                 </div>
                             </div>
                             </div>
+                        @if (!string.IsNullOrWhiteSpace(_detalheReal.Mensagem))
+                        {
+                            <div class="dfp-obs-af">
+                                <span class="dfp-obs-af-titulo"><i class="bi bi-chat-left-text"></i> OBS AF</span>
+                                <p class="dfp-obs-af-texto">@_detalheReal.Mensagem</p>
+                            </div>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(_detalheReal.MotivoRejeicao))
+                        {
+                            <div class="dfp-obs-af dfp-motivo-rejeicao">
+                                <span class="dfp-obs-af-titulo"><i class="bi bi-x-circle"></i> Motivo da rejeição</span>
+                                <p class="dfp-obs-af-texto">@_detalheReal.MotivoRejeicao</p>
+                            </div>
+                        }
                     </div>
-                    @if (!string.IsNullOrWhiteSpace(_detalheReal.Mensagem))
-                    {
-                        <div class="dfp-obs-af">
-                            <span class="dfp-obs-af-titulo"><i class="bi bi-chat-left-text"></i> OBS AF</span>
-                            <p class="dfp-obs-af-texto">@_detalheReal.Mensagem</p>
-                        </div>
-                    }
-                    @if (!string.IsNullOrWhiteSpace(_detalheReal.MotivoRejeicao))
-                    {
-                        <div class="dfp-obs-af dfp-motivo-rejeicao">
-                            <span class="dfp-obs-af-titulo"><i class="bi bi-x-circle"></i> Motivo da rejeição</span>
-                            <p class="dfp-obs-af-texto">@_detalheReal.MotivoRejeicao</p>
-                        </div>
-                    }
                 </div>
             }
         }
@@ -287,6 +289,77 @@
                 }
             </div>
         }
+        else if (_etapaAtual == 3)
+        {
+            <div class="dfp-corpo dfp-obs-corpo">
+                <div class="dfp-obs-card">
+                    <div class="dfp-obs-card-header">
+                        <span class="dfp-obs-card-icone"><i class="bi bi-chat-left-text"></i></span>
+                        <div class="dfp-obs-card-titulo">OBS AF</div>
+                    </div>
+                    <div class="dfp-obs-card-conteudo">
+                        @if (string.IsNullOrWhiteSpace(_detalheReal?.Mensagem))
+                        {
+                            <p class="dfp-obs-vazio">Sem observações.</p>
+                        }
+                        else
+                        {
+                            <p class="dfp-obs-texto">@_detalheReal.Mensagem</p>
+                        }
+                    </div>
+                </div>
+
+                <div class="dfp-obs-card">
+                    <div class="dfp-obs-card-header">
+                        <span class="dfp-obs-card-icone"><i class="bi bi-chat-left-dots"></i></span>
+                        <div class="dfp-obs-card-titulo">OBS CEFGA</div>
+                    </div>
+                    <div class="dfp-obs-card-conteudo">
+                        @if (string.IsNullOrWhiteSpace(_detalheReal?.MensagemCefga))
+                        {
+                            <p class="dfp-obs-vazio">Sem observações.</p>
+                        }
+                        else
+                        {
+                            <p class="dfp-obs-texto">@_detalheReal.MensagemCefga</p>
+                        }
+                    </div>
+                </div>
+
+                <div class="dfp-obs-card">
+                    <div class="dfp-obs-card-header">
+                        <span class="dfp-obs-card-icone"><i class="bi bi-clipboard2-check"></i></span>
+                        <div class="dfp-obs-card-titulo">Conferência de campos</div>
+                    </div>
+                    <div class="dfp-obs-card-conteudo">
+                        @if (_detalheReal?.DtUltimaConferencia is null)
+                        {
+                            <p class="dfp-obs-vazio">A conferência de campos ainda não foi rodada.</p>
+                        }
+                        else
+                        {
+                            <span class="dfp-conferencia-quando">Última conferência: @_detalheReal.DtUltimaConferencia.Value.ToString("dd/MM/yyyy HH:mm")</span>
+                            <div class="dfp-conferencia-lista">
+                                @foreach (var item in _detalheReal.ConferenciaCampos)
+                                {
+                                    <div class="dfp-conferencia-item">
+                                        <i class="bi @IconeConferencia(item.Situacao) dfp-conferencia-icone-@item.Situacao.ToLowerInvariant()"></i>
+                                        <span class="dfp-conferencia-nome">@item.DeCampo</span>
+                                        <span class="dfp-conferencia-situacao dfp-conferencia-situacao-@item.Situacao.ToLowerInvariant()">
+                                            @(item.Situacao == "OK" ? "OK" : item.Situacao == "PENDENTE" ? "Pendente" : "Erro")
+                                        </span>
+                                        @if (!string.IsNullOrWhiteSpace(item.Mensagem))
+                                        {
+                                            <span class="dfp-conferencia-msg">@item.Mensagem</span>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
         else
         {
             <div class="dfp-corpo">
@@ -317,7 +390,7 @@
                     <i class="bi bi-chevron-left"></i> <span>Etapa anterior</span>
                 </button>
             }
-            @if (_etapaAtual < 3)
+            @if (_etapaAtual < 4)
             {
                 <button class="btn-fpd-etapa-proxima" @onclick="ProximaEtapa">
                     <span>Próxima etapa</span> <i class="bi bi-chevron-right"></i>
@@ -377,7 +450,7 @@
 
     private decimal? PercExecucaoFinanceira =>
         _detalheReal is { ValorEmprestimo: > 0 }
-            ? Math.Round((_detalheReal.Desembolsado + _detalheReal.SolicitadoVi) / _detalheReal.ValorEmprestimo * 100, 3)
+            ? Math.Round((_detalheReal.Desembolsado + _detalheReal.ParticipacaoFgts) / _detalheReal.ValorEmprestimo * 100, 3)
             : null;
 
     private decimal? PercContrapartidaIntegralizada =>
@@ -411,8 +484,15 @@
     private string EstadoEtapa(int numero) =>
         numero == _etapaAtual ? "atual" : numero < _etapaAtual ? "concluida" : "";
 
-    private void ProximaEtapa()  { if (_etapaAtual < 3) _etapaAtual++; }
+    private void ProximaEtapa()  { if (_etapaAtual < 4) _etapaAtual++; }
     private void EtapaAnterior() { if (_etapaAtual > 1) _etapaAtual--; }
+
+    private static string IconeConferencia(string situacao) => situacao switch
+    {
+        "OK" => "bi-check-circle-fill",
+        "PENDENTE" => "bi-question-circle-fill",
+        _ => "bi-x-circle-fill",
+    };
 
     private int TotalComComentario => MontarChecklistReal().Count(v => v.Comentarios.Any());
 
@@ -653,6 +733,27 @@
 .dfp-motivo-rejeicao { background: var(--err-bg); }
 .dfp-motivo-rejeicao .dfp-obs-af-titulo { color: var(--err); }
 .dfp-motivo-rejeicao .dfp-obs-af-texto { color: var(--ink-900); }
+
+.dfp-obs-corpo { display: flex; flex-direction: column; gap: 14px; }
+.dfp-obs-card { background: #F4F8FB; border: 1px solid #DCEAF3; border-radius: var(--radius-xl, 14px); padding: 16px 18px; }
+.dfp-obs-card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.dfp-obs-card-icone { flex-shrink: 0; width: 26px; height: 26px; border-radius: 8px; background: var(--brand-100, #D6E9F8); color: var(--brand-700, #005CA9); display: flex; align-items: center; justify-content: center; font-size: 13px; }
+.dfp-obs-card-titulo { font-size: 14px; font-weight: 800; color: var(--brand-900, #00304F); }
+.dfp-obs-card-conteudo { display: flex; flex-direction: column; gap: 0; }
+.dfp-obs-vazio { font-size: 12.5px; color: var(--ink-400, var(--ink-300)); font-style: italic; margin: 0; }
+.dfp-obs-texto { font-size: 13px; color: var(--ink-800, var(--ink-900)); line-height: 1.6; margin: 0; background: #EAF6EF; border: 1px solid #CDECDA; border-radius: var(--radius-lg); padding: 10px 12px; white-space: pre-wrap; }
+.dfp-conferencia-quando { display: block; font-size: 10.5px; color: var(--ink-500); margin-bottom: 8px; }
+.dfp-conferencia-lista { display: flex; flex-direction: column; gap: 6px; }
+.dfp-conferencia-item { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-lg); background: #EAF6EF; border: 1px solid #CDECDA; font-size: 12.5px; flex-wrap: wrap; }
+.dfp-conferencia-icone-ok { color: var(--ok); }
+.dfp-conferencia-icone-erro { color: var(--err); }
+.dfp-conferencia-icone-pendente { color: var(--warn, #9A5B00); }
+.dfp-conferencia-nome { font-weight: 600; color: var(--ink-900); }
+.dfp-conferencia-situacao { margin-left: auto; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; padding: 2px 8px; border-radius: var(--radius-full); }
+.dfp-conferencia-situacao-ok { background: var(--ok-bg); color: var(--ok); }
+.dfp-conferencia-situacao-erro { background: var(--err-bg); color: var(--err); }
+.dfp-conferencia-situacao-pendente { background: var(--warn-bg); color: #9A5B00; }
+.dfp-conferencia-msg { flex-basis: 100%; font-size: 11px; color: var(--ink-500); }
 
 .dfp-etapa-validacoes { flex: 1; overflow-y: auto; padding: 16px 24px; max-height: 700px; background: #fff; }
 .dfp-etapa-validacoes-topo { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }

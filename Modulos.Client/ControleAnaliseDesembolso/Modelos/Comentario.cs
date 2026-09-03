@@ -16,9 +16,11 @@ public static class TiposComentario
 {
     public static readonly Dictionary<string, ConfigTipo> Configs = new()
     {
-        ["justificativa"] = new("#E0F2E7", "#1A7A4A", "#1A7A4A"),
+        // "parecer" é quem aprova a validação agora (antes era "justificativa") —
+        // por isso fica verde, cor que "positivo" tinha antigamente.
+        ["parecer"]       = new("#E0F2E7", "#1A7A4A", "#1A7A4A"),
         ["informativo"]   = new("#E5F1FC", "#00437A", "#005CA9"),
-        ["parecer"]       = new("#EEF0F3", "#4B5563", "#6B7280"),
+        ["justificativa"] = new("#EEF0F3", "#4B5563", "#6B7280"),
     };
 
     public record ConfigTipo(string CorFundo, string CorTexto, string CorPonto);

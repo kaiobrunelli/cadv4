@@ -50,20 +50,21 @@ public class ControleAnaliseDesembolsoService(IHttpClientFactory httpClientFacto
     public async Task<DesembolsoDetalheDto?> ObterDetalheDesembolsoAsync(string id) =>
         await _httpClient.GetFromJsonAsync<DesembolsoDetalheDto>($"api/ObterDetalheDesembolso/{id}");
 
-    public static string MapearStatus(int statusServidor, bool dataAgendamento = false)
+    // Não colapsa mais status 1/2 em "agendado" quando é SANEPAR — a partir da
+    // reestruturação do filtro (SANEPAR virou categoria própria, mantendo seus
+    // próprios sub-status Pendente/Analisar), o status real sempre aparece aqui;
+    // a UI usa DesembolsoCAD.Sanepar pra decidir se o item entra na categoria
+    // SANEPAR em vez do "agendado" achatado de antes.
+    public static string MapearStatus(int statusServidor) => statusServidor switch
     {
-        if (dataAgendamento && statusServidor is 1 or 2) return "agendado";
-
-        return statusServidor switch
-        {
-            1 => "pendencia",
-            2 => "pendente",
-            3 => "aprovado",
-            5 => "baixado",
-            4 => "negado",
-            _ => "pendencia",
-        };
-    }
+        1 => "pendencia",
+        2 => "pendente",
+        3 => "aprovado",
+        5 => "baixado",
+        4 => "negado",
+        6 => "cancelado",
+        _ => "pendencia",
+    };
 
     private static DesembolsoCAD MapearParaDesembolsoCAD(DesembolsoResponseDto d) => new()
     {
@@ -79,13 +80,17 @@ public class ControleAnaliseDesembolsoService(IHttpClientFactory httpClientFacto
         Fase = "",
         ValidacoesOk = d.ValidacoesOk,
         ValidacoesTotal = d.ValidacoesTotal,
-        Status = MapearStatus(d.Status, d.DataAgendamento),
+        Status = MapearStatus(d.Status),
         PrazoFinal = d.PrazoFinal,
         DtSolicitado = d.DtSolicitado,
         DtConclusao = d.DtConclusao,
         PrimeiroDesembolso = d.PrimeiroDesembolso,
         UltimoDesembolso = d.UltimoDesembolso,
         Adiantamento = d.Adiantamento,
+        Recorrente = d.Recorrente,
+        Sanepar = d.Sanepar,
+        ContratoAo = d.ContratoAo,
+        ContratoAoDv = d.ContratoAoDv,
         ResponsavelAnalise = d.ResponsavelAnalise,
     };
 
@@ -116,6 +121,27 @@ public class ControleAnaliseDesembolsoService(IHttpClientFactory httpClientFacto
         return resposta.IsSuccessStatusCode;
     }
 
+    public async Task<bool> CancelarAsync(string id, string matriculaUsuario, string usuarioNome, string motivo)
+    {
+        var req = new { MatriculaUsuario = matriculaUsuario, UsuarioNome = usuarioNome, Motivo = motivo };
+        var resposta = await _httpClient.PutAsJsonAsync($"api/Cancelar/{id}", req);
+        return resposta.IsSuccessStatusCode;
+    }
+
+    public async Task<bool> AtualizarMensagemCefgaAsync(string id, string mensagemCefga, string matriculaUsuario)
+    {
+        var req = new { MensagemCefga = mensagemCefga, MatriculaUsuario = matriculaUsuario };
+        var resposta = await _httpClient.PutAsJsonAsync($"api/AtualizarMensagemCefga/{id}", req);
+        return resposta.IsSuccessStatusCode;
+    }
+
+    public async Task<List<ConferenciaCampoDto>> ExecutarConferenciaCamposAsync(string id)
+    {
+        var resposta = await _httpClient.PostAsync($"api/ExecutarConferenciaCampos/{id}", null);
+        if (!resposta.IsSuccessStatusCode) return [];
+        return await resposta.Content.ReadFromJsonAsync<List<ConferenciaCampoDto>>() ?? [];
+    }
+
     public async Task<bool> VincularAnalistaAsync(string id, string? matriculaAnalista)
     {
         var resposta = await _httpClient.PutAsJsonAsync($"api/VincularResponsavel/{id}", matriculaAnalista);
@@ -135,15 +161,17 @@ public class ControleAnaliseDesembolsoService(IHttpClientFactory httpClientFacto
         return lista ?? [];
     }
 
-    public async Task<bool> ValidarAsync(string id)
+    public async Task<bool> ValidarAsync(string id, string matriculaUsuario, string senha)
     {
-        var resposta = await _httpClient.PostAsync($"api/Validar/{id}", null);
+        var req = new { MatriculaUsuario = matriculaUsuario, Senha = senha };
+        var resposta = await _httpClient.PostAsJsonAsync($"api/Validar/{id}", req);
         return resposta.IsSuccessStatusCode;
     }
 
-    public async Task<bool> ValidarTodosPendentesAsync()
+    public async Task<bool> ValidarTodosPendentesAsync(string matriculaUsuario, string senha)
     {
-        var resposta = await _httpClient.PostAsync("api/ValidarTodosPendentes", null);
+        var req = new { MatriculaUsuario = matriculaUsuario, Senha = senha };
+        var resposta = await _httpClient.PostAsJsonAsync("api/ValidarTodosPendentes", req);
         return resposta.IsSuccessStatusCode;
     }
 
@@ -199,4 +227,5 @@ public class ControleAnaliseDesembolsoService(IHttpClientFactory httpClientFacto
         var resposta = await _httpClient.PutAsJsonAsync("api/BaixarDrp", req);
         return resposta.IsSuccessStatusCode;
     }
+
 }

@@ -4,11 +4,37 @@
 
 <div class="drp">
 
+    <div class="drp-subfiltros">
+        <button class="drp-subfiltro @(_subFiltro == "drp" ? "drp-subfiltro-ativo" : "")" @onclick='() => SelecionarSubFiltro("drp")'>
+            Aguardando Baixa (DRP)
+        </button>
+        <button class="drp-subfiltro @(_subFiltro == "rejeitado" ? "drp-subfiltro-ativo" : "")" @onclick='() => SelecionarSubFiltro("rejeitado")'>
+            Rejeitado/Cancelado
+        </button>
+        <button class="drp-subfiltro @(_subFiltro == "desembolsados" ? "drp-subfiltro-ativo" : "")" @onclick='() => SelecionarSubFiltro("desembolsados")'>
+            Desembolsados
+        </button>
+
+        @if (_subFiltro == "drp")
+        {
+            <button class="drp-btn-baixa drp-btn-baixa-subfiltro" @onclick="AbrirBaixaSelecionados"
+                    disabled="@(_selecionados.Count == 0)"
+                    title="@(_selecionados.Count == 0 ? "Selecione ao menos um registro" : "Baixar selecionados")">
+                <i class="bi bi-check2-square"></i>
+                <span>Baixa</span>
+                @if (_selecionados.Count > 0)
+                {
+                    <span class="drp-btn-baixa-num">@_selecionados.Count</span>
+                }
+            </button>
+        }
+    </div>
+
     <div class="drp-topo">
         <div class="drp-topo-info">
-            <span class="drp-topo-titulo">Controle de baixa · DRP</span>
+            <span class="drp-topo-titulo">Relatórios · DRP</span>
             <span class="drp-topo-sub">
-                @_registrosFiltrados.Count de @_registros.Count @(_registros.Count == 1 ? "registro" : "registros")
+                @_registrosFiltrados.Count de @_registrosDoSubFiltro.Count @(_registrosDoSubFiltro.Count == 1 ? "registro" : "registros")
                 @if (_selecionados.Count > 0)
                 {
                     <span class="drp-topo-selecao">· @_selecionados.Count selecionado@(_selecionados.Count > 1 ? "s" : "")</span>
@@ -29,17 +55,6 @@
                 <input type="text" placeholder="Buscar..." @bind="_textoBusca" @bind:event="oninput" @bind:after="() => _paginaAtual = 1" />
             </div>
         </div>
-
-        <button class="drp-btn-baixa" @onclick="AbrirBaixaSelecionados"
-                disabled="@(_selecionados.Count == 0)"
-                title="@(_selecionados.Count == 0 ? "Selecione ao menos um registro" : "Baixar selecionados")">
-            <i class="bi bi-check2-square"></i>
-            <span>Baixa</span>
-            @if (_selecionados.Count > 0)
-            {
-                <span class="drp-btn-baixa-num">@_selecionados.Count</span>
-            }
-        </button>
     </div>
 
     @if (_carregando)
@@ -59,7 +74,7 @@
                                title="Selecionar todos aguardando baixa" />
                     </th>
                     <th class="drp-center drp-th-ordenavel" @onclick='() => OrdenarPor("gigov")'>GIGOV @IconeOrdenacao("gigov")</th>
-                    <th>Contrato</th>
+                    <th>Contrato AF</th>
                     <th class="drp-center drp-th-ordenavel" @onclick='() => OrdenarPor("tipo")'>Tipo @IconeOrdenacao("tipo")</th>
                     <th class="drp-num drp-th-ordenavel" @onclick='() => OrdenarPor("valor")'>Valor FGTS @IconeOrdenacao("valor")</th>
                     <th class="drp-th-ordenavel" @onclick='() => OrdenarPor("solicitacao")'>Solicitação @IconeOrdenacao("solicitacao")</th>
@@ -72,19 +87,19 @@
             <tbody>
                 @foreach (var r in _registrosPaginados)
                 {
-                    <tr class="drp-linha-clicavel @(_selecionados.Contains(r.Id) ? "drp-linha-sel" : "") @(r.Baixado || r.Rejeitado ? "drp-linha-baixada" : "")"
+                    <tr class="drp-linha-clicavel @(_selecionados.Contains(r.Id) ? "drp-linha-sel" : "") @(r.Baixado || r.Rejeitado || r.Cancelado ? "drp-linha-baixada" : "")"
                         @onclick="() => AbrirResumo(r)">
                         <td class="drp-col-check" @onclick:stopPropagation>
                             <input type="checkbox"
                                    checked="@_selecionados.Contains(r.Id)"
-                                   disabled="@(r.Baixado || r.Rejeitado)"
+                                   disabled="@(r.Baixado || r.Rejeitado || r.Cancelado)"
                                    @onchange="() => AlternarSelecao(r.Id)" />
                         </td>
                         <td class="drp-center"><span class="drp-gigov">@r.Gigov</span></td>
                         <td class="drp-mono">@r.ContratoDv</td>
                         <td class="drp-center">
                             <span class="drp-tipo drp-tipo-@r.TipoDesembolso">
-                                @(r.TipoDesembolso == "ADIANTAMENTO" ? "Adiantamento" : "Normal")
+                                @(r.TipoDesembolso == "ADIANTAMENTO" ? "Adiantamento" : "Corrente")
                             </span>
                         </td>
                         <td class="drp-num drp-valor">@r.ValorFgts.ToString("C", _br)</td>
@@ -105,6 +120,12 @@
                                     <i class="bi bi-x-circle-fill"></i> Rejeitado
                                 </span>
                             }
+                            else if (r.Cancelado)
+                            {
+                                <span class="drp-status drp-status-rejeitado" title="Cancelado">
+                                    <i class="bi bi-slash-circle-fill"></i> Cancelado
+                                </span>
+                            }
                             else
                             {
                                 <span class="drp-status drp-status-aguardando">
@@ -114,7 +135,7 @@
                         </td>
                         <td class="drp-col-acao drp-center" @onclick:stopPropagation>
                             <div class="drp-acoes-linha">
-                                @if (!r.Baixado && !r.Rejeitado)
+                                @if (!r.Baixado && !r.Rejeitado && !r.Cancelado)
                                 {
                                     <button class="drp-acao-linha" @onclick="() => AbrirBaixaUnico(r.Id)" title="Baixar este">
                                         <i class="bi bi-check2"></i>
@@ -186,7 +207,22 @@
     private string _periodoFiltro = "todos";
     private string _textoBusca    = "";
 
-    private List<RegistroDrp> _registrosFiltrados => AplicarOrdenacao(AplicarBusca(AplicarFiltroPeriodo(_registros)));
+    private string _subFiltro = "drp";
+
+    private void SelecionarSubFiltro(string filtro)
+    {
+        _subFiltro = filtro;
+        _paginaAtual = 1;
+    }
+
+    private List<RegistroDrp> _registrosDoSubFiltro => _subFiltro switch
+    {
+        "rejeitado"     => _registros.Where(r => r.Rejeitado || r.Cancelado).ToList(),
+        "desembolsados" => _registros.Where(r => r.Baixado).ToList(),
+        _               => _registros.Where(r => !r.Baixado && !r.Rejeitado && !r.Cancelado).ToList(),
+    };
+
+    private List<RegistroDrp> _registrosFiltrados => AplicarOrdenacao(AplicarBusca(AplicarFiltroPeriodo(_registrosDoSubFiltro)));
 
     private string _colunaOrdenacao = "";
     private bool   _ordemAscendente = true;
@@ -301,7 +337,7 @@
         _resumoDesembolso = _desembolsosParaResumo.FirstOrDefault(d => d.Id == r.Id.ToString());
     }
 
-    private IEnumerable<RegistroDrp> Baixaveis => _registros.Where(r => !r.Baixado && !r.Rejeitado);
+    private IEnumerable<RegistroDrp> Baixaveis => _registros.Where(r => !r.Baixado && !r.Rejeitado && !r.Cancelado);
     private bool TodosSelecionados => Baixaveis.Any() && Baixaveis.All(r => _selecionados.Contains(r.Id));
 
     private void AlternarSelecao(int id)
@@ -366,6 +402,28 @@
     box-shadow: var(--shadow-card);
     overflow: hidden;
 }
+
+.drp-subfiltros {
+    display: flex;
+    gap: 6px;
+    padding: 10px 18px 0;
+}
+.drp-subfiltro {
+    border-radius: var(--radius-full);
+    padding: 6px 14px;
+    font-size: 11.5px;
+    font-weight: 700;
+    font-family: inherit;
+    color: var(--ink-500);
+    background: var(--ink-100);
+    border: none;
+    cursor: pointer;
+    transition: background .15s, color .15s;
+}
+.drp-subfiltro:hover { background: var(--ink-200); }
+.drp-subfiltro-ativo { background: var(--brand-700); color: #fff; }
+.drp-subfiltro-ativo:hover { background: var(--brand-800, #004F93); color: #fff; }
+.drp-btn-baixa-subfiltro { margin-left: auto; }
 
 .drp-topo {
     display: flex;

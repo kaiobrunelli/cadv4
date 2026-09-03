@@ -86,6 +86,24 @@ namespace ControleAnaliseDesembolso.Api.Controllers
         }
 
         [HttpPut("{coControleDesembolso}")]
+        public async Task<IActionResult> Cancelar(int coControleDesembolso, [FromBody] CancelarDesembolsoRequest request, CancellationToken cancellationToken)
+        {
+            await _aplicacaoService.CancelarDesembolso(coControleDesembolso, request, cancellationToken);
+            return Ok();
+        }
+
+        [HttpPut("{coControleDesembolso}")]
+        public async Task<IActionResult> AtualizarMensagemCefga(int coControleDesembolso, [FromBody] AtualizarMensagemCefgaRequest request, CancellationToken cancellationToken)
+        {
+            await _aplicacaoService.AtualizarMensagemCefga(coControleDesembolso, request, cancellationToken);
+            return Ok();
+        }
+
+        [HttpPost("{coControleDesembolso}")]
+        public async Task<ActionResult<List<ConferenciaCampoResponse>>> ExecutarConferenciaCampos(int coControleDesembolso, CancellationToken cancellationToken)
+            => Ok(await _aplicacaoService.ExecutarConferenciaCampos(coControleDesembolso, cancellationToken));
+
+        [HttpPut("{coControleDesembolso}")]
         public async Task<IActionResult> VincularResponsavel(int coControleDesembolso, [FromBody] string? matriculaResponsavel, CancellationToken cancellationToken)
         {
             await _aplicacaoService.VincularResponsavel(coControleDesembolso, matriculaResponsavel, cancellationToken);
@@ -100,16 +118,16 @@ namespace ControleAnaliseDesembolso.Api.Controllers
         }
 
         [HttpPost("{coControleDesembolso}")]
-        public async Task<IActionResult> Validar(int coControleDesembolso, CancellationToken cancellationToken)
+        public async Task<IActionResult> Validar(int coControleDesembolso, [FromBody] ValidarDesembolsoRequest request, CancellationToken cancellationToken)
         {
-            await _aplicacaoService.ValidarDesembolso(coControleDesembolso, cancellationToken);
+            await _aplicacaoService.ValidarDesembolso(coControleDesembolso, request, cancellationToken);
             return Ok();
         }
 
         [HttpPost]
-        public async Task<IActionResult> ValidarTodosPendentes(CancellationToken cancellationToken)
+        public async Task<IActionResult> ValidarTodosPendentes([FromBody] ValidarDesembolsoRequest request, CancellationToken cancellationToken)
         {
-            await _aplicacaoService.ValidarTodosPendentes(cancellationToken);
+            await _aplicacaoService.ValidarTodosPendentes(request, cancellationToken);
             return Ok();
         }
 

@@ -77,7 +77,9 @@
                 <div class="fpd-step-linha @(_etapaAtual > 1 ? "concluida" : "")"></div>
                 @StepHeader(2, "bi-check2-square", "Validações")
                 <div class="fpd-step-linha @(_etapaAtual > 2 ? "concluida" : "")"></div>
-                @StepHeader(3, "bi-clock-history", "Histórico")
+                @StepHeader(3, "bi-chat-square-text", "Observações e Conferência")
+                <div class="fpd-step-linha @(_etapaAtual > 3 ? "concluida" : "")"></div>
+                @StepHeader(4, "bi-clock-history", "Histórico")
             </div>
 
             @if (_etapaAtual == 1)
@@ -102,7 +104,11 @@
                                 {
                                     <span class="dfp-badge-destaque"><i class="bi bi-flag-fill"></i> Último desembolso</span>
                                 }
-                                @if (_detalhe.TipoDesembolso == "ADIANTAMENTO" || (!_detalhe.PrimeiroDesembolso && !_detalhe.UltimoDesembolso))
+                                @if (_detalhe.Recorrente)
+                                {
+                                    <span class="dfp-badge-destaque"><i class="bi bi-flag-fill"></i> Recorrente</span>
+                                }
+                                @if (_detalhe.TipoDesembolso == "ADIANTAMENTO" || (!_detalhe.PrimeiroDesembolso && !_detalhe.UltimoDesembolso && !_detalhe.Recorrente))
                                 {
                                     <span class="dfp-badge-tipo @(_detalhe.TipoDesembolso == "ADIANTAMENTO" ? "adiantamento" : "")">
                                         @(_detalhe.TipoDesembolso == "ADIANTAMENTO" ? "Adiantamento" : "Normal")
@@ -122,9 +128,9 @@
                                     <i class="bi bi-pencil-square"></i> Editar
                                 </button>
                             }
-                            @if (!ServicoUsuario.EhGigov && !_apenasLeitura)
+                            @if (_podeAgirCefga)
                             {
-                                <button class="btn-validar-macro @(macroJaRodou && !_validandoMacro ? "ja-validado" : "")" @onclick="ExecutarValidacaoMacro" disabled="@(_validandoMacro || macroJaRodou)"
+                                <button class="btn-validar-macro @(macroJaRodou && !_validandoMacro ? "ja-validado" : "")" @onclick="() => _dialogSenhaValidarAberto = true" disabled="@(_validandoMacro || macroJaRodou)"
                                         title="@(macroJaRodou ? "Já validado — só roda de novo se a FPD for editada e reenviada" : "Roda a validação automática só pra este desembolso")">
                                     @if (_validandoMacro)
                                     {
@@ -139,10 +145,19 @@
                                         <i class="bi bi-shield-check"></i> <span>Validar</span>
                                     }
                                 </button>
+                            }
+                            @if (!ServicoUsuario.EhGigov && !_apenasLeitura)
+                            {
                                 <button class="btn-vincular" @onclick="() => _popoverAberto = !_popoverAberto">
                                     <i class="bi bi-person"></i>
                                     @(Analista is null ? "Vincular" : "Alterar vínculo")
                                     <i class="bi bi-chevron-down btn-chevron"></i>
+                                </button>
+                            }
+                            @if (_podeCancelar)
+                            {
+                                <button class="btn-cancelar-desembolso" @onclick="() => _modoCancelamento = true" disabled="@_processandoAcao" title="Cancela o desembolso inteiro — um novo pedido com os mesmos dados gera um novo desembolso">
+                                    <i class="bi bi-slash-circle"></i> Cancelar
                                 </button>
                             }
                         </div>
@@ -170,6 +185,10 @@
                                 <span class="dfp-rotulo">Agente Promotor</span>
                                 <span class="dfp-valor dfp-valor-truncar @(string.IsNullOrWhiteSpace(_detalhe.AgentePromotor) ? "dfp-valor-vazio" : "")" title="@ExibirTexto(_detalhe.AgentePromotor)">@ExibirTexto(_detalhe.AgentePromotor)</span>
                             </div>
+                            <div class="dfp-linha">
+                                <span class="dfp-rotulo">CNPJ Agente Promotor</span>
+                                <span class="dfp-valor dfp-mono @(string.IsNullOrWhiteSpace(_detalhe.CnpjAgentePromotor) ? "dfp-valor-vazio" : "")">@ExibirTexto(_detalhe.CnpjAgentePromotor)</span>
+                            </div>
                             <div class="dfp-linha dfp-linha-last">
                                 <span class="dfp-rotulo">Programa</span>
                                 <span class="dfp-valor">@ProgramaExibicao(_detalhe.Programa)</span>
@@ -179,10 +198,6 @@
                         <div class="dfp-divisor-v"></div>
 
                         <div class="dfp-coluna">
-                            <div class="dfp-linha">
-                                <span class="dfp-rotulo">Agente Técnico</span>
-                                <span class="dfp-valor dfp-valor-truncar @(string.IsNullOrWhiteSpace(_detalhe.AgenteTecnicoOperador) ? "dfp-valor-vazio" : "")" title="@ExibirTexto(_detalhe.AgenteTecnicoOperador)">@ExibirTexto(_detalhe.AgenteTecnicoOperador)</span>
-                            </div>
                             <div class="dfp-linha">
                                 <span class="dfp-rotulo">Tomador / Mutuário</span>
                                 <span class="dfp-valor dfp-valor-truncar @(string.IsNullOrWhiteSpace(_detalhe.MutuarioFinal) ? "dfp-valor-vazio" : "")" title="@ExibirTexto(_detalhe.MutuarioFinal)">@ExibirTexto(_detalhe.MutuarioFinal)</span>
@@ -257,7 +272,7 @@
                                     <strong><i class="bi bi-graph-up dfp-resumo-perc-icone"></i>@_detalhe.PercentualObra.ToString("0.000", new CultureInfo("pt-BR"))%</strong>
                                 </div>
                                 <div class="dfp-resumo-perc-item">
-                                    <span class="dfp-resumo-perc-rotulo" title="(Desembolsado + Solicitado VI) / VE">Execução financeira</span>
+                                    <span class="dfp-resumo-perc-rotulo" title="(Desembolsado + Participação FGTS) / VE">Execução financeira</span>
                                     <strong class="@ClassePercComparado(PercExecucaoFinanceira, _detalhe.PercentualObra)"><i class="bi bi-graph-up dfp-resumo-perc-icone"></i>@FmtPerc(PercExecucaoFinanceira)</strong>
                                 </div>
                                 <div class="dfp-resumo-perc-item">
@@ -266,13 +281,7 @@
                                 </div>
                             </div>
                         </div>
-                        @if (!string.IsNullOrWhiteSpace(_detalhe.Mensagem))
-                        {
-                            <div class="dfp-obs-af">
-                                <span class="dfp-obs-af-titulo"><i class="bi bi-chat-left-text"></i> OBS AF</span>
-                                <p class="dfp-obs-af-texto">@_detalhe.Mensagem</p>
-                            </div>
-                        }
+                        @* OBS AF removida daqui — já tem etapa própria "Observações e Conferência" (_etapaAtual == 3), não precisa repetir na 1ª etapa. *@
                         @if (!string.IsNullOrWhiteSpace(_detalhe.MotivoRejeicao))
                         {
                             <div class="dfp-obs-af dfp-motivo-rejeicao">
@@ -316,7 +325,12 @@
                                     </span>
                                 }
                                 <span class="dfp-acc-spacer"></span>
-                                <PilulhaStatus Status="@v.Status" Tamanho="sm" />
+                                @* Pra GIGOV, enquanto a CEFGA ainda não rodou a macro de validação
+                                   (macroJaRodou == false), item "Analisar" reflete o status geral do
+                                   desembolso (Pendente) em vez de parecer que já está em análise — só
+                                   troca o rótulo mostrado aqui, v.Status continua "pendente" pra não
+                                   bagunçar as contagens (totalPendentes/podeAprovar) usadas pela CEFGA. *@
+                                <PilulhaStatus Status="@(ServicoUsuario.EhGigov && !macroJaRodou && v.Status == "pendente" ? "pendencia" : v.Status)" Tamanho="sm" />
                                 @if (v.Comentarios.Any())
                                 {
                                     <i class="bi bi-chat-text-fill dfp-acc-comm">@v.Comentarios.Count</i>
@@ -326,8 +340,9 @@
                             <div class="dfp-acc-body">
                                 <div class="dfp-acc-inner">
                                     <div class="dfp-acc-corpo">
-                                        <FioComentario Comentarios="@v.Comentarios" ApenasLeitura="@(_apenasLeitura || (!ServicoUsuario.EhGigov && !macroJaRodou))"
+                                        <FioComentario Comentarios="@v.Comentarios" ApenasLeitura="@(_apenasLeitura || _bloqueadoPorResponsavel || (!ServicoUsuario.EhGigov && !macroJaRodou))"
                                                        ApenasInformativo="@ServicoUsuario.EhGigov"
+                                                       OcultarJustificativa="@(!ServicoUsuario.EhGigov)"
                                                        AoAdicionarComentario="@(c => AdicionarComentario(v.CoValidacao, c))"
                                                        AoEditarComentario="@(c => EditarComentario(v.CoValidacao, c))"
                                                        AoRemoverComentario="@(c => RemoverComentario(v.CoValidacao, c))" />
@@ -340,6 +355,112 @@
             }
 
             @if (_etapaAtual == 3)
+            {
+                <div class="dfp-corpo dfp-obs-corpo">
+                    <div class="dfp-obs-card">
+                        <div class="dfp-obs-card-header">
+                            <span class="dfp-obs-card-icone"><i class="bi bi-chat-left-text"></i></span>
+                            <div class="dfp-obs-card-titulo">OBS AF</div>
+                        </div>
+                        <div class="dfp-obs-card-conteudo">
+                            @if (string.IsNullOrWhiteSpace(_detalhe.Mensagem))
+                            {
+                                <p class="dfp-obs-vazio">Sem observações.</p>
+                            }
+                            else
+                            {
+                                <p class="dfp-obs-texto">@_detalhe.Mensagem</p>
+                            }
+                        </div>
+                    </div>
+
+                    @if (!ServicoUsuario.EhGigov)
+                    {
+                        <div class="dfp-obs-card">
+                            <div class="dfp-obs-card-header">
+                                <span class="dfp-obs-card-icone"><i class="bi bi-chat-left-dots"></i></span>
+                                <div class="dfp-obs-card-titulo">OBS CEFGA</div>
+                            </div>
+                            <div class="dfp-obs-card-conteudo">
+                                @if (_editandoMensagemCefga)
+                                {
+                                    <div class="form-tratativa form-tratativa-foco">
+                                        <textarea class="form-textarea" rows="3" placeholder="Descreva a observação..."
+                                                  @bind="_mensagemCefgaEdicao" @bind:event="oninput" disabled="@_salvandoMensagemCefga"></textarea>
+                                        <div class="form-acoes-bar">
+                                            <span></span>
+                                            <div class="form-acoes-dir">
+                                                <button class="btn-cancelar" @onclick="CancelarEdicaoMensagemCefga" disabled="@_salvandoMensagemCefga">Cancelar</button>
+                                                <button class="btn-salvar-tratativa" @onclick="SalvarMensagemCefga" disabled="@(_salvandoMensagemCefga || string.IsNullOrWhiteSpace(_mensagemCefgaEdicao))">
+                                                    @if (_salvandoMensagemCefga) { <i class="bi bi-arrow-repeat spin"></i> } else { <i class="bi bi-check2"></i> }
+                                                    <span>Salvar</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                                else if (!string.IsNullOrWhiteSpace(_detalhe.MensagemCefga))
+                                {
+                                    <div class="comentario dfp-obs-cefga-comentario">
+                                        <div class="comentario-cabecalho">
+                                            <span class="comentario-ponto" style="background:#1074C8"></span>
+                                            <span class="comentario-tipo" style="color:#1074C8">Observação CEFGA</span>
+                                            <button class="btn-editar-comentario" @onclick="IniciarEdicaoMensagemCefga" title="Editar">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            <button class="btn-editar-comentario" @onclick="RemoverMensagemCefga" title="Remover">
+                                                <i class="bi bi-trash3"></i>
+                                            </button>
+                                        </div>
+                                        <p class="comentario-texto">@_detalhe.MensagemCefga</p>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <button class="btn-adicionar-comentario" @onclick="IniciarEdicaoMensagemCefga">
+                                        <i class="bi bi-plus"></i> Adicionar comentário
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    <div class="dfp-obs-card">
+                        <div class="dfp-obs-card-header">
+                            <span class="dfp-obs-card-icone"><i class="bi bi-clipboard2-check"></i></span>
+                            <div class="dfp-obs-card-titulo">Conferência de campos</div>
+                        </div>
+                        <div class="dfp-obs-card-conteudo">
+                        @if (_detalhe.DtUltimaConferencia is null)
+                        {
+                            <p class="dfp-obs-vazio">A conferência de campos ainda não foi rodada — ela roda automaticamente junto com o botão "Validar", na Etapa 1.</p>
+                        }
+                        else
+                        {
+                            <span class="dfp-conferencia-quando">Última conferência: @_detalhe.DtUltimaConferencia.Value.ToString("dd/MM/yyyy HH:mm")</span>
+                            <div class="dfp-conferencia-lista">
+                                @foreach (var item in _detalhe.ConferenciaCampos)
+                                {
+                                    <div class="dfp-conferencia-item">
+                                        <i class="bi @IconeConferencia(item.Situacao) dfp-conferencia-icone-@item.Situacao.ToLowerInvariant()"></i>
+                                        <span class="dfp-conferencia-nome">@item.DeCampo</span>
+                                        <span class="dfp-conferencia-situacao dfp-conferencia-situacao-@item.Situacao.ToLowerInvariant()">
+                                            @(item.Situacao == "OK" ? "OK" : item.Situacao == "PENDENTE" ? "Pendente" : "Erro")
+                                        </span>
+                                        @if (!string.IsNullOrWhiteSpace(item.Mensagem))
+                                        {
+                                            <span class="dfp-conferencia-msg">@item.Mensagem</span>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        }
+                        </div>
+                    </div>
+                </div>
+            }
+
+            @if (_etapaAtual == 4)
             {
                 <div class="dfp-corpo">
                     <div class="dfp-timeline">
@@ -358,7 +479,19 @@
             }
 
             <div class="dfp-rodape">
-                @if (_modoRejeicao)
+                @if (_modoCancelamento)
+                {
+                    <div class="rejeicao-campos">
+                        <textarea class="input-justificativa" rows="2" placeholder="Escreva o motivo do cancelamento"
+                                  @bind="_motivoCancelamento" @bind:event="oninput"></textarea>
+                    </div>
+                    <button class="btn-recusar-cancelar" @onclick="CancelarModoCancelamento">Voltar</button>
+                    <button class="btn-recusar" @onclick="ConfirmarCancelamento"
+                            disabled="@(string.IsNullOrWhiteSpace(_motivoCancelamento) || _processandoAcao)">
+                        <i class="bi bi-slash-circle"></i> Confirmar cancelamento
+                    </button>
+                }
+                else if (_modoRejeicao)
                 {
                     <div class="rejeicao-campos">
                         <textarea class="input-justificativa" rows="2" placeholder="Escreva o motivo da rejeição"
@@ -400,13 +533,13 @@
                             <i class="bi bi-chevron-left"></i> <span>Etapa anterior</span>
                         </button>
                     }
-                    @if (_etapaAtual < 3)
+                    @if (_etapaAtual < 4)
                     {
                         <button class="btn-fpd-etapa-proxima" @onclick="() => _etapaAtual++">
                             <span>Próxima etapa</span> <i class="bi bi-chevron-right"></i>
                         </button>
                     }
-                    @if (!ServicoUsuario.EhGigov && !_apenasLeitura)
+                    @if (_podeAgirCefga)
                     {
                         <button class="btn-recusar" @onclick="() => _modoRejeicao = true" disabled="@_processandoAcao">
                             <i class="bi bi-x-circle"></i> Recusar desembolso
@@ -423,6 +556,12 @@
                                 <span>Aprovar desembolso</span>
                             }
                         </button>
+                    }
+                    else if (_bloqueadoPorResponsavel)
+                    {
+                        <span class="dfp-bloqueado-info" title="@($"Vinculado a {Analista?.Nome} — só ele(a) ou um Coordenador/Eventual pode agir")">
+                            <i class="bi bi-lock-fill"></i> Vinculado a outro responsável
+                        </span>
                     }
                 }
             </div>
@@ -456,6 +595,13 @@
     <DialogEditarFpd Desembolso="Desembolso"
                       AoFechar="() => _editarFpdAberto = false"
                       AoSalvar="AoSalvarEdicaoFpd" />
+}
+
+@if (_dialogSenhaValidarAberto)
+{
+    <DialogSenhaBaixa SenhaParaDrp="false"
+                      AoCancelar="() => _dialogSenhaValidarAberto = false"
+                      AoConfirmar="ConfirmarValidacaoComSenha" />
 }
 
 @code {
@@ -495,7 +641,7 @@
     // mais do que já foi fisicamente executado na obra.
     private decimal? PercExecucaoFinanceira =>
         _detalhe is { ValorEmprestimo: > 0 }
-            ? Math.Round((_detalhe.Desembolsado + _detalhe.SolicitadoVi) / _detalhe.ValorEmprestimo * 100, 3)
+            ? Math.Round((_detalhe.Desembolsado + _detalhe.ParticipacaoFgts) / _detalhe.ValorEmprestimo * 100, 3)
             : null;
 
     // Quanto da contrapartida total do contrato (ContrapartidaAtual) já foi
@@ -514,14 +660,65 @@
     private int _etapaAtual = 1;
     private readonly HashSet<string> _validacoesAbertas = [];
 
-    private bool _apenasLeitura => Desembolso.Status is "aprovado" or "negado";
+    private bool _apenasLeitura => Desembolso.Status is "aprovado" or "negado" or "baixado" or "cancelado";
+
+    // Item 15: quando o desembolso já está vinculado a um responsável de
+    // análise, só o próprio responsável (ou alguém com cargo Coordenador/
+    // Eventual) pode agir sobre ele — os demais ficam em modo leitura.
+    // IMPORTANTE: ServicoUsuarioUI é só um mock de usuário de teste (não há
+    // autenticação real neste projeto ainda) — esta regra hoje só existe no
+    // front, sem checagem equivalente no servidor.
+    private bool _souResponsavelAnalise => Analista is not null && Analista.Matricula == ServicoUsuario.Matricula;
+    private bool _souPrivilegiado => ServicoUsuario.Cargo is "Coordenador" or "Eventual";
+    private bool _bloqueadoPorResponsavel => !ServicoUsuario.EhGigov && Analista is not null && !_souResponsavelAnalise && !_souPrivilegiado;
+
+    private bool _podeAgirCefga => !ServicoUsuario.EhGigov && !_apenasLeitura && !_bloqueadoPorResponsavel;
+    private bool _podeCancelar => Desembolso.Status is "pendencia" or "pendente";
 
     private bool _popoverAberto;
     private bool _modoRejeicao;
+    private bool _modoCancelamento;
     private bool _processandoAcao;
     private bool _validandoMacro;
+    private bool _dialogSenhaValidarAberto;
     private string _justificativaRejeicao = "";
+    private string _motivoCancelamento = "";
     private bool _editarFpdAberto;
+
+    private void CancelarModoCancelamento()
+    {
+        _modoCancelamento = false;
+        _motivoCancelamento = "";
+    }
+
+    private async Task ConfirmarCancelamento()
+    {
+        if (string.IsNullOrWhiteSpace(_motivoCancelamento))
+        {
+            Snackbar.Add("Escreva o motivo antes de confirmar o cancelamento.", Severity.Warning);
+            return;
+        }
+        _processandoAcao = true;
+        StateHasChanged();
+        try
+        {
+            var ok = await Service.CancelarAsync(Desembolso.Id, ServicoUsuario.Matricula, ServicoUsuario.Nome, _motivoCancelamento);
+            Snackbar.Add(ok ? "Desembolso cancelado com sucesso." : "Não foi possível cancelar o desembolso.",
+                ok ? Severity.Success : Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[DialogFPD] Erro ao cancelar: {ex.Message}");
+            Snackbar.Add("Falha ao cancelar. Tente novamente.", Severity.Error);
+        }
+        finally
+        {
+            _processandoAcao = false;
+            _modoCancelamento = false;
+            _motivoCancelamento = "";
+        }
+        await AoFechar.InvokeAsync();
+    }
 
     protected override async Task OnInitializedAsync() => await CarregarDetalheAsync();
 
@@ -531,6 +728,7 @@
         try
         {
             _detalhe = await Service.ObterDetalheDesembolsoAsync(Desembolso.Id);
+            _mensagemCefgaEdicao = _detalhe?.MensagemCefga ?? "";
         }
         catch (Exception ex)
         {
@@ -540,6 +738,78 @@
         {
             _carregandoDetalhe = false;
         }
+    }
+
+    private string _mensagemCefgaEdicao = "";
+    private bool _salvandoMensagemCefga;
+    private bool _editandoMensagemCefga;
+
+    private static string IconeConferencia(string situacao) => situacao switch
+    {
+        "OK" => "bi-check-circle-fill",
+        "PENDENTE" => "bi-question-circle-fill",
+        _ => "bi-x-circle-fill",
+    };
+
+    // OBS CEFGA é um comentário único (não um fio) — qualquer usuário pode
+    // adicionar/editar/remover, sem regra de autoria.
+    private void IniciarEdicaoMensagemCefga()
+    {
+        _mensagemCefgaEdicao = _detalhe?.MensagemCefga ?? "";
+        _editandoMensagemCefga = true;
+    }
+
+    private void CancelarEdicaoMensagemCefga()
+    {
+        _editandoMensagemCefga = false;
+        _mensagemCefgaEdicao = _detalhe?.MensagemCefga ?? "";
+    }
+
+    private async Task SalvarMensagemCefga()
+    {
+        if (_detalhe is null || string.IsNullOrWhiteSpace(_mensagemCefgaEdicao)) return;
+        _salvandoMensagemCefga = true;
+        StateHasChanged();
+        try
+        {
+            var ok = await Service.AtualizarMensagemCefgaAsync(Desembolso.Id, _mensagemCefgaEdicao, ServicoUsuario.Matricula);
+            Snackbar.Add(ok ? "OBS CEFGA salvo com sucesso." : "Não foi possível salvar o OBS CEFGA.",
+                ok ? Severity.Success : Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[DialogFPD] Erro ao salvar OBS CEFGA: {ex.Message}");
+            Snackbar.Add("Falha ao salvar. Tente novamente.", Severity.Error);
+        }
+        finally
+        {
+            _salvandoMensagemCefga = false;
+            _editandoMensagemCefga = false;
+        }
+        await CarregarDetalheAsync();
+    }
+
+    private async Task RemoverMensagemCefga()
+    {
+        if (_detalhe is null) return;
+        _salvandoMensagemCefga = true;
+        StateHasChanged();
+        try
+        {
+            var ok = await Service.AtualizarMensagemCefgaAsync(Desembolso.Id, "", ServicoUsuario.Matricula);
+            Snackbar.Add(ok ? "OBS CEFGA removido." : "Não foi possível remover o OBS CEFGA.",
+                ok ? Severity.Success : Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[DialogFPD] Erro ao remover OBS CEFGA: {ex.Message}");
+            Snackbar.Add("Falha ao remover. Tente novamente.", Severity.Error);
+        }
+        finally
+        {
+            _salvandoMensagemCefga = false;
+        }
+        await CarregarDetalheAsync();
     }
 
     private async Task AoSalvarEdicaoFpd()
@@ -652,10 +922,10 @@
         {
             var alvo = item is null ? "" : $" em <strong>{item}</strong>";
             eventos.Add(new(
-                c.Tipo == "justificativa" ? "bi-check-circle" : c.Tipo == "parecer" ? "bi-x-circle" : "bi-chat-text",
+                c.Tipo == "parecer" ? "bi-check-circle" : "bi-chat-text",
                 $"<strong>{c.Autor}</strong> comentou{alvo}: “{c.Texto}”",
                 ServicoMock.FormatarTempo(c.Timestamp),
-                c.Tipo == "parecer" ? "falha" : c.Tipo == "justificativa" ? "ok" : "info"));
+                c.Tipo == "parecer" ? "ok" : "info"));
         }
 
         eventos.Add(Desembolso.Status switch
@@ -673,14 +943,19 @@
         return eventos;
     }
 
-    private async Task ExecutarValidacaoMacro()
+    private async Task ConfirmarValidacaoComSenha(string senha)
     {
+        _dialogSenhaValidarAberto = false;
         if (_validandoMacro) return;
         _validandoMacro = true;
         StateHasChanged();
         try
         {
-            await Service.ValidarAsync(Desembolso.Id);
+            // Conferência de campos roda junto com a validação — mesmo clique,
+            // mesma senha (não é mais uma ação separada). A lógica fica no
+            // backend (ValidarDesembolso já chama ExecutarConferenciaCamposInterno).
+            // matrícula+senha logam no SIAPF pra confrontar o FPD com o cadastro real do contrato.
+            await Service.ValidarAsync(Desembolso.Id, ServicoUsuario.Matricula, senha);
             await CarregarDetalheAsync();
         }
         catch (Exception ex) { Console.WriteLine($"[DialogFPD] Validar automaticamente: {ex.Message}"); }
@@ -930,6 +1205,10 @@
 .btn-remover-desativo, .btn-remover-vinculo:disabled { border-color: var(--ink-100) !important; background: #fff !important; color: var(--ink-300) !important; cursor: not-allowed !important; box-shadow: none !important; }
 .btn-editar-gigov { display: inline-flex; align-items: center; gap: 5px; border-radius: var(--radius-md); padding: 5px 12px; font-size: 11px; font-weight: 700; font-family: inherit; cursor: pointer; transition: background .12s; border: 1px solid var(--brand-200); background: var(--brand-50); color: var(--brand-800, #004F93); box-shadow: 0 1px 2px rgba(0,0,0,.06); }
 .btn-editar-gigov:hover { background: var(--brand-100); }
+.btn-cancelar-desembolso { display: inline-flex; align-items: center; gap: 5px; border-radius: var(--radius-md); padding: 5px 12px; font-size: 11px; font-weight: 700; font-family: inherit; cursor: pointer; transition: background .12s; border: 1px solid #FBCBC7; background: #FEF6F5; color: #9A2A1F; box-shadow: 0 1px 2px rgba(0,0,0,.06); }
+.btn-cancelar-desembolso:hover:not(:disabled) { background: #FCE6E3; }
+.btn-cancelar-desembolso:disabled { opacity: .5; cursor: not-allowed; }
+.dfp-bloqueado-info { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--ink-500); }
 
 .dfp-dados-grid { display: flex; border-bottom: 1px solid var(--ink-100); }
 .dfp-coluna { flex: 1; padding: 10px 24px; min-width: 0; }
@@ -983,6 +1262,58 @@
 .dfp-motivo-rejeicao { background: var(--err-bg); }
 .dfp-motivo-rejeicao .dfp-obs-af-titulo { color: var(--err); }
 .dfp-motivo-rejeicao .dfp-obs-af-texto { color: var(--ink-900); }
+
+.dfp-obs-corpo { display: flex; flex-direction: column; gap: 14px; }
+
+.dfp-obs-card { background: #F4F8FB; border: 1px solid #DCEAF3; border-radius: var(--radius-xl, 14px); padding: 16px 18px; }
+.dfp-obs-card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.dfp-obs-card-icone { flex-shrink: 0; width: 26px; height: 26px; border-radius: 8px; background: var(--brand-100, #D6E9F8); color: var(--brand-700, #005CA9); display: flex; align-items: center; justify-content: center; font-size: 13px; }
+.dfp-obs-card-titulo { font-size: 14px; font-weight: 800; color: var(--brand-900, #00304F); }
+
+.dfp-obs-card-conteudo { display: flex; flex-direction: column; gap: 0; }
+.dfp-obs-vazio { font-size: 12.5px; color: var(--ink-400, var(--ink-300)); font-style: italic; margin: 0; }
+.dfp-obs-texto { font-size: 13px; color: var(--ink-800, var(--ink-900)); line-height: 1.6; margin: 0; background: #EAF6EF; border: 1px solid #CDECDA; border-radius: var(--radius-lg); padding: 10px 12px; white-space: pre-wrap; }
+
+.dfp-conferencia-vazia { font-size: 12.5px; color: var(--ink-400, var(--ink-300)); font-style: italic; }
+.dfp-conferencia-quando { display: block; font-size: 10.5px; color: var(--ink-500); margin-bottom: 8px; }
+.dfp-conferencia-lista { display: flex; flex-direction: column; gap: 6px; }
+.dfp-conferencia-item { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-lg); background: #EAF6EF; border: 1px solid #CDECDA; font-size: 12.5px; flex-wrap: wrap; }
+
+
+.form-tratativa { display: flex; flex-direction: column; border: 1.5px solid var(--ink-200); border-radius: var(--radius-lg); background: #fff; overflow: hidden; transition: border-color .15s, box-shadow .15s; }
+.form-tratativa-foco { border-color: var(--brand-300); box-shadow: 0 0 0 3px var(--brand-50); }
+.form-textarea { resize: none; border: none; padding: 10px 12px 8px; font-size: 13px; font-family: inherit; color: var(--ink-900); line-height: 1.55; background: transparent; width: 100%; }
+.form-textarea:focus { outline: none; }
+.form-textarea::placeholder { color: var(--ink-300); }
+.form-textarea:disabled { opacity: .6; }
+.form-acoes-bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 10px; border-top: 1px solid var(--ink-100); background: #FAFBFC; flex-wrap: wrap; }
+.form-acoes-dir { display: flex; align-items: center; gap: 6px; }
+.btn-cancelar { height: 26px; padding: 0 10px; border-radius: var(--radius-md); font-size: 11.5px; font-family: inherit; color: var(--ink-500); background: transparent; border: 1px solid var(--ink-200); cursor: pointer; transition: background .15s; }
+.btn-cancelar:hover:not(:disabled) { background: var(--ink-50); color: var(--ink-700); }
+.btn-cancelar:disabled { opacity: .5; cursor: not-allowed; }
+.btn-salvar-tratativa { display: inline-flex; align-items: center; gap: 5px; height: 26px; padding: 0 12px; border-radius: var(--radius-md); font-size: 11.5px; font-weight: 600; font-family: inherit; color: var(--ink-500); background: #fff; border: 1px solid var(--ink-200); cursor: pointer; transition: all .15s; box-shadow: var(--shadow-card); }
+.btn-salvar-tratativa:hover:not(:disabled) { background: var(--brand-50); border-color: var(--brand-200); color: var(--brand-700); }
+.btn-salvar-tratativa:disabled { opacity: .4; cursor: not-allowed; }
+.btn-salvar-tratativa i { font-size: 12px; }
+.dfp-obs-cefga-comentario { border-radius: var(--radius-md); padding: 8px 10px; background: #EAF6EF; }
+.comentario-cabecalho { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; flex-wrap: wrap; }
+.comentario-ponto { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.comentario-tipo { font-size: 10px; font-weight: 700; }
+.comentario-texto { font-size: 12px; color: var(--ink-900); line-height: 1.5; margin: 0; }
+.btn-editar-comentario { width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; border-radius: var(--radius-md); color: var(--ink-500); font-size: 10px; background: transparent; transition: background .12s, color .12s; flex-shrink: 0; margin-left: auto; }
+.btn-editar-comentario + .btn-editar-comentario { margin-left: 0; }
+.btn-editar-comentario:hover { background: rgba(0,0,0,.06); color: var(--ink-900); }
+.btn-adicionar-comentario { height: 28px; padding: 0 10px; border-radius: var(--radius-md); font-size: 11px; font-weight: 500; font-family: inherit; color: var(--brand-700); background: #fff; border: 1px dashed var(--brand-200); display: inline-flex; align-items: center; gap: 4px; cursor: pointer; transition: background .15s, border-color .15s; width: fit-content; }
+.btn-adicionar-comentario:hover { background: var(--brand-50); border-color: var(--brand-300); }
+.dfp-conferencia-icone-ok { color: var(--ok); }
+.dfp-conferencia-icone-erro { color: var(--err); }
+.dfp-conferencia-icone-pendente { color: var(--warn, #9A5B00); }
+.dfp-conferencia-nome { font-weight: 600; color: var(--ink-900); }
+.dfp-conferencia-situacao { margin-left: auto; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; padding: 2px 8px; border-radius: var(--radius-full); }
+.dfp-conferencia-situacao-ok { background: var(--ok-bg); color: var(--ok); }
+.dfp-conferencia-situacao-erro { background: var(--err-bg); color: var(--err); }
+.dfp-conferencia-situacao-pendente { background: var(--warn-bg); color: #9A5B00; }
+.dfp-conferencia-msg { flex-basis: 100%; font-size: 11px; color: var(--ink-500); }
 
 .dfp-tabs { display: flex; align-items: center; gap: 2px; padding: 8px 24px 0; border-bottom: 1px solid var(--ink-100); flex-shrink: 0; background: #fff; }
 .btn-validar-macro { display: inline-flex; align-items: center; gap: 5px; height: 28px; padding: 0 12px; border-radius: var(--radius-md); font-size: 11.5px; font-weight: 600; font-family: inherit; color: var(--brand-700); background: var(--brand-50); border: 1px solid var(--brand-200); }

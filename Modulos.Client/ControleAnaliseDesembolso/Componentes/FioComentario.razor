@@ -68,7 +68,7 @@
                 @if (!ApenasInformativo)
                 {
                     <div class="seletor-tipo">
-                        @foreach (var tipo in new[] { "justificativa", "informativo", "parecer" })
+                        @foreach (var tipo in TiposDisponiveis)
                         {
                             var cfg2 = TiposComentario.Configs[tipo];
                             var ativo = _novoTipo == tipo;
@@ -117,6 +117,15 @@
     [Parameter] public bool                             ApenasLeitura         { get; set; }
     [Parameter] public bool                             ApenasInformativo     { get; set; }
     [Parameter] public bool                             LimitarUmComentario   { get; set; }
+    // Item 11: os comentários da CEFGA agora só têm PARECER (o que aprova a
+    // validação) e INFORMATIVO — "justificativa" (nome antigo do que aprovava)
+    // fica de fora do seletor, embora comentários antigos com esse tipo ainda
+    // sejam exibidos normalmente no histórico.
+    [Parameter] public bool                             OcultarJustificativa  { get; set; }
+
+    private string[] TiposDisponiveis => OcultarJustificativa
+        ? ["parecer", "informativo"]
+        : ["justificativa", "informativo", "parecer"];
 
     private bool   _adicionando = false;
     private bool   _comFoco     = false;
@@ -197,7 +206,7 @@
 
     private static string NomeTipo(string tipo) => tipo switch
     {
-        "justificativa" => "Justificativa",
+        "justificativa" => "Justificativa (legado)",
         "parecer"       => "Parecer",
         _               => "Informativo"
     };

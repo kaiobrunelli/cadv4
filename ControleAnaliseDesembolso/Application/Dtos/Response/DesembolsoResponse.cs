@@ -24,9 +24,13 @@ namespace ControleAnaliseDesembolso.Application.Dtos.Response
         public bool PrimeiroDesembolso { get; set; }
         public bool Adiantamento { get; set; }
         public bool UltimoDesembolso { get; set; }
+        public bool Recorrente { get; set; }
 
         public DateTime PrazoFinal { get; set; }
         public bool DataAgendamento { get; set; } = false;
+        public bool Sanepar { get; set; }
+        public string? ContratoAo { get; set; }
+        public string? ContratoAoDv { get; set; }
         public string? ResponsavelAnalise { get; set; }
         public DateTime? DtConclusao { get; set; }
     }

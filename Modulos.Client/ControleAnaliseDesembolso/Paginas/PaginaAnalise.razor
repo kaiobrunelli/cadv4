@@ -34,12 +34,12 @@
     .pagina-header-container {
         max-width: 1200px;
         margin: 0;
-        padding: 32px;
+        padding: 24px 32px;
     }
 
     .pagina-titulo {
-        font-size: 40px;
-        font-weight: 800;
+        font-size: 32px;
+        font-weight: 700;
         line-height: 1.05;
         letter-spacing: -.02em;
         color: var(--ink-900);
@@ -50,8 +50,8 @@
     }
 
     .titulo-gigov-sufixo {
-        font-size: 22px;
-        font-weight: 700;
+        font-size: 17px;
+        font-weight: 600;
         color: var(--ink-500);
         letter-spacing: 0;
     }
@@ -74,7 +74,7 @@
     .btn-toggle-modo-teste i { font-size: 12px; }
 
     .stats-consolidado {
-        margin-top: 24px;
+        margin-top: 16px;
         overflow: hidden;
         border-radius: var(--radius-xl);
         border: 1px solid var(--ink-100);
@@ -85,7 +85,7 @@
     .stats-consolidado-header {
         background: #FAFBFC;
         border-bottom: 1px solid var(--ink-100);
-        padding: 10px 20px;
+        padding: 8px 16px;
     }
 
     .stats-consolidado-titulo {
@@ -105,7 +105,7 @@
         display: flex;
         align-items: flex-start;
         gap: 12px;
-        padding: 16px 20px;
+        padding: 12px 16px;
         border-right: 1px solid var(--ink-100);
         transition: background .15s;
     }
@@ -130,8 +130,8 @@
     }
 
     .stats-cell-valor {
-        font-size: 26px;
-        font-weight: 800;
+        font-size: 20px;
+        font-weight: 700;
         line-height: 1;
         color: var(--ink-900);
         font-variant-numeric: tabular-nums;
@@ -151,7 +151,7 @@
     .filtros-container {
         max-width: 1200px;
         margin: 0;
-        padding: 12px 32px;
+        padding: 8px 32px;
         display: flex;
         flex-direction: row;
         flex-wrap: wrap;
@@ -385,7 +385,7 @@
     .contratos-container {
         max-width: 1200px;
         margin: 0;
-        padding: 24px 32px 64px;
+        padding: 16px 32px 64px;
     }
 
     .skeletons {
@@ -616,33 +616,38 @@
     var todos           = _todos;
     var totalVal        = todos.Sum(d => d.ValidacoesTotal);
     var totalOk         = todos.Sum(d => d.ValidacoesOk);
-    var qtdPendencias   = todos.Count(d => d.Status == "pendencia");
-    var qtdPendentes    = todos.Count(d => d.Status == "pendente");
-    var qtdAgendados    = todos.Count(d => d.Status == "agendado");
+    // SANEPAR virou categoria própria (item 9) — os registros com Sanepar==true
+    // saem dos grupos "Pendente"/"Analisar" gerais e só aparecem dentro da
+    // categoria SANEPAR, mantendo lá os mesmos dois sub-status.
+    var qtdPendencias   = todos.Count(d => d.Status == "pendencia" && !d.Sanepar);
+    var qtdPendentes    = todos.Count(d => d.Status == "pendente" && !d.Sanepar);
+    var qtdSanepar      = todos.Count(d => d.Sanepar && d.Status is "pendencia" or "pendente");
     var qtdAguardandoBaixa = todos.Count(d => d.Status == "aprovado");
-    var totalContratos  = qtdPendencias + qtdPendentes + qtdAguardandoBaixa + qtdAgendados;
+    var totalPedidos    = qtdPendencias + qtdPendentes + qtdAguardandoBaixa + qtdSanepar;
     // Badge da aba "Geral": só conta o que de fato aparece nessa aba —
-    // Aguardando Baixa só é mostrado na aba DRP.
-    var totalContratosGeral = qtdPendencias + qtdPendentes + qtdAgendados;
+    // Aguardando Baixa só é mostrado na aba Relatórios.
+    var totalPedidosGeral = qtdPendencias + qtdPendentes + qtdSanepar;
 
     var filtrados = _filtroAtivo switch
     {
-        "invalidos" => todos.Where(d => d.Status == "pendencia").ToList(),
-        "pendentes" => todos.Where(d => d.Status == "pendente").ToList(),
-        "agendado"  => todos.Where(d => d.Status == "agendado").ToList(),
+        "invalidos" => todos.Where(d => d.Status == "pendencia" && !d.Sanepar).ToList(),
+        "pendentes" => todos.Where(d => d.Status == "pendente" && !d.Sanepar).ToList(),
+        "sanepar"   => todos.Where(d => d.Sanepar && d.Status is "pendencia" or "pendente").ToList(),
         _           => todos
     };
 
     var buscados = AplicarBusca(filtrados);
 
-    var buscadosNaoDrp = buscados.Where(d => d.Status is not ("aprovado" or "baixado" or "negado")).ToList();
+    var buscadosNaoDrp = buscados.Where(d => d.Status is not ("aprovado" or "baixado" or "negado" or "cancelado")).ToList();
 
-    var grupoPendencias = buscados.Where(d => d.Status == "pendencia").ToList();
-    var grupoPendentes  = buscados.Where(d => d.Status == "pendente").ToList();
-    var grupoAgendados  = buscados.Where(d => d.Status == "agendado").ToList();
+    var grupoPendencias = buscados.Where(d => d.Status == "pendencia" && !d.Sanepar).ToList();
+    var grupoPendentes  = buscados.Where(d => d.Status == "pendente" && !d.Sanepar).ToList();
+    // SANEPAR é tratamento à parte — fica numa lista única (não separada por
+    // Pendente/Analisar como as demais categorias).
+    var grupoSanepar = buscados.Where(d => d.Sanepar && d.Status is "pendencia" or "pendente").ToList();
 
-    var emAndamentoGigov = buscados.Where(d => d.Status is "pendencia" or "pendente" or "agendado").ToList();
-    var concluidosGigov = todos.Where(d => d.Status is "aprovado" or "baixado" or "negado").ToList();
+    var emAndamentoGigov = buscados.Where(d => d.Status is "pendencia" or "pendente").ToList();
+    var concluidosGigov = todos.Where(d => d.Status is "aprovado" or "baixado" or "negado" or "cancelado").ToList();
 }
 
 <div class="pagina">
@@ -651,7 +656,7 @@
         <div class="pagina-header-container">
            
             <h1 class="pagina-titulo">
-                Análise de <span class="titulo-destaque">Desembolsos</span>
+                Controle <span class="titulo-destaque">Análise Desembolso</span>
                 @if (ServicoUsuario.EhGigov && _meusGigov.Count > 0)
                 {
                     <span class="titulo-gigov-sufixo"> - GIGOV @string.Join(", ", _meusGigov)</span>
@@ -676,8 +681,8 @@
                                 <i class="bi bi-list-check" style="color:#005CA9;font-size:14px"></i>
                             </div>
                             <div>
-                                <div class="stats-cell-valor">@totalContratos</div>
-                                <div class="stats-cell-label">Total de contratos</div>
+                                <div class="stats-cell-valor">@totalPedidos</div>
+                                <div class="stats-cell-label">Total Pedidos</div>
                             </div>
                         </div>
 
@@ -711,6 +716,16 @@
                             </div>
                         </div>
 
+                        <div class="stats-cell">
+                            <div class="stats-cell-icon" style="background:#EAF3FC">
+                                <i class="bi bi-calendar-check" style="color:#2D8AD8;font-size:14px"></i>
+                            </div>
+                            <div>
+                                <div class="stats-cell-valor">@qtdSanepar</div>
+                                <div class="stats-cell-label">Total SANEPAR</div>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
             }
@@ -726,7 +741,7 @@
                     <button class="filtro-btn @(_filtroAtivo == "geral"     ? "filtro-btn-ativo" : "")" @onclick='() => SelecionarFiltro("geral")'>
                         <span class="filtro-dot" style="background:#9EB2BB;opacity:@(_filtroAtivo=="geral"?"1":"0.5")"></span>
                         Geral
-                        <span class="filtro-badge @(_filtroAtivo == "geral" ? "filtro-badge-ativo" : "")">@(ServicoUsuario.EhGigov ? emAndamentoGigov.Count : totalContratosGeral)</span>
+                        <span class="filtro-badge @(_filtroAtivo == "geral" ? "filtro-badge-ativo" : "")">@(ServicoUsuario.EhGigov ? emAndamentoGigov.Count : totalPedidosGeral)</span>
                     </button>
 
                     @if (!ServicoUsuario.EhGigov)
@@ -749,12 +764,12 @@
                             }
                         </button>
 
-                        <button class="filtro-btn @(_filtroAtivo == "agendado"  ? "filtro-btn-ativo" : "")" @onclick='() => SelecionarFiltro("agendado")' title="Desembolsos SANEPAR — aguardam a rotina do dia 20 pra entrar na fila normal">
-                            <span class="filtro-dot" style="background:#2D8AD8;opacity:@(_filtroAtivo=="agendado"?"1":"0.5")"></span>
-                            Agendado
-                            @if (qtdAgendados > 0)
+                        <button class="filtro-btn @(_filtroAtivo == "sanepar"  ? "filtro-btn-ativo" : "")" @onclick='() => SelecionarFiltro("sanepar")' title="Desembolsos SANEPAR — categoria própria, com seus próprios status Pendente/Analisar">
+                            <span class="filtro-dot" style="background:#2D8AD8;opacity:@(_filtroAtivo=="sanepar"?"1":"0.5")"></span>
+                            SANEPAR
+                            @if (qtdSanepar > 0)
                             {
-                                <span class="filtro-badge @(_filtroAtivo == "agendado" ? "filtro-badge-ativo" : "")">@qtdAgendados</span>
+                                <span class="filtro-badge @(_filtroAtivo == "sanepar" ? "filtro-badge-ativo" : "")">@qtdSanepar</span>
                             }
                         </button>
                     }
@@ -762,7 +777,7 @@
 
                     <button class="filtro-btn @(_filtroAtivo == "drp"  ? "filtro-btn-ativo" : "")" @onclick='() => SelecionarFiltro("drp")'>
                         <span class="filtro-dot" style="background:#1074C8;opacity:@(_filtroAtivo=="drp"?"1":"0.5")"></span>
-                        @(ServicoUsuario.EhGigov ? "Concluídos" : "DRP")
+                        @(ServicoUsuario.EhGigov ? "Concluídos" : "Relatórios")
                     </button>
                 </div>
 
@@ -781,7 +796,7 @@
 
                 @if (!ServicoUsuario.EhGigov)
                 {
-                    <button class="btn-processar @(_processando ? "btn-processando" : "")" @onclick="ExecutarMacro" disabled="@_processando"
+                    <button class="btn-processar @(_processando ? "btn-processando" : "")" @onclick="AbrirValidarPendentes" disabled="@_processando"
                             title="Roda a validação em lote pra todo desembolso ainda no status inicial (pendência)">
                         <i class="bi bi-@(_processando ? "hourglass-split" : "shield-check")"></i>
                         <span>@(_processando ? "Validando..." : "Validar Pendentes")</span>
@@ -960,21 +975,21 @@
                     }
 
 
-                    @if (grupoAgendados.Any())
+                    @if (grupoSanepar.Any())
                     {
                         <section class="grupo-card">
-                            <div class="grupo-card-header @(_grupoAgendadosAberto ? "com-borda" : "")">
-                                <CabecalhoGrupo Titulo="Agendado"
-                                                Contagem="@grupoAgendados.Count"
+                            <div class="grupo-card-header @(_grupoSaneparAberto ? "com-borda" : "")">
+                                <CabecalhoGrupo Titulo="SANEPAR"
+                                                Contagem="@grupoSanepar.Count"
                                                 Tipo="agendado"
-                                                Aberto="@_grupoAgendadosAberto"
-                                                AoAlternar="@(v => _grupoAgendadosAberto = v)" />
+                                                Aberto="@_grupoSaneparAberto"
+                                                AoAlternar="@(v => _grupoSaneparAberto = v)" />
                             </div>
-                            <div class="acc-body @(_grupoAgendadosAberto ? "aberto" : "")">
+                            <div class="acc-body @(_grupoSaneparAberto ? "aberto" : "")">
                                 <div class="acc-inner">
                                     @ColsHeader
-                                    @{ _paginaAgendados = PaginaValidaGrupo(_paginaAgendados, grupoAgendados.Count); }
-                                    @foreach (var d in Paginar(grupoAgendados, _paginaAgendados))
+                                    @{ _paginaSanepar = PaginaValidaGrupo(_paginaSanepar, grupoSanepar.Count); }
+                                    @foreach (var d in Paginar(grupoSanepar, _paginaSanepar))
                                     {
                                         <LinhaContrato Desembolso="d"
                                                       MostrarAguardando="false"
@@ -986,14 +1001,14 @@
                                                       AoAtribuir="@((MouseEventArgs e) => { _idAtribuicao = d.Id; _popoverX = e.ClientX; _popoverY = e.ClientY; })" />
                                     }
                                 </div>
-                                @if (TotalPaginasGrupo(grupoAgendados.Count) > 1)
+                                @if (TotalPaginasGrupo(grupoSanepar.Count) > 1)
                                 {
                                     <div class="grupo-paginacao">
-                                        <button class="grupo-btn-pagina" disabled="@(_paginaAgendados <= 1)" @onclick="() => _paginaAgendados--">
+                                        <button class="grupo-btn-pagina" disabled="@(_paginaSanepar <= 1)" @onclick="() => _paginaSanepar--">
                                             <i class="bi bi-chevron-left"></i>
                                         </button>
-                                        <span class="grupo-paginacao-info">Página @_paginaAgendados de @TotalPaginasGrupo(grupoAgendados.Count)</span>
-                                        <button class="grupo-btn-pagina" disabled="@(_paginaAgendados >= TotalPaginasGrupo(grupoAgendados.Count))" @onclick="() => _paginaAgendados++">
+                                        <span class="grupo-paginacao-info">Página @_paginaSanepar de @TotalPaginasGrupo(grupoSanepar.Count)</span>
+                                        <button class="grupo-btn-pagina" disabled="@(_paginaSanepar >= TotalPaginasGrupo(grupoSanepar.Count))" @onclick="() => _paginaSanepar++">
                                             <i class="bi bi-chevron-right"></i>
                                         </button>
                                     </div>
@@ -1002,14 +1017,14 @@
                         </section>
                     }
 
-                    @if (!grupoPendencias.Any() && !grupoPendentes.Any() && !grupoAgendados.Any())
+                    @if (!grupoPendencias.Any() && !grupoPendentes.Any() && !grupoSanepar.Any())
                     {
                         var buscando = !string.IsNullOrWhiteSpace(_textoBusca);
                         var (emptyIcone, emptyTitulo, emptySub) = buscando
                             ? ("bi-search", $"Nenhum resultado para \"{_textoBusca.Trim()}\"", "Busque por número do contrato, mutuário, GIGOV ou responsável.")
                             : _filtroAtivo switch
                             {
-                                "agendado"  => ("bi-calendar2-x",  "Nenhum desembolso agendado",       "Não há contratos com agendamento pendente no momento."),
+                                "sanepar"   => ("bi-calendar2-x",  "Nenhum desembolso SANEPAR",         "Não há contratos SANEPAR pendentes ou em análise no momento."),
                                 "invalidos" => ("bi-x-circle",     "Nenhuma pendência encontrada",      "Não há contratos aguardando validação no momento."),
                                 "pendentes" => ("bi-clock",        "Nenhum contrato para analisar",     "Não há contratos aguardando análise no momento."),
                                 _           => ("bi-folder2-open", "Nenhum contrato encontrado",        "Tente outro filtro.")
@@ -1065,6 +1080,13 @@
     <PainelPreencherFpdEtapas AoVoltar="() => _fpdEtapasAberto = false" AoSolicitar="SolicitarDesembolso" />
 }
 
+@if (_dialogSenhaValidarPendentesAberto)
+{
+    <DialogSenhaBaixa SenhaParaDrp="false"
+                      AoCancelar="() => _dialogSenhaValidarPendentesAberto = false"
+                      AoConfirmar="ExecutarMacro" />
+}
+
 @if (_idDialogAberto is not null)
 {
     var desembolsoDialog = _todos.FirstOrDefault(d => d.Id == _idDialogAberto);
@@ -1089,18 +1111,19 @@
     private string  _textoBusca            = "";
     private bool    _grupoPendenciasAberto = true;
     private bool    _grupoPendentesAberto  = true;
-    private bool    _grupoAgendadosAberto  = true;
+    private bool    _grupoSaneparAberto = true;
     private bool    _grupoEmAndamentoAberto = true;
     private List<string> _meusGigov          = [];
     private bool    _carregando            = true;
     private bool    _processando           = false;
     private bool    _fpdEtapasAberto       = false;
+    private bool    _dialogSenhaValidarPendentesAberto = false;
     private List<DesembolsoCAD> _todos     = [];
 
     private const int ItensPorPaginaGrupo = 10;
     private int _paginaPendencias = 1;
     private int _paginaPendentes  = 1;
-    private int _paginaAgendados  = 1;
+    private int _paginaSanepar    = 1;
 
     private static List<DesembolsoCAD> Paginar(List<DesembolsoCAD> lista, int pagina) =>
         lista.Skip((pagina - 1) * ItensPorPaginaGrupo).Take(ItensPorPaginaGrupo).ToList();
@@ -1115,7 +1138,7 @@
     {
         _paginaPendencias = 1;
         _paginaPendentes  = 1;
-        _paginaAgendados  = 1;
+        _paginaSanepar    = 1;
     }
 
     private async Task AlternarModoTeste()
@@ -1136,6 +1159,7 @@
     private RenderFragment ColsHeader =>
         @<div class="cols-header">
             <span class="col-h" style="width:144px">Contrato</span>
+            @if (!ServicoUsuario.EhGigov) { <span class="col-h" style="width:144px">Contrato AO</span> }
             @if (ServicoUsuario.EhGigov) { <span class="col-h" style="width:208px">Mutuário</span> }
             <span class="col-h" style="width:80px;text-align:center">GIGOV</span>
             <span class="col-h" style="width:112px;text-align:right">Valor</span>
@@ -1235,8 +1259,15 @@
 
         StateHasChanged();
     }
-    private async Task ExecutarMacro()
+    private void AbrirValidarPendentes()
     {
+        if (_processando) return;
+        _dialogSenhaValidarPendentesAberto = true;
+    }
+
+    private async Task ExecutarMacro(string senha)
+    {
+        _dialogSenhaValidarPendentesAberto = false;
         if (_processando) return;
         _processando = true;
         StateHasChanged();
@@ -1249,7 +1280,7 @@
                 return;
             }
 
-            var ok = await Service.ValidarTodosPendentesAsync();
+            var ok = await Service.ValidarTodosPendentesAsync(ServicoUsuario.Matricula, senha);
             if (!ok)
             {
                 Snackbar.Add("Falha ao validar os desembolsos pendentes. Tente novamente.", Severity.Error);

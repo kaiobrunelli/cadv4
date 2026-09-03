@@ -2,6 +2,7 @@
 @using System.Net.Http.Json
 @using System.Text.Json
 @using ControleAnaliseDesembolso.Modelos
+@using Microsoft.AspNetCore.Components.Forms
 
 @inject ServicoUsuarioUI ServicoUsuario
 @inject ControleAnaliseDesembolsoService ControleAnaliseDesembolsoService
@@ -95,8 +96,8 @@
                         <span>Adiantamento</span>
                     </label>
                     <label class="fpd-check">
-                        <input type="checkbox" @bind="_fpd.Sanepar" />
-                        <span>SANEPAR</span>
+                        <input type="checkbox" checked="@(_fpd.OpcaoExclusiva == "recorrente")" @onchange='() => DefinirOpcaoExclusiva("recorrente")' />
+                        <span>Recorrente</span>
                     </label>
                 </div>
 
@@ -110,21 +111,20 @@
                     </div>
                 }
 
+                @if (_fpd.PrimeiroDesembolso)
+                {
+                    <div class="fpd-subtoggles">
+                        <div class="fpd-sn-item"><label class="fpd-label">Destinação da coleta de resíduos sólidos</label>
+                            <ToggleSimNao @bind-Value="_fpd.DestinacaoColetaResiduosSolidos" /></div>
+                    </div>
+                }
+
                 <div class="fpd-agentes">
                     @CampoAgente("Agente Financeiro", _fpd.AgenteFinanceiro, v => _fpd.AgenteFinanceiro = v, _fpd.CnpjAgenteFinanceiro, v => _fpd.CnpjAgenteFinanceiro = v, _erroAgenteFinanceiro, ValidarAgenteFinanceiro)
                     @CampoAgente("Tomador / Mutuário", _fpd.Tomador, v => _fpd.Tomador = v, _fpd.CnpjTomador, v => _fpd.CnpjTomador = v)
-                    @CampoAgente("Agente Técnico OP", _fpd.AgenteTecnico, v => _fpd.AgenteTecnico = v, _fpd.CnpjAgenteTecnico, v => _fpd.CnpjAgenteTecnico = v)
                     @CampoAgente("Agente Promotor", _fpd.AgentePromotor, v => _fpd.AgentePromotor = v, _fpd.CnpjAgentePromotor, v => _fpd.CnpjAgentePromotor = v)
-                    <div class="fpd-campo fpd-campo-cheio"><label class="fpd-label">Programa</label>
-                        <select class="fpd-input" @bind="ProgramaSelecionado">
-                            <option value="">Selecione…</option>
-                            @foreach (var opcao in _programas)
-                            {
-                                <option value="@opcao.Rotulo">@opcao.Rotulo</option>
-                            }
-                        </select>
-                    </div>
                 </div>
+
                 <div class="fpd-grid4">
                     <div class="fpd-campo"><label class="fpd-label">DT Emissão Eng.</label>
                         <input class="fpd-input" type="date" @bind="_fpd.DataEmissaoEng" /></div>
@@ -150,9 +150,40 @@
                                value="@_percObraTexto" @oninput="FormatarPercObraEnquantoDigita" /></div>
                 </div>
 
+                @* Últimos campos antes do OBS AF: Data de início da obra + Programa, com as
+                   opções de Pró-Transporte (só aparecem com esse Programa) na mesma linha. *@
+                <div class="fpd-subtoggles">
+                    <div class="fpd-campo"><label class="fpd-label">Data de início da obra</label>
+                        <input class="fpd-input" type="date" @bind="_fpd.DataInicioObra" /></div>
+                    <div class="fpd-campo fpd-campo-programa"><label class="fpd-label">Programa</label>
+                        <select class="fpd-input" @bind="ProgramaSelecionado">
+                            <option value="">Selecione…</option>
+                            @foreach (var opcao in _programas)
+                            {
+                                <option value="@opcao.Rotulo">@opcao.Rotulo</option>
+                            }
+                        </select>
+                    </div>
+                    @if (EhProTransporte)
+                    {
+                        <div class="fpd-sn-item"><label class="fpd-label">Tem carroceria</label>
+                            <ToggleSimNao @bind-Value="_fpd.TemCarroceria" /></div>
+                        <div class="fpd-sn-item"><label class="fpd-label">Veículo possui adesivos</label>
+                            <ToggleSimNao @bind-Value="_fpd.VeiculoPossuiAdesivos" /></div>
+                    }
+                </div>
+
                 <div class="fpd-campo fpd-campo-cheio" style="margin-top:10px">
                     <label class="fpd-label">OBS AF</label>
                     <textarea class="fpd-input fpd-textarea" @bind="_fpd.Mensagem" @bind:event="oninput"></textarea>
+                </div>
+
+                <div class="fpd-campo fpd-campo-cheio" style="margin-top:10px">
+                    <label class="fpd-label">Anexos</label>
+                    <input type="file" @ref="_inputArquivoRef" style="display:none" multiple />
+                    <button type="button" class="fpd-btn-anexar" @onclick="AbrirSeletorDeArquivo">
+                        <i class="bi bi-paperclip"></i> <span>Anexar arquivo</span>
+                    </button>
                 </div>
             </div>
         }
@@ -161,13 +192,13 @@
             <div class="fpd-grupo-head fpd-grupo-head-topo"><i class="bi bi-check2-square"></i><span>Verificações</span>
                 <span class="fpd-grupo-hint">clique no item para comentar</span></div>
             <div class="fpd-arvore">
-                @ItemToggle("2.1", "licoperacao", "Licença de operação", () => _fpd.LicencaOperacao, v => _fpd.LicencaOperacao = v, true, null)
+                @ItemToggle("2.1", "licoperacao", "Licença de operação", () => _fpd.LicencaOperacao, v => _fpd.LicencaOperacao = v, true, AnexosLicencaOperacao)
                 @ItemToggle("2.2", "licinstalacao", "Licença de instalação", () => _fpd.LicencaInstalacao, v => _fpd.LicencaInstalacao = v, true, null)
                 @ItemToggle("2.3", "retorno", "Retorno parcial", () => _fpd.RetornoParcial, v => _fpd.RetornoParcial = v, false, null)
                 @ItemToggle("2.4", "placa", "Placa local", () => _fpd.PlacaLocal, v => _fpd.PlacaLocal = v, false, null)
                 @ItemToggle("2.5", "excep", "Excepcionalização", () => _fpd.Excepcionalizacao, v => _fpd.Excepcionalizacao = v, false, null)
                 @ItemToggle("2.6", "cndinss", "CND INSS Válida", () => _fpd.CndValido, v => _fpd.CndValido = v, false, null)
-                @ItemToggle("2.7", "crp", "CRP Válida", () => _fpd.CrpValido, v => _fpd.CrpValido = v, false, null)
+                @ItemToggle("2.7", "crp", "CRP Válida", () => _fpd.CrpValido, v => _fpd.CrpValido = v, true, null)
                 @ItemToggle("2.8", "cpalterada", "CP alterada", () => _fpd.CpAlterada, v => _fpd.CpAlterada = v, false, null)
             </div>
         }
@@ -184,7 +215,7 @@
                         <div class="fpd-grid2">
                             <div class="fpd-campo"><label class="fpd-label" title="Quanto do desembolso vem do FGTS">Participação FGTS</label><CampoMoeda @bind-Value="_fpd.ParticipacaoFgts" /></div>
                             <div class="fpd-campo"><label class="fpd-label" title="Valor total do empréstimo contratado, sem somar a contrapartida">VE (Valor Empréstimo)</label><CampoMoeda @bind-Value="_fpd.Ve" /></div>
-                            <div class="fpd-campo"><label class="fpd-label" title="Total já desembolsado até agora (sigla Rede Caixa: VD)">Desembolsado</label><CampoMoeda @bind-Value="_fpd.Desembolsado" /></div>
+                            <div class="fpd-campo"><label class="fpd-label" title="Total já desembolsado até agora (sigla Rede Caixa: VD) — só leitura, vem do contrato ao buscar (ou fica vazio no 1º desembolso)">Desembolsado</label><CampoMoeda Value="_fpd.Desembolsado" ReadOnly="true" /></div>
                             <div class="fpd-campo"><label class="fpd-label" title="Calculado automaticamente: VE - Desembolsado">Saldo a desembolsar</label><CampoMoeda Value="_fpd.SaldoDesembolsar" ReadOnly="true" /></div>
                         </div>
                     </div>
@@ -193,8 +224,8 @@
                         <div class="fpd-grid2">
                             <div class="fpd-campo"><label class="fpd-label" title="Valor da contrapartida desta parcela (recurso próprio do agente)">Contrapartida</label><CampoMoeda @bind-Value="_fpd.Contrapartida" /></div>
                             <div class="fpd-campo"><label class="fpd-label" title="Contrapartida total a ser integralizada até o fim do contrato">CP Atual</label><CampoMoeda @bind-Value="_fpd.CpAtual" /></div>
-                            <div class="fpd-campo"><label class="fpd-label" title="Quanto da contrapartida já foi integralizado até agora (informado pela GIGOV)">Integralizado</label><CampoMoeda @bind-Value="_fpd.Integralizado" /></div>
-                            <div class="fpd-campo"><label class="fpd-label" title="Calculado automaticamente: CP Atual - Integralizado">Saldo a integralizar</label><CampoMoeda Value="_fpd.SaldoIntegralizar" ReadOnly="true" /></div>
+                            <div class="fpd-campo"><label class="fpd-label" title="Quanto da contrapartida já foi integralizado até agora — só leitura, vem do contrato ao buscar (ou fica vazio no 1º desembolso)">Integralizado</label><CampoMoeda Value="_fpd.Integralizado" ReadOnly="true" /></div>
+                            <div class="fpd-campo"><label class="fpd-label" title="Calculado automaticamente: CP Atual - (Contrapartida + Integralizado)">Saldo a integralizar</label><CampoMoeda Value="_fpd.SaldoIntegralizar" ReadOnly="true" /></div>
                         </div>
                     </div>
                 </div>
@@ -207,11 +238,11 @@
                             <strong><i class="bi bi-graph-up fpd-resumo-perc-icone"></i>@FmtPerc(_fpd.PercObra)</strong>
                         </div>
                         <div class="fpd-resumo-perc-item">
-                            <span class="fpd-resumo-perc-rotulo" title="(Desembolsado + Solicitado VI) / VE">Execução financeira</span>
+                            <span class="fpd-resumo-perc-rotulo" title="(Desembolsado + Participação FGTS) / VE">Execução financeira</span>
                             <strong class="@ClassePercComparado(_fpd.PercExecucaoFinanceira, _fpd.PercObra)"><i class="bi bi-graph-up fpd-resumo-perc-icone"></i>@FmtPerc(_fpd.PercExecucaoFinanceira)</strong>
                         </div>
                         <div class="fpd-resumo-perc-item">
-                            <span class="fpd-resumo-perc-rotulo" title="Integralizado / CP Atual">Contrapartida integralizada</span>
+                            <span class="fpd-resumo-perc-rotulo" title="(Contrapartida + Integralizado) / CP Atual">Contrapartida integralizada</span>
                             <strong><i class="bi bi-graph-up fpd-resumo-perc-icone"></i>@FmtPerc(_fpd.PercContrapartidaIntegralizada)</strong>
                         </div>
                     </div>
@@ -270,7 +301,47 @@
 
     private readonly PreenchimentoFpd _fpd = new();
     private ElementReference _corpoRef;
+    private ElementReference _inputArquivoRef;
+
+    // Item 7: só simula o efeito de anexar — abre o seletor nativo do Windows,
+    // sem upload real (nenhum endpoint de anexo existe ainda).
+    private async Task AbrirSeletorDeArquivo() =>
+        await JS.InvokeVoidAsync("clicarElemento", _inputArquivoRef);
     private readonly HashSet<string> _itensAbertos = [];
+
+    // Anexos da Licença de operação — só simula o efeito de anexar (mesmo
+    // espírito do "Anexar arquivo" da Etapa 1): monta uma lista no front com
+    // nome + tamanho do que foi escolhido, sem upload/armazenamento real.
+    // Onde/como isso vai ser salvo de fato ainda está em aberto.
+    private const long TamanhoMaximoAnexoBytes = 20 * 1024 * 1024; // 20MB por arquivo
+    private readonly List<(string Nome, long Tamanho)> _anexosLicencaOperacao = [];
+    private string? _erroAnexoLicencaOperacao;
+
+    private async Task AoSelecionarAnexosLicencaOperacao(InputFileChangeEventArgs e)
+    {
+        _erroAnexoLicencaOperacao = null;
+        foreach (var arquivo in e.GetMultipleFiles(50))
+        {
+            if (arquivo.Size > TamanhoMaximoAnexoBytes)
+            {
+                _erroAnexoLicencaOperacao = $"\"{arquivo.Name}\" excede 20MB e não foi adicionado.";
+                continue;
+            }
+            if (_anexosLicencaOperacao.Any(a => a.Nome == arquivo.Name))
+                continue;
+
+            _anexosLicencaOperacao.Add((arquivo.Name, arquivo.Size));
+        }
+        await Task.CompletedTask;
+    }
+
+    private void RemoverAnexoLicencaOperacao(string nome) =>
+        _anexosLicencaOperacao.RemoveAll(a => a.Nome == nome);
+
+    private static string FormatarTamanhoArquivo(long bytes) =>
+        bytes < 1024 * 1024
+            ? $"{bytes / 1024.0:0.#} KB"
+            : $"{bytes / 1024.0 / 1024.0:0.#} MB";
 
     private string _percObraTexto = "";
 
@@ -473,8 +544,13 @@
         _fpd.OpcaoExclusiva = d.PrimeiroDesembolso ? "primeiro"
             : d.UltimoDesembolso ? "ultimo"
             : d.TipoDesembolso == "ADIANTAMENTO" ? "adiantamento"
+            : d.Recorrente ? "recorrente"
             : null;
         _fpd.Sanepar = d.Sanepar ?? false;
+        _fpd.TemCarroceria = BoolParaSimNao(d.TemCarroceria);
+        _fpd.VeiculoPossuiAdesivos = BoolParaSimNao(d.VeiculoPossuiAdesivos);
+        _fpd.DataInicioObra = d.DataInicioObra;
+        _fpd.DestinacaoColetaResiduosSolidos = BoolParaSimNao(d.DestinacaoColetaResiduosSolidos);
 
         _fpd.AgenteFinanceiro = d.AgenteFinanceiro;
         _fpd.CnpjAgenteFinanceiro = d.CnpjAf;
@@ -493,7 +569,7 @@
         _fpd.LicencaInstalacao = BoolParaSimNao(d.LicensaInstalacao);
         _fpd.LicencaOperacao = BoolParaSimNao(d.LicensaOperacao);
         _fpd.CndValido = BoolParaSimNao(d.CndValido);
-        _fpd.CrpValido = BoolParaSimNao(d.CrpValido);
+        _fpd.CrpValido = d.CrpNsa ? "nsa" : BoolParaSimNao(d.CrpValido);
         _fpd.Excepcionalizacao = BoolParaSimNao(d.Excepcionalizado);
         _fpd.CpAlterada = BoolParaSimNao(d.ContrapartidaAlterada);
 
@@ -550,12 +626,47 @@
         @<div class="fpd-campo">
             <label class="fpd-label">@rotulo</label>
             <div class="fpd-agente-linha">
-                <input class="fpd-input @(erro is not null ? "fpd-input-erro" : "")" value="@valor"
-                       @onchange="e => setValor(e.Value?.ToString() ?? string.Empty)" @onblur="() => aoSairDoCampo?.Invoke()" />
-                <input class="fpd-input fpd-cnpj" placeholder="CNPJ" value="@cnpj" @onchange="e => setCnpj(e.Value?.ToString() ?? string.Empty)" />
+                <div class="fpd-agente-sub">
+                    <span class="fpd-agente-sub-label">Nome</span>
+                    <input class="fpd-input @(erro is not null ? "fpd-input-erro" : "")" value="@valor"
+                           @onchange="e => setValor(e.Value?.ToString() ?? string.Empty)" @onblur="() => aoSairDoCampo?.Invoke()" />
+                </div>
+                <div class="fpd-agente-sub">
+                    <span class="fpd-agente-sub-label">CNPJ</span>
+                    <input class="fpd-input fpd-cnpj" title="CNPJ" value="@cnpj" @onchange="e => setCnpj(e.Value?.ToString() ?? string.Empty)" />
+                </div>
             </div>
             @if (erro is not null) { <span class="fpd-erro-campo">@erro</span> }
         </div>;
+
+    private RenderFragment AnexosLicencaOperacao =>
+        @<div class="fpd-anexos-licenca" @onclick:stopPropagation>
+            <InputFile id="input-anexo-licop" OnChange="AoSelecionarAnexosLicencaOperacao" multiple style="display:none" />
+            <label for="input-anexo-licop" class="fpd-btn-anexar">
+                <i class="bi bi-paperclip"></i> <span>Anexar licença</span>
+            </label>
+            @if (_erroAnexoLicencaOperacao is not null)
+            {
+                <span class="fpd-erro-campo">@_erroAnexoLicencaOperacao</span>
+            }
+            @if (_anexosLicencaOperacao.Count > 0)
+            {
+                <ul class="fpd-anexos-lista">
+                    @foreach (var anexo in _anexosLicencaOperacao)
+                    {
+                        <li class="fpd-anexo-item">
+                            <i class="bi bi-file-earmark-text"></i>
+                            <span class="fpd-anexo-nome" title="@anexo.Nome">@anexo.Nome</span>
+                            <span class="fpd-anexo-tamanho">@FormatarTamanhoArquivo(anexo.Tamanho)</span>
+                            <button type="button" class="fpd-anexo-remover" @onclick="() => RemoverAnexoLicencaOperacao(anexo.Nome)" title="Remover">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        </li>
+                    }
+                </ul>
+            }
+        </div>
+    ;
 
     private RenderFragment ItemToggle(string num, string chave, string titulo, Func<string?> get, Action<string?> set,
         bool comNsa, RenderFragment? extra, bool readOnly = false) =>
@@ -632,7 +743,7 @@
 
     private static readonly (string Rotulo, string EnumNome)[] _programas =
     [
-        ("Infraestrutura", "Pro_Transporte"),
+        ("Pró-Transporte", "Pro_Transporte"),
         ("Pró-Moradia", "Pro_Moradia"),
         ("Saneamento", "Saneamento"),
         ("Saúde", "Saude"),
@@ -643,6 +754,8 @@
         get => _programas.FirstOrDefault(p => p.EnumNome == _fpd.Programa).Rotulo ?? "";
         set => _fpd.Programa = _programas.FirstOrDefault(p => p.Rotulo == value).EnumNome ?? "";
     }
+
+    private bool EhProTransporte => _fpd.Programa == "Pro_Transporte";
 
     private static int SituacaoObraParaInt(string? nome) => nome switch
     {
@@ -673,6 +786,7 @@
             CoContratoAf = coContrato,
             CoContratoAfDv = coContratoDv,
             PrimeiroDesembolso = _fpd.PrimeiroDesembolso,
+            Recorrente = _fpd.Recorrente,
             AgenteFinanceiro = _fpd.AgenteFinanceiro,
             CnpjAf = _fpd.CnpjAgenteFinanceiro,
             MutuarioFinal = _fpd.Tomador,
@@ -696,6 +810,7 @@
             LicensaOperacao = SimNaoParaBool(_fpd.LicencaOperacao),
             CndValido = SimNaoParaBool(_fpd.CndValido),
             CrpValido = SimNaoParaBool(_fpd.CrpValido),
+            CrpNsa = _fpd.CrpValido == "nsa",
             SolicitadoVi = _fpd.SolicitadoVi ?? 0,
             GlossadoVi = _fpd.GlosadoVi ?? 0,
             AceitoVi = _fpd.AceitoVi ?? 0,
@@ -711,6 +826,10 @@
             ContrapartidaAlterada = SimNaoParaBool(_fpd.CpAlterada),
             Sanepar = _fpd.Sanepar,
             Mensagem = _fpd.Mensagem,
+            TemCarroceria = SimNaoParaBool(_fpd.TemCarroceria),
+            VeiculoPossuiAdesivos = SimNaoParaBool(_fpd.VeiculoPossuiAdesivos),
+            DataInicioObra = _fpd.DataInicioObra,
+            DestinacaoColetaResiduosSolidos = SimNaoParaBool(_fpd.DestinacaoColetaResiduosSolidos),
             ValidacoesDesembolsoRequest = MontarComentariosParaEnvio(),
         };
     }
@@ -1064,11 +1183,31 @@
 .fpd-af-linha { display: flex; gap: 6px; } .fpd-af-linha .fpd-input { flex: 1; }
 .fpd-btn-buscar { display: inline-flex; align-items: center; gap: 5px; background: var(--brand-700); color: #fff; border-radius: var(--radius-md); padding: 0 12px; font-size: 11.5px; font-weight: 600; flex-shrink: 0; }
 .fpd-btn-buscar:hover:not(:disabled) { background: var(--brand-800); } .fpd-btn-buscar:disabled { opacity: .6; }
+.fpd-btn-anexar { display: inline-flex; align-items: center; gap: 6px; width: fit-content; background: #fff; border: 1px dashed var(--ink-200); color: var(--ink-700); border-radius: var(--radius-md); padding: 7px 14px; font-size: 12px; font-weight: 600; font-family: inherit; cursor: pointer; transition: background .12s, border-color .12s; }
+.fpd-btn-anexar:hover { background: var(--brand-50); border-color: var(--brand-300); color: var(--brand-700); }
+
+.fpd-anexos-licenca { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+.fpd-anexos-lista { display: flex; flex-direction: column; gap: 6px; list-style: none; margin: 0; padding: 0; }
+.fpd-anexo-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 10px;
+    border: 1px solid var(--ink-100); border-radius: var(--radius-md);
+    background: var(--ink-50);
+    font-size: 12px; color: var(--ink-700);
+}
+.fpd-anexo-item i.bi-file-earmark-text { color: var(--brand-700); flex-shrink: 0; }
+.fpd-anexo-nome { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fpd-anexo-tamanho { flex-shrink: 0; color: var(--ink-400, var(--ink-300)); font-size: 11px; font-variant-numeric: tabular-nums; }
+.fpd-anexo-remover { flex-shrink: 0; color: var(--ink-400, var(--ink-300)); padding: 2px; border-radius: var(--radius-sm, 4px); }
+.fpd-anexo-remover:hover { color: var(--err); background: var(--err-bg); }
 .fpd-msg-busca { font-size: 10.5px; margin-top: 2px; } .fpd-msg-busca.ok { color: var(--ok); } .fpd-msg-busca.falha { color: var(--warn); }
 
-.fpd-agentes { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.fpd-agentes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
 .fpd-agente-linha { display: grid; grid-template-columns: 1.6fr 1fr; gap: 6px; }
+.fpd-agente-sub { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.fpd-agente-sub-label { font-size: 9.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-400, var(--ink-300)); }
 .fpd-cnpj { font-variant-numeric: tabular-nums; }
+.fpd-campo-programa { min-width: 220px; }
 .fpd-grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
 .fpd-grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
 .fpd-grid2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }

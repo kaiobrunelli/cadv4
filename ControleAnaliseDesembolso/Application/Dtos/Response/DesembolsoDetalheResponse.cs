@@ -26,6 +26,7 @@ namespace ControleAnaliseDesembolso.Application.Dtos.Response
         public string TipoDesembolso { get; set; } = string.Empty;
         public bool PrimeiroDesembolso { get; set; }
         public bool UltimoDesembolso { get; set; }
+        public bool Recorrente { get; set; }
         public decimal PercentualObra { get; set; }
         public decimal ValorEmprestimo { get; set; }
         public decimal SolicitadoVi { get; set; }
@@ -37,6 +38,7 @@ namespace ControleAnaliseDesembolso.Application.Dtos.Response
         public int NuDesembolso { get; set; }
         public bool? CndValido { get; set; }
         public bool? CrpValido { get; set; }
+        public bool CrpNsa { get; set; }
         public string? Mensagem { get; set; }
         public string? MotivoRejeicao { get; set; }
         public string CnpjAf { get; set; } = string.Empty;
@@ -63,6 +65,29 @@ namespace ControleAnaliseDesembolso.Application.Dtos.Response
         public bool? LicensaInstalacao { get; set; }
         public bool? LicensaOperacao { get; set; }
         public bool? Funcionalidade { get; set; }
+
+        public bool? TemCarroceria { get; set; }
+        public bool? VeiculoPossuiAdesivos { get; set; }
+        public DateTime? DataInicioObra { get; set; }
+        public bool? DestinacaoColetaResiduosSolidos { get; set; }
+
+        public string? MotivoCancelamento { get; set; }
+
+        public string? NumeroDrp { get; set; }
+        public string? DvDrp { get; set; }
+        public string? SenhaDrp { get; set; }
+        public DateTime? DtDrp { get; set; }
+
+        public DateTime? CrfAf { get; set; }
+        public DateTime? CrfTomador { get; set; }
+        public DateTime? CrfAp { get; set; }
+        public DateTime? CrfAt { get; set; }
+
+        public string? MensagemCefga { get; set; }
+
+        // Null = macro de conferência de campos ainda não rodou.
+        public DateTime? DtUltimaConferencia { get; set; }
+        public List<ConferenciaCampoResponse> ConferenciaCampos { get; set; } = new();
 
         public List<ChecklistItemResponse> Checklist { get; set; } = new();
 

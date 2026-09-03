@@ -21,5 +21,9 @@ public class DesembolsoCAD
     public bool PrimeiroDesembolso { get; set; }
     public bool UltimoDesembolso { get; set; }
     public bool Adiantamento { get; set; }
+    public bool Recorrente { get; set; }
+    public bool Sanepar { get; set; }
+    public string? ContratoAo { get; set; }
+    public string? ContratoAoDv { get; set; }
     public string? ResponsavelAnalise { get; set; }
 }

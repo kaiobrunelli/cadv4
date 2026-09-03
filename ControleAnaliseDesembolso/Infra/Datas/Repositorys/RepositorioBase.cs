@@ -24,6 +24,19 @@ namespace ControleAnaliseDesembolso.Infra.Datas.Repositorys
             }
         }
 
+        public Task AdicionarSemSalvar(TEntity obj, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                _context.Set<TEntity>().Add(obj);
+                return Task.CompletedTask;
+            }
+            catch (Exception)
+            {
+                throw new Exception($"Erro ao tentar salvar o objeto: {obj}");
+            }
+        }
+
         public async Task Atualizar(TEntity obj, CancellationToken cancellationToken = default)
         {
             try

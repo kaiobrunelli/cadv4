@@ -20,9 +20,13 @@ public class DesembolsoResponseDto
     public bool PrimeiroDesembolso { get; set; }
     public bool Adiantamento { get; set; }
     public bool UltimoDesembolso { get; set; }
+    public bool Recorrente { get; set; }
     public DateTime PrazoFinal { get; set; }
     public string? ResponsavelAnalise { get; set; }
     public bool DataAgendamento { get; set; }
+    public bool Sanepar { get; set; }
+    public string? ContratoAo { get; set; }
+    public string? ContratoAoDv { get; set; }
     public DateTime? DtConclusao { get; set; }
 }
 
@@ -76,6 +80,7 @@ public class DesembolsoDetalheDto
     public string TipoDesembolso { get; set; } = "";
     public bool PrimeiroDesembolso { get; set; }
     public bool UltimoDesembolso { get; set; }
+    public bool Recorrente { get; set; }
     public decimal PercentualObra { get; set; }
     public decimal ValorEmprestimo { get; set; }
     public decimal SolicitadoVi { get; set; }
@@ -87,6 +92,7 @@ public class DesembolsoDetalheDto
     public int NuDesembolso { get; set; }
     public bool? CndValido { get; set; }
     public bool? CrpValido { get; set; }
+    public bool CrpNsa { get; set; }
     public string? Mensagem { get; set; }
     public string? MotivoRejeicao { get; set; }
     public string CnpjAf { get; set; } = "";
@@ -114,6 +120,34 @@ public class DesembolsoDetalheDto
     public bool? LicensaOperacao { get; set; }
     public bool? Funcionalidade { get; set; }
 
+    public bool? TemCarroceria { get; set; }
+    public bool? VeiculoPossuiAdesivos { get; set; }
+    public DateTime? DataInicioObra { get; set; }
+    public bool? DestinacaoColetaResiduosSolidos { get; set; }
+    public string? MotivoCancelamento { get; set; }
+
+    public string? NumeroDrp { get; set; }
+    public string? DvDrp { get; set; }
+    public string? SenhaDrp { get; set; }
+    public DateTime? DtDrp { get; set; }
+
+    public DateTime? CrfAf { get; set; }
+    public DateTime? CrfTomador { get; set; }
+    public DateTime? CrfAp { get; set; }
+    public DateTime? CrfAt { get; set; }
+
+    public string? MensagemCefga { get; set; }
+    public DateTime? DtUltimaConferencia { get; set; }
+    public List<ConferenciaCampoDto> ConferenciaCampos { get; set; } = [];
+
     public List<ChecklistItemDto> Checklist { get; set; } = [];
     public List<ComentarioValidacaoDto> ComentariosGerais { get; set; } = [];
+}
+
+public class ConferenciaCampoDto
+{
+    public int CoCampo { get; set; }
+    public string DeCampo { get; set; } = "";
+    public string Situacao { get; set; } = "";
+    public string? Mensagem { get; set; }
 }

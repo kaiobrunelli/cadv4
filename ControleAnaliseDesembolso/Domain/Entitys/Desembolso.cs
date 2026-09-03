@@ -24,6 +24,7 @@ namespace ControleAnaliseDesembolso.Domain.Entitys
         public string ContratoAoDv { get; set; } = string.Empty;
 
         public bool PrimeiroDesembolso { get; set; }
+        public bool Recorrente { get; set; }
         public string AgenteFinanceiro { get; set; } = string.Empty;
         public string CnpjAf { get; set; } = string.Empty;
         public string MutuarioFinal { get; set; } = string.Empty;
@@ -49,6 +50,9 @@ namespace ControleAnaliseDesembolso.Domain.Entitys
         public bool? LicensaOperacao { get; set; }
         public bool? CndValido { get; set; }
         public bool? CrpValido { get; set; }
+        // true quando a validação de CRP foi marcada como NSA — CrpValido fica null nesse caso
+        // (mesmo padrão do par DtSocioAmbiental/Nsa já usado pro sócio-ambiental).
+        public bool CrpNsa { get; set; }
         public decimal SolicitadoVi { get; set; }
         public decimal GlossadoVi { get; set; }
         public decimal AceitoVi { get; set; }
@@ -69,7 +73,21 @@ namespace ControleAnaliseDesembolso.Domain.Entitys
         public bool? Sanepar { get; set; }
         public string? Mensagem { get; set; }
 
+        // OBS CEFGA — campo único (não é fio de comentários), qualquer usuário
+        // pode complementar/editar, sem regra de autoria (ao contrário de Mensagem
+        // da tabela Mensagem, que tem autor fixo).
+        public string? MensagemCefga { get; set; }
+
         public string? MotivoRejeicao { get; set; }
+
+        // Só se aplicam quando Programa == Pro_Transporte (ver PainelPreencherFpdEtapas.razor)
+        public bool? TemCarroceria { get; set; }
+        public bool? VeiculoPossuiAdesivos { get; set; }
+
+        public DateTime? DataInicioObra { get; set; }
+
+        // Só se aplica quando PrimeiroDesembolso == true (ver PainelPreencherFpdEtapas.razor)
+        public bool? DestinacaoColetaResiduosSolidos { get; set; }
 
         public ControleDesembolso ControleDesembolso { get; set; } = new();
     }
