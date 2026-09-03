@@ -229,9 +229,6 @@ public class DesembolsoConfig : IEntityTypeConfiguration<Desembolso>
         builder.Property(x => x.ContrapartidaAlterada)
             .HasColumnName("CONTRAPARTIDA_ALTERADA");
 
-        //builder.Property(x => x.Amortizacao)
-        //    .HasColumnName("AMORTIZACAO");
-
         builder.Property(x => x.Sanepar)
             .HasColumnName("SANEPAR");
 

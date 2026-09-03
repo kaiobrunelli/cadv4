@@ -58,18 +58,7 @@
             var totalInvalidas = checklist.Count(v => v.Status == "invalido");
             var totalPendentes = checklist.Count(v => v.Status == "pendente");
             var podeAprovar = totalInvalidas == 0 && totalPendentes == 0;
-            // Usa _detalhe.Status (recarregado por CarregarDetalheAsync a cada
-            // ação), não Desembolso.Status — esse é um [Parameter] passado
-            // pelo componente pai UMA vez, na hora de abrir o dialog, e nunca
-            // mais atualizado enquanto o dialog fica aberto. Usar ele aqui
-            // fazia macroJaRodou continuar "false" mesmo logo depois de
-            // validar (1 = Pendente, o único status onde a macro ainda não
-            // rodou) — só corrigia fechando e reabrindo o dialog, porque aí
-            // sim o componente pai relia a lista inteira com o status novo.
             var macroJaRodou = _detalhe.Status != 1;
-            // Mesmo motivo: a pilula do cabeçalho usava Desembolso.Status
-            // (stale) e continuava mostrando "Pendência" mesmo depois de
-            // validar, até fechar e reabrir o dialog.
             var statusAtual = ControleAnaliseDesembolsoService.MapearStatus(_detalhe.Status);
 
             <div class="fpd-stepper">
@@ -281,7 +270,6 @@
                                 </div>
                             </div>
                         </div>
-                        @* OBS AF removida daqui — já tem etapa própria "Observações e Conferência" (_etapaAtual == 3), não precisa repetir na 1ª etapa. *@
                         @if (!string.IsNullOrWhiteSpace(_detalhe.MotivoRejeicao))
                         {
                             <div class="dfp-obs-af dfp-motivo-rejeicao">
@@ -325,11 +313,6 @@
                                     </span>
                                 }
                                 <span class="dfp-acc-spacer"></span>
-                                @* Pra GIGOV, enquanto a CEFGA ainda não rodou a macro de validação
-                                   (macroJaRodou == false), item "Analisar" reflete o status geral do
-                                   desembolso (Pendente) em vez de parecer que já está em análise — só
-                                   troca o rótulo mostrado aqui, v.Status continua "pendente" pra não
-                                   bagunçar as contagens (totalPendentes/podeAprovar) usadas pela CEFGA. *@
                                 <PilulhaStatus Status="@(ServicoUsuario.EhGigov && !macroJaRodou && v.Status == "pendente" ? "pendencia" : v.Status)" Tamanho="sm" />
                                 @if (v.Comentarios.Any())
                                 {
@@ -636,16 +619,11 @@
     private DesembolsoDetalheDto? _detalhe;
     private bool _carregandoDetalhe = true;
 
-    // Quanto do VE já foi (ou está sendo, com esse pedido) desembolsado —
-    // comparado com PercentualObra pra ver se o pedido não está pedindo
-    // mais do que já foi fisicamente executado na obra.
     private decimal? PercExecucaoFinanceira =>
         _detalhe is { ValorEmprestimo: > 0 }
             ? Math.Round((_detalhe.Desembolsado + _detalhe.ParticipacaoFgts) / _detalhe.ValorEmprestimo * 100, 3)
             : null;
 
-    // Quanto da contrapartida total do contrato (ContrapartidaAtual) já foi
-    // integralizado até agora.
     private decimal? PercContrapartidaIntegralizada =>
         _detalhe is { ContrapartidaAtual: > 0 }
             ? Math.Round(_detalhe.Integralizado / _detalhe.ContrapartidaAtual * 100, 3)
@@ -662,12 +640,6 @@
 
     private bool _apenasLeitura => Desembolso.Status is "aprovado" or "negado" or "baixado" or "cancelado";
 
-    // Item 15: quando o desembolso já está vinculado a um responsável de
-    // análise, só o próprio responsável (ou alguém com cargo Coordenador/
-    // Eventual) pode agir sobre ele — os demais ficam em modo leitura.
-    // IMPORTANTE: ServicoUsuarioUI é só um mock de usuário de teste (não há
-    // autenticação real neste projeto ainda) — esta regra hoje só existe no
-    // front, sem checagem equivalente no servidor.
     private bool _souResponsavelAnalise => Analista is not null && Analista.Matricula == ServicoUsuario.Matricula;
     private bool _souPrivilegiado => ServicoUsuario.Cargo is "Coordenador" or "Eventual";
     private bool _bloqueadoPorResponsavel => !ServicoUsuario.EhGigov && Analista is not null && !_souResponsavelAnalise && !_souPrivilegiado;
@@ -751,8 +723,6 @@
         _ => "bi-x-circle-fill",
     };
 
-    // OBS CEFGA é um comentário único (não um fio) — qualquer usuário pode
-    // adicionar/editar/remover, sem regra de autoria.
     private void IniciarEdicaoMensagemCefga()
     {
         _mensagemCefgaEdicao = _detalhe?.MensagemCefga ?? "";
@@ -951,10 +921,6 @@
         StateHasChanged();
         try
         {
-            // Conferência de campos roda junto com a validação — mesmo clique,
-            // mesma senha (não é mais uma ação separada). A lógica fica no
-            // backend (ValidarDesembolso já chama ExecutarConferenciaCamposInterno).
-            // matrícula+senha logam no SIAPF pra confrontar o FPD com o cadastro real do contrato.
             await Service.ValidarAsync(Desembolso.Id, ServicoUsuario.Matricula, senha);
             await CarregarDetalheAsync();
         }

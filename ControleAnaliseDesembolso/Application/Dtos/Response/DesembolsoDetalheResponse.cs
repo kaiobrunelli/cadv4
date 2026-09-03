@@ -85,7 +85,6 @@ namespace ControleAnaliseDesembolso.Application.Dtos.Response
 
         public string? MensagemCefga { get; set; }
 
-        // Null = macro de conferência de campos ainda não rodou.
         public DateTime? DtUltimaConferencia { get; set; }
         public List<ConferenciaCampoResponse> ConferenciaCampos { get; set; } = new();
 

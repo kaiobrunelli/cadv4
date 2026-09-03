@@ -16,10 +16,6 @@ namespace ControleAnaliseDesembolso.Domain.Entitys
         public string CoContratoAf { get; set; } = string.Empty;
         public string CoContratoAfDv { get; set; } = string.Empty;
 
-        // Contrato AO — preenchido só quando o CEFGA clica em "Validar" (ver
-        // ExecutarValidacaoDesembolso/ValidarDesembolso em ControleAnaliseDesembolsoService),
-        // que busca no sistema externo e grava aqui. Coluna NOT NULL no banco, então fica
-        // "" (não null) até a primeira validação — front trata "" igual a não informado.
         public string ContratoAo { get; set; } = string.Empty;
         public string ContratoAoDv { get; set; } = string.Empty;
 
@@ -50,8 +46,6 @@ namespace ControleAnaliseDesembolso.Domain.Entitys
         public bool? LicensaOperacao { get; set; }
         public bool? CndValido { get; set; }
         public bool? CrpValido { get; set; }
-        // true quando a validação de CRP foi marcada como NSA — CrpValido fica null nesse caso
-        // (mesmo padrão do par DtSocioAmbiental/Nsa já usado pro sócio-ambiental).
         public bool CrpNsa { get; set; }
         public decimal SolicitadoVi { get; set; }
         public decimal GlossadoVi { get; set; }
@@ -68,25 +62,18 @@ namespace ControleAnaliseDesembolso.Domain.Entitys
         public decimal SaldoIntegralizar { get; set; }
         public bool? ContrapartidaAlterada { get; set; }
 
-        //public bool? Amortizacao { get; set; }
-
         public bool? Sanepar { get; set; }
         public string? Mensagem { get; set; }
 
-        // OBS CEFGA — campo único (não é fio de comentários), qualquer usuário
-        // pode complementar/editar, sem regra de autoria (ao contrário de Mensagem
-        // da tabela Mensagem, que tem autor fixo).
         public string? MensagemCefga { get; set; }
 
         public string? MotivoRejeicao { get; set; }
 
-        // Só se aplicam quando Programa == Pro_Transporte (ver PainelPreencherFpdEtapas.razor)
         public bool? TemCarroceria { get; set; }
         public bool? VeiculoPossuiAdesivos { get; set; }
 
         public DateTime? DataInicioObra { get; set; }
 
-        // Só se aplica quando PrimeiroDesembolso == true (ver PainelPreencherFpdEtapas.razor)
         public bool? DestinacaoColetaResiduosSolidos { get; set; }
 
         public ControleDesembolso ControleDesembolso { get; set; } = new();

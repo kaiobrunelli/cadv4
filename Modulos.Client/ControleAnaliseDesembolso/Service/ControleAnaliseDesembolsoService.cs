@@ -50,11 +50,6 @@ public class ControleAnaliseDesembolsoService(IHttpClientFactory httpClientFacto
     public async Task<DesembolsoDetalheDto?> ObterDetalheDesembolsoAsync(string id) =>
         await _httpClient.GetFromJsonAsync<DesembolsoDetalheDto>($"api/ObterDetalheDesembolso/{id}");
 
-    // Não colapsa mais status 1/2 em "agendado" quando é SANEPAR — a partir da
-    // reestruturação do filtro (SANEPAR virou categoria própria, mantendo seus
-    // próprios sub-status Pendente/Analisar), o status real sempre aparece aqui;
-    // a UI usa DesembolsoCAD.Sanepar pra decidir se o item entra na categoria
-    // SANEPAR em vez do "agendado" achatado de antes.
     public static string MapearStatus(int statusServidor) => statusServidor switch
     {
         1 => "pendencia",

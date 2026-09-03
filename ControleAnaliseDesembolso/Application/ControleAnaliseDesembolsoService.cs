@@ -84,10 +84,6 @@ namespace ControleAnaliseDesembolso.Application
         {
             var fpd = await _repositorioDesembolso.ObterDesembolso(coFpd, cancellationToken);
 
-            // Checagem de nulo que a versão anterior (direto no _context) não tinha —
-            // fpd podia vir null e estourava NullReferenceException ao acessar
-            // .ControleDesembolso (era o warning CS8602 nessa linha). O repositório
-            // devolve Desembolso? explicitamente, então tratei o caso aqui.
             if (fpd is null)
                 throw new Exception($"Desembolso {coFpd} não encontrado.");
 
@@ -176,7 +172,6 @@ namespace ControleAnaliseDesembolso.Application
                 Integralizado = fpd.Integralizado,
                 SaldoIntegralizar = fpd.SaldoIntegralizar,
                 ContrapartidaAlterada = fpd.ContrapartidaAlterada,
-                //Amortizacao = fpd.Amortizacao,
                 Sanepar = fpd.Sanepar,
                 RetornoParcial = fpd.RetornoParcial,
                 PlacaLocal = fpd.PlacaLocal,
@@ -470,7 +465,6 @@ namespace ControleAnaliseDesembolso.Application
             fpd.Integralizado = request.Integralizado;
             fpd.SaldoIntegralizar = request.SaldoIntegralizar;
             fpd.ContrapartidaAlterada = request.ContrapartidaAlterada;
-            //fpd.Amortizacao = request.Amortizacao;
             fpd.Sanepar = request.Sanepar;
             fpd.Mensagem = request.Mensagem;
             fpd.TemCarroceria = request.TemCarroceria;
@@ -498,11 +492,6 @@ namespace ControleAnaliseDesembolso.Application
                 throw new Exception("O comentário não pode ser vazio.");
             }
 
-            // BuscarValidacao(CoValidacao, CoControleDesembolso, ...) — nessa ordem.
-            // O service de referência (XP Metodo nvoo) chama esse mesmo método só que
-            // com os dois argumentos TROCADOS (passa CoControleDesembolso no lugar de
-            // CoValidacao e vice-versa) — como os dois são int, compila, mas o filtro
-            // dá errado e a validação nunca é encontrada. Corrigido aqui.
             var validacao = await _repositorioValidacaoControle.BuscarValidacao(request.CoValidacao, request.CoControleDesembolso, cancellationToken);
 
             if (validacao is null)
@@ -567,7 +556,6 @@ namespace ControleAnaliseDesembolso.Application
             }
             else
             {
-                // Se precisarmos, mudamos a regra de notificação para ser responsável e gestor
                 if (!string.IsNullOrWhiteSpace(controle.ResponsavelAnalise))
                 {
                     await _notificacoes.EnviarPorMatriculasAsync(
@@ -622,27 +610,8 @@ namespace ControleAnaliseDesembolso.Application
                 if (desembolso is null)
                     throw new Exception($"Desembolso {coControleDesembolso} não encontrado.");
 
-                // Método para atualizar a tabela de desembolso com o Contrato AO
-                // TODO: implementar a busca real assim que o acesso ao sistema externo estiver disponível.
-                // var (contratoAo, contratoAoDv) = await _sistemaExterno.ConsultarContratoAoAsync(
-                //     desembolso.Desembolso.CoContratoAf, desembolso.Desembolso.CoContratoAfDv, cancellationToken);
-                //
-                // -- consulta equivalente, caso a origem seja direto no banco do sistema externo:
-                // -- SELECT CONTRATO_AO, CONTRATO_AO_DV FROM <TABELA_DO_SISTEMA_EXTERNO>
-                // -- WHERE CO_CONTRATO_AF = @CoContratoAf AND CO_CONTRATO_AF_DV = @CoContratoAfDv
-                //
-                // if (!string.IsNullOrWhiteSpace(contratoAo))
-                // {
-                //     desembolso.Desembolso.ContratoAo = contratoAo;
-                //     desembolso.Desembolso.ContratoAoDv = contratoAoDv;
-                // }
-
                 await ExecutarValidacaoDesembolso(desembolso, cancellationToken);
 
-                // Conferência de campos roda junto com a validação — mesmo
-                // clique, mesma senha (não é mais uma ação separada na tela).
-                // request.MatriculaUsuario/Senha logam no SIAPF pra confrontar
-                // o FPD com o cadastro real do contrato (ver _regrasConferenciaSiapf).
                 await ExecutarConferenciaCamposInterno(desembolso, request.MatriculaUsuario, request.Senha, cancellationToken);
 
                 RegistrarAuditoria(request.MatriculaUsuario, "Validar", $"Validou o desembolso {coControleDesembolso}");
@@ -678,9 +647,6 @@ namespace ControleAnaliseDesembolso.Application
                 {
                     await ExecutarValidacaoDesembolso(desembolso, cancellationToken);
 
-                    // Mesma sessão/login SIAPF é reaproveitada entre os itens do
-                    // lote (ISiapfService é Scoped por requisição) — só entra de
-                    // novo nas telas se ainda não estiver logado.
                     await ExecutarConferenciaCamposInterno(desembolso, request.MatriculaUsuario, request.Senha, cancellationToken);
                 }
 
@@ -699,11 +665,6 @@ namespace ControleAnaliseDesembolso.Application
 
         private async Task ExecutarValidacaoDesembolso(ControleDesembolso desembolso, CancellationToken cancellationToken = default)
         {
-            // ========================= MODO SIMULADO (mantido) =========================
-            // Continua exatamente como estava: as regras booleanas de ValidadorDesembolsoService
-            // rodam, mas o resultado (Aprovado/Reprovado) é ignorado e cada item do checklist é
-            // forçado pra APROVADO. Mantido de propósito — é o que faz a validação "funcionar" hoje
-            // sem depender de nenhum sistema externo.
             var resultados = await _validador.Validar(desembolso.Desembolso);
 
             foreach (var resultado in resultados)
@@ -714,11 +675,9 @@ namespace ControleAnaliseDesembolso.Application
                 if (validacao is null)
                     continue;
 
-                // aqui será a lógica do SIAPF para validar item a item
                 validacao.Situacao = TipoSituacaoValidacao.APROVADO;
             }
 
-            // validacao.Situacao acima sempre vira Aprovado (stub — aqui será a
             var todosAprovados = desembolso.ValidacaoControleDesembolso.Count > 0
                 && desembolso.ValidacaoControleDesembolso.All(v => v.Situacao == TipoSituacaoValidacao.APROVADO);
 
@@ -1058,9 +1017,6 @@ namespace ControleAnaliseDesembolso.Application
             if (desembolso is null)
                 throw new Exception($"Desembolso {coControleDesembolso} não encontrado.");
 
-            // Sem regra de autoria de propósito — qualquer usuário da CEFGA pode
-            // complementar/editar o OBS CEFGA (diferente do fio de comentários,
-            // que exige ser o autor).
             desembolso.Desembolso.MensagemCefga = request.MensagemCefga.Trim();
 
             RegistrarAuditoria(request.MatriculaUsuario, "Editar OBS CEFGA",
@@ -1069,13 +1025,6 @@ namespace ControleAnaliseDesembolso.Application
             await _context.SaveChangesAsync(cancellationToken);
         }
 
-        // Catálogo de checagens (Chave -> regra) dos campos "não-validação" da
-        // FPD (ver CampoConferencia/CAD_TB005_CAMPO_CONFERENCIA). Pra adicionar
-        // uma nova checagem no futuro: (1) insere a linha no catálogo com uma
-        // Chave nova, (2) adiciona o case correspondente aqui. Se o catálogo tiver
-        // uma Chave sem case aqui (ex.: alguém cadastrou mas ainda não implementou
-        // a regra), o campo aparece como PENDENTE com uma mensagem padrão — nunca
-        // quebra a macro.
         private static readonly Dictionary<string, Func<Desembolso, (bool Ok, string? Mensagem)>> _regrasConferencia = new()
         {
             ["AgenteFinanceiro"] = d => (!string.IsNullOrWhiteSpace(d.AgenteFinanceiro), "Agente Financeiro não informado."),
@@ -1094,17 +1043,11 @@ namespace ControleAnaliseDesembolso.Application
         private static string SoDigitos(string? valor) =>
             new(string.IsNullOrEmpty(valor) ? [] : valor.Where(char.IsDigit).ToArray());
 
-        // Normaliza texto pra comparação tolerante a maiúscula/minúscula e
-        // espaços — telas de mainframe têm largura fixa e às vezes cortam ou
-        // preenchem campos com espaço extra.
         private static string NormalizarTexto(string? valor) =>
             string.IsNullOrWhiteSpace(valor)
                 ? string.Empty
                 : string.Join(' ', valor.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries)).ToUpperInvariant();
 
-        // Nomes (tomador, agente promotor...) no SIAPF às vezes vêm truncados
-        // pela largura do campo na tela — considera OK se um é prefixo do
-        // outro, não só igualdade exata.
         private static bool NomesConferem(string? siapf, string? cad)
         {
             var a = NormalizarTexto(siapf);
@@ -1113,23 +1056,8 @@ namespace ControleAnaliseDesembolso.Application
             return a == b || a.StartsWith(b, StringComparison.Ordinal) || b.StartsWith(a, StringComparison.Ordinal);
         }
 
-        // Catálogo de checagens que confrontam o FPD com o cadastro REAL do
-        // contrato no SIAPF (CadastroGeralSiapf, retornado por
-        // ISiapfService.ConsultarCadastroGeralAsync) — mesmo padrão de
-        // _regrasConferencia acima, só que a regra recebe também o cadastro do
-        // SIAPF. CadastroGeralSiapf tem muito mais campos do que os 4 usados
-        // aqui (dados de obra, carência, retorno...) — pra comparar mais
-        // algum, é só adicionar uma entrada nova aqui e a linha correspondente
-        // no catálogo CAD_TB005_CAMPO_CONFERENCIA, seguindo a mesma regra.
-        //
-        // Não incluí uma checagem de CNPJ aqui: a tela consultada
-        // (ConsultarCadastroGeral) só devolve códigos internos do SIAPF pro
-        // tomador/agente (CoMutuarioFinal, CoAgentePromotorOuParceiro), não o
-        // CNPJ em si — não achei um campo correspondente real pra comparar.
         private static readonly Dictionary<string, Func<Desembolso, CadastroGeralSiapf, (bool Ok, string? Mensagem)>> _regrasConferenciaSiapf = new()
         {
-            // Confirma que a consulta realmente abriu o contrato pedido —
-            // guarda contra tela desatualizada/consulta anterior no automatismo.
             ["SiapfContratoAf"] = (d, s) => (
                 NormalizarTexto($"{s.Contrato}{s.ContratoDv}") == NormalizarTexto($"{d.CoContratoAf}{d.CoContratoAfDv}"),
                 $"Contrato retornado pelo SIAPF ({s.Contrato}-{s.ContratoDv}) diverge do Contrato AF do FPD ({d.CoContratoAf}-{d.CoContratoAfDv})."),
@@ -1142,27 +1070,12 @@ namespace ControleAnaliseDesembolso.Application
                 NomesConferem(s.DadosGerais.DeAgentePromotorOuParceiro, d.AgentePromotor),
                 $"Agente Promotor no SIAPF (\"{s.DadosGerais.DeAgentePromotorOuParceiro}\") diverge do informado no FPD (\"{d.AgentePromotor}\")."),
 
-            // Comparação por "contém" de propósito — DeObjetivo é um texto
-            // livre da tela do SIAPF, não há garantia de bater exatamente com
-            // o nome de exibição do enum Programa. Ajustar aqui se, na
-            // prática, o texto real do SIAPF vier diferente do esperado.
             ["SiapfPrograma"] = (d, s) => (
                 !string.IsNullOrWhiteSpace(s.DadosGerais.DeObjetivo)
                     && NormalizarTexto(s.DadosGerais.DeObjetivo).Contains(NormalizarTexto(d.Programa.ParaExibicao()), StringComparison.Ordinal),
                 $"Objetivo do contrato no SIAPF (\"{s.DadosGerais.DeObjetivo}\") não bate com o Programa do FPD (\"{d.Programa.ParaExibicao()}\")."),
         };
 
-        // Compartilhado entre ValidarDesembolso, ValidarTodosPendentes e o endpoint
-        // manual ExecutarConferenciaCampos — a conferência sempre roda junto com a
-        // validação (não é mais uma ação separada na tela), mas o método continua
-        // reutilizável caso precise ser chamado sozinho no futuro.
-        // `desembolso` precisa ter .Desembolso e .Conferencias carregados (Include).
-        // matriculaUsuario/senha são as credenciais de quem clicou em "Validar"
-        // (capturadas no DialogSenhaBaixa que já existe na tela), usadas só
-        // pra logar no SIAPF nessa consulta. Não valida se vieram vazias aqui
-        // — se a senha estiver errada (ou faltando, ex.: chamada via
-        // ExecutarConferenciaCampos avulso), o próprio login do SIAPF falha
-        // na tela inicial e cai no catch abaixo como qualquer outra falha.
         private async Task<List<ConferenciaControleDesembolso>> ExecutarConferenciaCamposInterno(
             ControleDesembolso desembolso,
             string? matriculaUsuario = null,
@@ -1194,12 +1107,6 @@ namespace ControleAnaliseDesembolso.Application
                 }
                 catch (Exception ex)
                 {
-                    // Cobre tanto falha de login (senha errada/vazia, sigla
-                    // suspensa...) quanto falha de automação/conexão com o
-                    // SIAPF em qualquer ponto da consulta. Em nenhum caso pode
-                    // derrubar a Validar inteira — os campos SIAPF ficam
-                    // PENDENTE com o erro, o resto da conferência (checagens
-                    // locais) segue normalmente.
                     erroConsultaSiapf = $"Falha ao consultar o SIAPF: {ex.Message}";
                 }
             }
@@ -1264,8 +1171,6 @@ namespace ControleAnaliseDesembolso.Application
             if (desembolso is null)
                 throw new Exception($"Desembolso {coControleDesembolso} não encontrado.");
 
-            // Sem matrícula/senha aqui — endpoint avulso, sem contexto de quem
-            // está chamando. Campos SIAPF ficam PENDENTE nesse caso.
             var novasConferencias = await ExecutarConferenciaCamposInterno(desembolso, cancellationToken: cancellationToken);
 
             RegistrarAuditoria(null, "Executar conferência de campos",

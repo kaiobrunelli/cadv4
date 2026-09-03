@@ -1,12 +1,5 @@
 namespace RedeCaixaUtilitario.Domain.Model;
 
-// Modelo real (não simulado) devolvido pela consulta ao cadastro geral do
-// contrato no SIAPF — mesma estrutura do projeto original em
-// "XP Metodo nvoo/RedeCaixaUtilitario" (Domain/Model/CadastroGeralSiapf.cs).
-// A maior parte dessas propriedades não é usada hoje pela conferência de
-// campos do CAD, mas fica disponível pra quando alguma nova comparação for
-// necessária — não precisa mexer no método de consulta, só usar o campo
-// que já está aqui.
 public class CadastroGeralSiapf
 {
     public string Contrato { get; set; } = string.Empty;
@@ -34,7 +27,7 @@ public class DadosGerais
     public string? NaturezaOperacao { get; set; }
     public string? CoMutuarioFinal { get; set; }
     public string? DeMutuarioFinal { get; set; }
-    public string? TipoMutuario { get; set; } //PessoaFisica ou Juridica
+    public string? TipoMutuario { get; set; }
     public string? Ugc { get; set; }
     public string? UgcDv { get; set; }
     public string? CoUnidadeMovimento { get; set; }

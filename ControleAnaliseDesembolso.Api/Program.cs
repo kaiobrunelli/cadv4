@@ -36,27 +36,12 @@ builder.Services.AddScoped<IValidadorDesembolsoService, ValidadorDesembolsoServi
 builder.Services.AddScoped<IEmpregadoCADService, EmpregadoCADService>();
 builder.Services.AddScoped<UtilitarioMapperServicecopy>();
 
-// Repositório vindo de XP Metodo nvoo/ControleAnaliseDesembolsoRepositorio —
-// mesmos nomes de classe/método do projeto de referência. Cobre só as
-// consultas/gravações que já existiam lá; tudo que foi construído depois
-// nesse CAD (conferência de campos, SIAPF, cancelamento, OBS CEFGA...)
-// continua acessando o DbContext direto dentro do service, como já era.
 builder.Services.AddScoped<IRepositorioDesembolso, RepositorioDesembolso>();
 builder.Services.AddScoped<IRepositorioControle, RepositorioControle>();
 builder.Services.AddScoped<IRepositorioMensagem, RepositorioMensagem>();
 builder.Services.AddScoped<IRepositorioValidacao, RepositorioValidacao>();
 builder.Services.AddScoped<IRepositorioValidacaoControle, RepositorioValidacaoControle>();
 
-// SiapfService real — automação de terminal 3270 (ConsultarCadastroGeral),
-// usada em ControleAnaliseDesembolsoService.ExecutarConferenciaCamposInterno
-// pra confrontar o FPD com o cadastro real do contrato no SIAPF.
-//
-// >>> MODO TESTE (temporário) <<<
-// Trocado pro SiapfServiceMock só pra testar a tela de conferência sem
-// terminal 3270 de verdade. COMO VOLTAR AO NORMAL: comente a linha do Mock
-// abaixo e descomente a linha do SiapfService real (ou apague
-// RedeCaixaUtilitario/Application/SiapfServiceMock.cs, dá no mesmo).
-// builder.Services.AddScoped<ISiapfService, SiapfService>();
 builder.Services.AddScoped<ISiapfService, SiapfServiceMock>();
 
 builder.Services.AddScoped<IAplicacaoService, AplicacaoService>();

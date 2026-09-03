@@ -616,16 +616,11 @@
     var todos           = _todos;
     var totalVal        = todos.Sum(d => d.ValidacoesTotal);
     var totalOk         = todos.Sum(d => d.ValidacoesOk);
-    // SANEPAR virou categoria própria (item 9) — os registros com Sanepar==true
-    // saem dos grupos "Pendente"/"Analisar" gerais e só aparecem dentro da
-    // categoria SANEPAR, mantendo lá os mesmos dois sub-status.
     var qtdPendencias   = todos.Count(d => d.Status == "pendencia" && !d.Sanepar);
     var qtdPendentes    = todos.Count(d => d.Status == "pendente" && !d.Sanepar);
     var qtdSanepar      = todos.Count(d => d.Sanepar && d.Status is "pendencia" or "pendente");
     var qtdAguardandoBaixa = todos.Count(d => d.Status == "aprovado");
     var totalPedidos    = qtdPendencias + qtdPendentes + qtdAguardandoBaixa + qtdSanepar;
-    // Badge da aba "Geral": só conta o que de fato aparece nessa aba —
-    // Aguardando Baixa só é mostrado na aba Relatórios.
     var totalPedidosGeral = qtdPendencias + qtdPendentes + qtdSanepar;
 
     var filtrados = _filtroAtivo switch
@@ -642,8 +637,6 @@
 
     var grupoPendencias = buscados.Where(d => d.Status == "pendencia" && !d.Sanepar).ToList();
     var grupoPendentes  = buscados.Where(d => d.Status == "pendente" && !d.Sanepar).ToList();
-    // SANEPAR é tratamento à parte — fica numa lista única (não separada por
-    // Pendente/Analisar como as demais categorias).
     var grupoSanepar = buscados.Where(d => d.Sanepar && d.Status is "pendencia" or "pendente").ToList();
 
     var emAndamentoGigov = buscados.Where(d => d.Status is "pendencia" or "pendente").ToList();

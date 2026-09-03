@@ -150,8 +150,6 @@
                                value="@_percObraTexto" @oninput="FormatarPercObraEnquantoDigita" /></div>
                 </div>
 
-                @* Últimos campos antes do OBS AF: Data de início da obra + Programa, com as
-                   opções de Pró-Transporte (só aparecem com esse Programa) na mesma linha. *@
                 <div class="fpd-subtoggles">
                     <div class="fpd-campo"><label class="fpd-label">Data de início da obra</label>
                         <input class="fpd-input" type="date" @bind="_fpd.DataInicioObra" /></div>
@@ -303,17 +301,11 @@
     private ElementReference _corpoRef;
     private ElementReference _inputArquivoRef;
 
-    // Item 7: só simula o efeito de anexar — abre o seletor nativo do Windows,
-    // sem upload real (nenhum endpoint de anexo existe ainda).
     private async Task AbrirSeletorDeArquivo() =>
         await JS.InvokeVoidAsync("clicarElemento", _inputArquivoRef);
     private readonly HashSet<string> _itensAbertos = [];
 
-    // Anexos da Licença de operação — só simula o efeito de anexar (mesmo
-    // espírito do "Anexar arquivo" da Etapa 1): monta uma lista no front com
-    // nome + tamanho do que foi escolhido, sem upload/armazenamento real.
-    // Onde/como isso vai ser salvo de fato ainda está em aberto.
-    private const long TamanhoMaximoAnexoBytes = 20 * 1024 * 1024; // 20MB por arquivo
+    private const long TamanhoMaximoAnexoBytes = 20 * 1024 * 1024;
     private readonly List<(string Nome, long Tamanho)> _anexosLicencaOperacao = [];
     private string? _erroAnexoLicencaOperacao;
 
@@ -384,9 +376,6 @@
 
     private static string FmtPerc(decimal? p) => p is null ? "—" : $"{p.Value.ToString("0.000", new CultureInfo("pt-BR"))}%";
 
-    // "ok" quando o percentual está dentro do que já foi executado na obra
-    // (igual ou abaixo), "alerta" quando pede/integraliza mais do que a obra
-    // já andou.
     private static string ClassePercComparado(decimal? valor, decimal? referencia) =>
         valor is null || referencia is null ? "" : valor <= referencia ? "fpd-perc-ok" : "fpd-perc-alerta";
     private static string? BoolParaSimNao(bool? b) => b switch { true => "sim", false => "nao", _ => null };
@@ -963,9 +952,6 @@
         return erros;
     }
 
-    // Os 8 itens sempre visíveis da Etapa 2 (ver ItemToggle em _etapaAtual == 2)
-    // — cada um precisa de Sim ou Não antes de enviar, senão a FPD ia pro
-    // banco com validação em branco e ninguém percebia até abrir de novo.
     private List<string> ValidarChecklist()
     {
         var pendentes = new List<string>();
@@ -995,8 +981,6 @@
         var pendentes = ValidarChecklist();
         if (pendentes.Count > 0)
         {
-            // Não mexe em _fpd — os dados já preenchidos ficam intactos, só
-            // manda pra Etapa 2 pra pessoa ver o que falta marcar.
             Snackbar.Add($"Marque todas as validações antes de enviar (faltando: {string.Join(", ", pendentes)}).", Severity.Error);
             _etapaAtual = 2;
             StateHasChanged();

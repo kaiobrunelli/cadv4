@@ -8,14 +8,6 @@ using System.Diagnostics;
 
 namespace RedeCaixaUtilitario.Application;
 
-// Implementação real (não simulada) de ISiapfService — porta só a região
-// "Cadastro" (ConsultarCadastroGeral) do projeto original em
-// "XP Metodo nvoo/RedeCaixaUtilitario" (Application/SiapfService.cs), mais o
-// mínimo de plumbing de terminal 3270 que esse método usa (login, navegação
-// de telas, espera de resposta). O ISiapfService real tem muito mais
-// métodos (DRP, movimentação financeira, cronograma...) que não são
-// necessários aqui — só a consulta usada pra confrontar o FPD do CAD com o
-// cadastro do contrato no SIAPF.
 public class SiapfService : ISiapfService, IAsyncDisposable
 {
     private readonly IRedeCaixa _redeCaixa;
@@ -37,8 +29,6 @@ public class SiapfService : ISiapfService, IAsyncDisposable
     {
         _usuario = new Usuario { Matricula = matricula, Senha = senha };
 
-        // A navegação de tela é toda síncrona (polling bloqueante no terminal
-        // 3270) — roda numa thread separada pra não travar quem chamou.
         return Task.Run(() => ConsultarCadastroGeralInterno(contrato, contratoDv), cancellationToken);
     }
 
@@ -67,7 +57,7 @@ public class SiapfService : ISiapfService, IAsyncDisposable
         }
         tolerancia = 0;
 
-        while (!_redeCaixa.GetStringArea(2, 1, 80).Contains("6.5")) //Tela de usuário
+        while (!_redeCaixa.GetStringArea(2, 1, 80).Contains("6.5"))
         {
             if (!_redeCaixa.GetStringArea(16, 1, 80).Contains("SENHA =>") || tolerancia > 60) { toleranciaGeral++; goto Inicio; }
 
@@ -104,7 +94,6 @@ public class SiapfService : ISiapfService, IAsyncDisposable
 
         TeclarAguardandoAlteracao(Tecla.Enter);
 
-        //CASO SIAPF ESTEJA INATIVO
         if (_redeCaixa.GetStringArea(1, 1, 80).Trim().Contains("MSGMB003"))
         {
             TeclarAguardandoAlteracao(Tecla.Enter);
@@ -124,10 +113,6 @@ public class SiapfService : ISiapfService, IAsyncDisposable
 
     #region Cadastro
 
-    // Porta fiel de RedeCaixaUtilitario.Application.SiapfService.ConsultarCadastroGeral
-    // (projeto original, região "Cadastro") — mesma navegação de tela, mesmas
-    // coordenadas de captura. `operacao`/`operacaoDv` são o número do
-    // contrato consultado.
     private CadastroGeralSiapf ConsultarCadastroGeralInterno(string operacao, string operacaoDv)
     {
         if (!ConferirTela("MS140"))
@@ -147,7 +132,6 @@ public class SiapfService : ISiapfService, IAsyncDisposable
 
         var cadastroGeral = new CadastroGeralSiapf();
 
-        //TELA DADOS GERAIS
         if (!string.IsNullOrEmpty(_redeCaixa.GetStringArea(4, 17, 23)))
         {
             cadastroGeral.Contrato = _redeCaixa.GetStringArea(4, 17, 23).Trim();
@@ -353,7 +337,6 @@ public class SiapfService : ISiapfService, IAsyncDisposable
 
         TeclarAguardandoAlteracao(Tecla.Pf7, "MB014");
 
-        //PROXIMA PAGINA => F7 DADOS COMP
         if (!string.IsNullOrEmpty(_redeCaixa.GetStringArea(04, 78, 80).Trim()))
         {
             cadastroGeral.DadosComplementares.Status = _redeCaixa.GetStringArea(04, 78, 80).Trim();
@@ -440,7 +423,6 @@ public class SiapfService : ISiapfService, IAsyncDisposable
             cadastroGeral.DadosComplementares.CtaCorrenteNSGD = _redeCaixa.GetStringArea(12, 21, 52).Trim();
         }
 
-        //Dados de Consulta a Construtora
         var linha = 14;
         while (linha <= 16)
         {
@@ -466,7 +448,6 @@ public class SiapfService : ISiapfService, IAsyncDisposable
             linha++;
         }
 
-        //Dados de Conta Reserva
         linha = 18;
         while (linha <= 20)
         {
@@ -487,7 +468,6 @@ public class SiapfService : ISiapfService, IAsyncDisposable
             cadastroGeral.DadosComplementares.TermoHabilitacao = _redeCaixa.GetStringArea(18, 63, 80).Trim();
         }
 
-        //DADOS DE OBRA F5
         TeclarAguardandoAlteracao(Tecla.Pf3, "MB010");
         TeclarAguardandoAlteracao(Tecla.Pf5, "MB363");
 
@@ -532,7 +512,6 @@ public class SiapfService : ISiapfService, IAsyncDisposable
             cadastroGeral.DadosObra.LicitacaoConcluida = _redeCaixa.GetStringArea(5, 39, 39).Trim();
         }
 
-        //Capturar Registros de obra
         linha = 8;
         var colunaInicial = 2;
 
@@ -585,7 +564,6 @@ public class SiapfService : ISiapfService, IAsyncDisposable
             }
         }
 
-        //IR PARA A TELA F8 => SELECAO DE ETAPA DE EVOLUCAO CONTRATUAL EEC
         TeclarAguardandoAlteracao(Tecla.Pf3, "MB010");
         TeclarAguardandoAlteracao(Tecla.Pf9, "MS070");
 
@@ -629,7 +607,6 @@ public class SiapfService : ISiapfService, IAsyncDisposable
             }
         }
 
-        //IR PARA A TELA F10 => DADOS CADASTRAIS - ACOMPANHAMENTO
         TeclarAguardandoAlteracao(Tecla.Pf3, "MB010");
         TeclarAguardandoAlteracao(Tecla.Pf10, "MB130");
 
@@ -743,7 +720,6 @@ public class SiapfService : ISiapfService, IAsyncDisposable
                 Convert.ToInt32(_redeCaixa.GetStringArea(20, 24, 25).Trim()));
         }
 
-        //IR PARA A TELA ENTER => DADOS CADASTRAIS CARENCIA I
         TeclarAguardandoAlteracao(Tecla.Pf3, "MB010");
         TeclarAguardandoAlteracao(Tecla.Enter, "MB020");
 
@@ -823,7 +799,6 @@ public class SiapfService : ISiapfService, IAsyncDisposable
             cadastroGeral.DadosCarencia.IndiceProrrogTxAdm = _redeCaixa.GetStringArea(20, 66, 80).Trim();
         }
 
-        //IR PARA A TELA ENTERx2 => DADOS CADASTRAIS RETORNO I
         TeclarAguardandoAlteracao(Tecla.Enter, "MB030");
 
         if (!string.IsNullOrEmpty(_redeCaixa.GetStringArea(6, 21, 25).Trim()))
@@ -1015,8 +990,6 @@ public class SiapfService : ISiapfService, IAsyncDisposable
         }
         catch
         {
-            // Encerramento de sessão best-effort — não pode derrubar a resposta
-            // da consulta por conta de erro no fechamento da sessão do terminal.
         }
         return ValueTask.CompletedTask;
     }

@@ -22,12 +22,6 @@ namespace ControleAnaliseDesembolso.Infra.Datas.Repositorys
             return await _context.ControleDesembolso.AnyAsync(x => x.CoControleDesembolso == coDesembolso, cancellationToken);
         }
 
-        // NOTA: o .Include(x => x.Conferencias) abaixo NÃO existe no projeto de
-        // referência (XP Metodo nvoo/ControleAnaliseDesembolsoRepositorio) — lá
-        // ControleDesembolso ainda não tinha a conferência de campos
-        // (CAD_TB005/TB006, adicionada depois). Sem esse Include, ObterDetalheDesembolso
-        // ficaria sem os dados de ConferenciaCampos que a tela já usa hoje.
-        // Precisei acrescentar pra não regredir uma funcionalidade que já existe no CAD.
         public async Task<ControleDesembolso?> ObterControleDesembolsoCompleto(int coControleDesembolso, CancellationToken cancellationToken)
         {
             return await _context.ControleDesembolso

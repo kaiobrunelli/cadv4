@@ -12,12 +12,6 @@
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 
-  <!--
-    Terminal 3270 real (mesmas DLLs do projeto original em
-    "XP Metodo nvoo/RedeCaixaUtilitario"), copiadas pra dentro do CAD em
-    dll/ pra esse projeto ficar autocontido — não depende de nenhuma pasta
-    fora do repositório do CAD.
-  -->
   <ItemGroup>
     <Reference Include="Helpers.RedeCaixa">
       <HintPath>dll\Helpers.RedeCaixa.dll</HintPath>
