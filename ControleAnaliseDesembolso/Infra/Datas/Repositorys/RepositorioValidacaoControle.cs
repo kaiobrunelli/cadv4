@@ -16,8 +16,12 @@ namespace ControleAnaliseDesembolso.Infra.Datas.Repositorys
 
         public async Task<ValidacaoControleDesembolso?> BuscarValidacao(int CoValidacao, int CoControleDesembolso, CancellationToken cancellationToken)
         {
-            return await _context.ValidacaoControleDesembolso.FirstOrDefaultAsync(x => x.CoValidacao == CoValidacao
-                    && x.CoControleDesembolso == CoControleDesembolso, cancellationToken);
+            // OrderByDescending por DtValidacao em vez de depender de PK única: itens de
+            // conferência podem ter mais de uma linha (histórico); pega sempre a mais recente.
+            return await _context.ValidacaoControleDesembolso
+                    .Where(x => x.CoValidacao == CoValidacao && x.CoControleDesembolso == CoControleDesembolso)
+                    .OrderByDescending(x => x.DtValidacao)
+                    .FirstOrDefaultAsync(cancellationToken);
         }
 
     }

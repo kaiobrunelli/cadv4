@@ -213,7 +213,7 @@
                         <div class="fpd-grid2">
                             <div class="fpd-campo"><label class="fpd-label" title="Quanto do desembolso vem do FGTS">Participação FGTS</label><CampoMoeda @bind-Value="_fpd.ParticipacaoFgts" /></div>
                             <div class="fpd-campo"><label class="fpd-label" title="Valor total do empréstimo contratado, sem somar a contrapartida">VE (Valor Empréstimo)</label><CampoMoeda @bind-Value="_fpd.Ve" /></div>
-                            <div class="fpd-campo"><label class="fpd-label" title="Total já desembolsado até agora (sigla Rede Caixa: VD) — só leitura, vem do contrato ao buscar (ou fica vazio no 1º desembolso)">Desembolsado</label><CampoMoeda Value="_fpd.Desembolsado" ReadOnly="true" /></div>
+                            <div class="fpd-campo"><label class="fpd-label" title="Total já desembolsado até agora (sigla Rede Caixa: VD) — vem do contrato ao buscar; no 1º desembolso é sempre 0, pois ainda não existe valor desembolsado">Desembolsado</label><CampoMoeda @bind-Value="_fpd.Desembolsado" ReadOnly="@_fpd.PrimeiroDesembolso" /></div>
                             <div class="fpd-campo"><label class="fpd-label" title="Calculado automaticamente: VE - Desembolsado">Saldo a desembolsar</label><CampoMoeda Value="_fpd.SaldoDesembolsar" ReadOnly="true" /></div>
                         </div>
                     </div>
@@ -607,8 +607,14 @@
         if (_etapaAtual > 1) _etapaAtual--;
     }
 
-    private void DefinirOpcaoExclusiva(string opcao) =>
+    private void DefinirOpcaoExclusiva(string opcao)
+    {
         _fpd.OpcaoExclusiva = _fpd.OpcaoExclusiva == opcao ? null : opcao;
+
+        // 1º desembolso é o cadastro inicial — ainda não existe valor desembolsado.
+        if (_fpd.PrimeiroDesembolso)
+            _fpd.Desembolsado = 0;
+    }
 
     private RenderFragment CampoAgente(string rotulo, string valor, Action<string> setValor, string cnpj, Action<string> setCnpj,
         string? erro = null, Action? aoSairDoCampo = null) =>
@@ -933,9 +939,11 @@
         _erroGigov = !string.IsNullOrWhiteSpace(_fpd.Gigov) && (_fpd.Gigov.Length != 4 || !_fpd.Gigov.All(char.IsDigit))
             ? "GIGOV precisa ter exatamente 4 números." : null;
 
+    // Regra do backend: C + 6 números (7 caracteres no total) — ver
+    // ValidarDadosObrigatoriosFpd em ControleAnaliseDesembolsoService.
     private void ValidarGestor() =>
-        _erroGestor = !string.IsNullOrWhiteSpace(_fpd.Gestor) && (!_fpd.Gestor.All(char.IsDigit) || _fpd.Gestor.Length is < 4 or > 6)
-            ? "Só números, entre 4 e 6 dígitos." : null;
+        _erroGestor = !string.IsNullOrWhiteSpace(_fpd.Gestor) && (!_fpd.Gestor.All(char.IsDigit) || _fpd.Gestor.Length != 6)
+            ? "Informe a letra C seguida de 6 números (ex.: C123456)." : null;
 
     private List<string> ValidarCampos()
     {

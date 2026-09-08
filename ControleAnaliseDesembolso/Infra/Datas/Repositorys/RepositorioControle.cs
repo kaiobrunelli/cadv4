@@ -28,7 +28,6 @@ namespace ControleAnaliseDesembolso.Infra.Datas.Repositorys
                 .Include(x => x.Desembolso)
                 .Include(x => x.ValidacaoControleDesembolso)
                     .ThenInclude(x => x.Validacao)
-                .Include(x => x.Conferencias)
                 .FirstOrDefaultAsync(x => x.CoControleDesembolso == coControleDesembolso, cancellationToken);
         }
     }

@@ -4,6 +4,7 @@ using ControleAnaliseDesembolso.Domain.Entitys;
 using Microsoft.AspNetCore.Mvc;
 using PlataformaNotificacao.Application.Interface;
 using PlataformaOperacional.Application.Service.Interface;
+using RedeCaixaUtilitario.Domain.Model;
 
 namespace ControleAnaliseDesembolso.Api.Controllers
 {
@@ -21,6 +22,17 @@ namespace ControleAnaliseDesembolso.Api.Controllers
             _aplicacaoService = aplicacaoService;
             _notificacoes = notificacoes;
         }
+
+        // TODO: usuário deve vir de um mecanismo central que captura a identidade
+        // autenticada aqui no controller (combinado — a implementar) — por enquanto,
+        // construído a partir dos campos de matrícula/senha que o próprio request já carrega.
+        private static PedidoDeAutomacao MontarPedidoAutomacao(string? matricula, string? senha = null) => new()
+        {
+            Area = "CAD",
+            MatriculaSolicitante = matricula ?? string.Empty,
+            DtSolicitacao = DateTime.Now,
+            Usuario = new Usuario { Matricula = matricula ?? string.Empty, Senha = senha ?? string.Empty },
+        };
 
         #region Controle Análise Desembolso
 
@@ -45,7 +57,7 @@ namespace ControleAnaliseDesembolso.Api.Controllers
                 CoControleDesembolso = coControleDesembolso,
                 CoValidacao = coValidacao,
                 ValidacaoRegistro = registro,
-            }, cancellationToken);
+            }, MontarPedidoAutomacao(registro.MatriculaAutor), cancellationToken);
             return Ok();
         }
 
@@ -53,81 +65,81 @@ namespace ControleAnaliseDesembolso.Api.Controllers
         public async Task<IActionResult> EditarComentario(int comentarioId, [FromBody] EditarComentarioRequest request, CancellationToken cancellationToken)
         {
             request.CoMensagem = comentarioId;
-            await _aplicacaoService.EditarComentario(request, cancellationToken);
+            await _aplicacaoService.EditarComentario(request, MontarPedidoAutomacao(request.MatriculaSolicitante), cancellationToken);
             return Ok();
         }
 
         [HttpPut("{coComentario}")]
         public async Task<IActionResult> RemoverComentario(int coComentario, [FromQuery] string matriculaSolicitante, CancellationToken cancellationToken)
         {
-            await _aplicacaoService.RemoverComentario(coComentario, matriculaSolicitante, cancellationToken);
+            await _aplicacaoService.RemoverComentario(coComentario, matriculaSolicitante, MontarPedidoAutomacao(matriculaSolicitante), cancellationToken);
             return Ok();
         }
 
         [HttpPut("{coControleDesembolso}")]
         public async Task<IActionResult> Aprovar(int coControleDesembolso, [FromBody] AprovarDesembolsoRequest request, CancellationToken cancellationToken)
         {
-            await _aplicacaoService.AprovarDesembolso(coControleDesembolso, request, cancellationToken);
+            await _aplicacaoService.AprovarDesembolso(coControleDesembolso, request, MontarPedidoAutomacao(request.MatriculaUsuario), cancellationToken);
             return Ok();
         }
 
         [HttpPut("{coControleDesembolso}")]
         public async Task<IActionResult> BaixarDRP(int coControleDesembolso, CancellationToken cancellationToken)
         {
-            await _aplicacaoService.BaixarDRP(coControleDesembolso, cancellationToken);
+            await _aplicacaoService.BaixarDRP(coControleDesembolso, MontarPedidoAutomacao(null), cancellationToken);
             return Ok();
         }
 
         [HttpPut("{coControleDesembolso}")]
         public async Task<IActionResult> Rejeitar(int coControleDesembolso, [FromBody] RejeitarDesembolsoRequest request, CancellationToken cancellationToken)
         {
-            await _aplicacaoService.RejeitarDesembolso(coControleDesembolso, request, cancellationToken);
+            await _aplicacaoService.RejeitarDesembolso(coControleDesembolso, request, MontarPedidoAutomacao(request.MatriculaUsuario), cancellationToken);
             return Ok();
         }
 
         [HttpPut("{coControleDesembolso}")]
         public async Task<IActionResult> Cancelar(int coControleDesembolso, [FromBody] CancelarDesembolsoRequest request, CancellationToken cancellationToken)
         {
-            await _aplicacaoService.CancelarDesembolso(coControleDesembolso, request, cancellationToken);
+            await _aplicacaoService.CancelarDesembolso(coControleDesembolso, request, MontarPedidoAutomacao(request.MatriculaUsuario), cancellationToken);
             return Ok();
         }
 
         [HttpPut("{coControleDesembolso}")]
         public async Task<IActionResult> AtualizarMensagemCefga(int coControleDesembolso, [FromBody] AtualizarMensagemCefgaRequest request, CancellationToken cancellationToken)
         {
-            await _aplicacaoService.AtualizarMensagemCefga(coControleDesembolso, request, cancellationToken);
+            await _aplicacaoService.AtualizarMensagemCefga(coControleDesembolso, request, MontarPedidoAutomacao(request.MatriculaUsuario), cancellationToken);
             return Ok();
         }
 
         [HttpPost("{coControleDesembolso}")]
         public async Task<ActionResult<List<ConferenciaCampoResponse>>> ExecutarConferenciaCampos(int coControleDesembolso, CancellationToken cancellationToken)
-            => Ok(await _aplicacaoService.ExecutarConferenciaCampos(coControleDesembolso, cancellationToken));
+            => Ok(await _aplicacaoService.ExecutarConferenciaCampos(coControleDesembolso, MontarPedidoAutomacao(null), cancellationToken));
 
         [HttpPut("{coControleDesembolso}")]
         public async Task<IActionResult> VincularResponsavel(int coControleDesembolso, [FromBody] string? matriculaResponsavel, CancellationToken cancellationToken)
         {
-            await _aplicacaoService.VincularResponsavel(coControleDesembolso, matriculaResponsavel, cancellationToken);
+            await _aplicacaoService.VincularResponsavel(coControleDesembolso, matriculaResponsavel, MontarPedidoAutomacao(null), cancellationToken);
             return Ok();
         }
 
         [HttpPut("{coControleDesembolso}")]
         public async Task<IActionResult> RemoverResponsavel(int coControleDesembolso, CancellationToken cancellationToken)
         {
-            await _aplicacaoService.VincularResponsavel(coControleDesembolso, null, cancellationToken);
+            await _aplicacaoService.VincularResponsavel(coControleDesembolso, null, MontarPedidoAutomacao(null), cancellationToken);
             return Ok();
         }
 
         [HttpPost("{coControleDesembolso}")]
         public async Task<IActionResult> Validar(int coControleDesembolso, [FromBody] ValidarDesembolsoRequest request, CancellationToken cancellationToken)
         {
-            await _aplicacaoService.ValidarDesembolso(coControleDesembolso, request, cancellationToken);
+            await _aplicacaoService.ValidarDesembolso(coControleDesembolso, MontarPedidoAutomacao(request.MatriculaUsuario, request.Senha), cancellationToken);
             return Ok();
         }
 
         [HttpPost]
         public async Task<IActionResult> ValidarTodosPendentes([FromBody] ValidarDesembolsoRequest request, CancellationToken cancellationToken)
         {
-            await _aplicacaoService.ValidarTodosPendentes(request, cancellationToken);
+            await _aplicacaoService.ValidarTodosPendentes(MontarPedidoAutomacao(request.MatriculaUsuario, request.Senha), cancellationToken);
             return Ok();
         }
 
@@ -143,14 +155,14 @@ namespace ControleAnaliseDesembolso.Api.Controllers
         [HttpPost]
         public async Task<IActionResult> CriarFichaPedidoDesembolso([FromBody] PedidoDesembolsoRequest request, CancellationToken cancellationToken)
         {
-            await _aplicacaoService.CriarFichaPedidoDesembolso(request, cancellationToken);
+            await _aplicacaoService.CriarFichaPedidoDesembolso(request, MontarPedidoAutomacao(request.MatriculaSolicitante), cancellationToken);
             return Ok();
         }
 
         [HttpPut("{coFpd}")]
         public async Task<IActionResult> ReenviarFicha(int coFpd, [FromBody] PedidoDesembolsoRequest request, CancellationToken cancellationToken)
         {
-            await _aplicacaoService.ReenviarFichaPedidoDesembolso(coFpd, request, cancellationToken);
+            await _aplicacaoService.ReenviarFichaPedidoDesembolso(coFpd, request, MontarPedidoAutomacao(request.MatriculaSolicitante), cancellationToken);
             return Ok();
         }
 
@@ -161,7 +173,7 @@ namespace ControleAnaliseDesembolso.Api.Controllers
         [HttpPut]
         public async Task<IActionResult> BaixarDrp([FromBody] BaixarDrpRequest request, CancellationToken cancellationToken)
         {
-            await _aplicacaoService.BaixarDrpEmLote(request, cancellationToken);
+            await _aplicacaoService.BaixarDrpEmLote(request, MontarPedidoAutomacao(request.MatriculaUsuario, request.Senha), cancellationToken);
             return Ok();
         }
 

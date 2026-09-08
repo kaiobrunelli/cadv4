@@ -20,17 +20,19 @@ public class DesembolsoConfig : IEntityTypeConfiguration<Desembolso>
         builder.Property(x => x.MatriculaSolicitante)
             .HasColumnName("MATRICULA_SOLICITANTE")
             .HasMaxLength(7)
+            .IsUnicode(false)
             .IsRequired();
 
         builder.Property(x => x.CoGigov)
             .HasColumnName("CO_GIGOV")
             .HasMaxLength(4)
-            .IsFixedLength()
+            .IsUnicode(false)
             .IsRequired();
 
         builder.Property(x => x.MatriculaGestor)
             .HasColumnName("MATRICULA_GESTOR")
             .HasMaxLength(7)
+            .IsUnicode(false)
             .IsRequired();
 
         builder.Property(x => x.DtSolicitado)
@@ -42,25 +44,33 @@ public class DesembolsoConfig : IEntityTypeConfiguration<Desembolso>
             .HasColumnName("NU_DESEMBOLSO")
             .IsRequired();
 
+        // Banco real: VARCHAR(15) — não 20.
         builder.Property(x => x.CoContratoAf)
             .HasColumnName("CO_CONTRATO_AF")
-            .HasMaxLength(20)
+            .HasMaxLength(15)
+            .IsUnicode(false)
             .IsRequired();
 
+        // Banco real: VARCHAR(5) — não 10.
         builder.Property(x => x.CoContratoAfDv)
             .HasColumnName("CO_CONTRATO_AF_DV")
-            .HasMaxLength(10)
+            .HasMaxLength(5)
+            .IsUnicode(false)
             .IsRequired();
 
+        // Banco real: VARCHAR(15) NULL — só é preenchido pela CEFGA ao validar.
         builder.Property(x => x.ContratoAo)
             .HasColumnName("CO_CONTRATO_AO")
-            .HasMaxLength(20)
-            .IsRequired();
+            .HasMaxLength(15)
+            .IsUnicode(false)
+            .IsRequired(false);
 
+        // Banco real: VARCHAR(5) NULL.
         builder.Property(x => x.ContratoAoDv)
             .HasColumnName("CO_CONTRATO_AO_DV")
-            .HasMaxLength(10)
-            .IsRequired();
+            .HasMaxLength(5)
+            .IsUnicode(false)
+            .IsRequired(false);
 
         builder.Property(x => x.PrimeiroDesembolso)
             .HasColumnName("PRIMEIRO_DESEMBOLSO")
@@ -70,46 +80,58 @@ public class DesembolsoConfig : IEntityTypeConfiguration<Desembolso>
             .HasColumnName("RECORRENTE")
             .IsRequired();
 
+        // Banco real: VARCHAR(500) — não 255.
         builder.Property(x => x.AgenteFinanceiro)
             .HasColumnName("AGENTE_FINANCEIRO")
-            .HasMaxLength(255)
+            .HasMaxLength(500)
+            .IsUnicode(false)
             .IsRequired();
 
         builder.Property(x => x.CnpjAf)
             .HasColumnName("CNPJ_AF")
             .HasMaxLength(14)
             .IsFixedLength()
+            .IsUnicode(false)
             .IsRequired();
 
+        // Banco real: VARCHAR(500) — não 255.
         builder.Property(x => x.MutuarioFinal)
             .HasColumnName("MUTUARIO_FINAL")
-            .HasMaxLength(255)
+            .HasMaxLength(500)
+            .IsUnicode(false)
             .IsRequired();
 
         builder.Property(x => x.CnpjMutuarioFinal)
             .HasColumnName("CNPJ_MUTUARIO_FINAL")
             .HasMaxLength(14)
             .IsFixedLength()
+            .IsUnicode(false)
             .IsRequired();
 
+        // Banco real: VARCHAR(500) — não 255.
         builder.Property(x => x.AgenteTecnicoOperador)
             .HasColumnName("AGENTE_TECNICO_OPERADOR")
-            .HasMaxLength(255);
+            .HasMaxLength(500)
+            .IsUnicode(false);
 
         builder.Property(x => x.CnpjAgenteTecnicoOperador)
             .HasColumnName("CNPJ_AGENTE_TECNICO_OPERADOR")
             .HasMaxLength(14)
-            .IsFixedLength();
+            .IsFixedLength()
+            .IsUnicode(false);
 
+        // Banco real: VARCHAR(500) — não 255.
         builder.Property(x => x.AgentePromotor)
             .HasColumnName("AGENTE_PROMOTOR")
-            .HasMaxLength(255)
+            .HasMaxLength(500)
+            .IsUnicode(false)
             .IsRequired();
 
         builder.Property(x => x.CnpjAgentePromotor)
             .HasColumnName("CNPJ_AGENTE_PROMOTOR")
             .HasMaxLength(14)
             .IsFixedLength()
+            .IsUnicode(false)
             .IsRequired();
 
         builder.Property(x => x.Programa)
@@ -117,7 +139,8 @@ public class DesembolsoConfig : IEntityTypeConfiguration<Desembolso>
             .IsRequired();
 
         builder.Property(x => x.UltimoDesembolso)
-            .HasColumnName("ULTIMO_DESEMBOLSO");
+            .HasColumnName("ULTIMO_DESEMBOLSO")
+            .IsRequired();
 
         builder.Property(x => x.Funcionalidade)
             .HasColumnName("FUNCIONALIDADE");
@@ -137,6 +160,9 @@ public class DesembolsoConfig : IEntityTypeConfiguration<Desembolso>
             .HasColumnName("DT_SOCIO_AMBIENTAL")
             .HasColumnType("date");
 
+        // Banco real: DECIMAL(5,2). Ficou DECIMAL(18,4) de propósito (ver migration
+        // AumentarPrecisaoPercentualObra) — o campo já precisou de mais casas
+        // decimais do que o script original previa, então mantemos a precisão maior.
         builder.Property(x => x.PercentualObra)
             .HasColumnName("PERCENTUAL_OBRA")
             .HasColumnType("decimal(18,4)")
@@ -149,14 +175,18 @@ public class DesembolsoConfig : IEntityTypeConfiguration<Desembolso>
         builder.Property(x => x.RetornoParcial)
             .HasColumnName("RETORNO_PARCIAL");
 
+        // Banco real: NOT NULL — o front exige essa resposta antes de liberar o envio da FPD.
         builder.Property(x => x.PlacaLocal)
-            .HasColumnName("PLACA_LOCAL");
+            .HasColumnName("PLACA_LOCAL")
+            .IsRequired();
 
         builder.Property(x => x.LicensaInstalacao)
-            .HasColumnName("LICENSA_INSTALACAO");
+            .HasColumnName("LICENSA_INSTALACAO")
+            .IsRequired();
 
         builder.Property(x => x.LicensaOperacao)
-            .HasColumnName("LICENSA_OPERACAO");
+            .HasColumnName("LICENSA_OPERACAO")
+            .IsRequired();
 
         builder.Property(x => x.CndValido)
             .HasColumnName("CND_VALIDO");
@@ -208,8 +238,10 @@ public class DesembolsoConfig : IEntityTypeConfiguration<Desembolso>
             .HasColumnType("decimal(18,2)")
             .IsRequired();
 
+        // Banco real: NOT NULL — checklist obrigatório antes do envio da FPD.
         builder.Property(x => x.Excepcionalizado)
-            .HasColumnName("EXCEPCIONALIZADO");
+            .HasColumnName("EXCEPCIONALIZADO")
+            .IsRequired();
 
         builder.Property(x => x.ContrapartidaAtual)
             .HasColumnName("CONTRAPARTIDA_ATUAL")
@@ -226,23 +258,30 @@ public class DesembolsoConfig : IEntityTypeConfiguration<Desembolso>
             .HasColumnType("decimal(18,2)")
             .IsRequired();
 
+        // Banco real: NOT NULL.
         builder.Property(x => x.ContrapartidaAlterada)
-            .HasColumnName("CONTRAPARTIDA_ALTERADA");
+            .HasColumnName("CONTRAPARTIDA_ALTERADA")
+            .IsRequired();
 
+        // Banco real: NOT NULL — nunca fica em branco no front (checkbox simples).
         builder.Property(x => x.Sanepar)
-            .HasColumnName("SANEPAR");
+            .HasColumnName("SANEPAR")
+            .IsRequired();
 
         builder.Property(x => x.Mensagem)
             .HasColumnName("MENSAGEM")
-            .HasMaxLength(3000);
+            .HasMaxLength(3000)
+            .IsUnicode(false);
 
         builder.Property(x => x.MensagemCefga)
             .HasColumnName("MENSAGEM_CEFGA")
-            .HasMaxLength(3000);
+            .HasMaxLength(3000)
+            .IsUnicode(false);
 
         builder.Property(x => x.MotivoRejeicao)
             .HasColumnName("MOTIVO_REJEICAO")
-            .HasMaxLength(3000);
+            .HasMaxLength(3000)
+            .IsUnicode(false);
 
         builder.Property(x => x.TemCarroceria)
             .HasColumnName("TEM_CARROCERIA");

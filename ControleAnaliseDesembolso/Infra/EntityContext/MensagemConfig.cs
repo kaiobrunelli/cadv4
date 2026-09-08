@@ -28,7 +28,8 @@ public class MensagemConfig : IEntityTypeConfiguration<Mensagem>
 
         builder.Property(x => x.DeMensagem)
             .HasColumnName("DE_MENSAGEM")
-            .HasMaxLength(3000);
+            .HasMaxLength(3000)
+            .IsUnicode(false);
 
         builder.Property(x => x.TipoMensagem)
             .HasColumnName("CO_TIPO_MENSAGEM")
@@ -37,11 +38,14 @@ public class MensagemConfig : IEntityTypeConfiguration<Mensagem>
 
         builder.Property(x => x.CoUsuario)
             .HasColumnName("CO_USUARIO")
-            .HasMaxLength(7);
+            .HasMaxLength(7)
+            .IsUnicode(false);
 
+        // Banco real: VARCHAR(100) — não 255.
         builder.Property(x => x.DeUsuario)
             .HasColumnName("DE_USUARIO")
-            .HasMaxLength(255);
+            .HasMaxLength(100)
+            .IsUnicode(false);
 
         builder.Property(x => x.UnidadeUsuario)
             .HasColumnName("UNIDADE_USUARIO")

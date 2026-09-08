@@ -38,9 +38,9 @@ public class ControleDesembolso
 
     public Desembolso Desembolso { get; set; } = null!;
 
+    // Guarda tanto o checklist manual/automático (Origem Manual/AutomaticaCampo,
+    // uma linha por item) quanto o histórico da conferência de campos/SIAPF
+    // (Origem ConferenciaLocal/ConferenciaSiapf, uma linha nova por execução).
     public ICollection<ValidacaoControleDesembolso> ValidacaoControleDesembolso { get; set; }
         = new List<ValidacaoControleDesembolso>();
-
-    public ICollection<ConferenciaControleDesembolso> Conferencias { get; set; }
-        = new List<ConferenciaControleDesembolso>();
 }

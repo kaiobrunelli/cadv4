@@ -20,7 +20,8 @@ public class ValidacaoConfig : IEntityTypeConfiguration<Validacao>
 
         builder.Property(x => x.DeValidacao)
             .HasColumnName("DE_VALIDACAO")
-            .HasMaxLength(500);
+            .HasMaxLength(500)
+            .IsUnicode(false);
 
         builder.Property(x => x.DtCriacao)
             .HasColumnName("DT_CRIACAO")
@@ -29,11 +30,13 @@ public class ValidacaoConfig : IEntityTypeConfiguration<Validacao>
 
         builder.Property(x => x.CampoVinculado)
             .HasColumnName("CAMPO_VINCULADO")
-            .HasMaxLength(100);
+            .HasMaxLength(100)
+            .IsUnicode(false);
 
         builder.Property(x => x.UsuarioExclusao)
             .HasColumnName("USUARIO_EXCLUSAO")
-            .HasMaxLength(7);
+            .HasMaxLength(7)
+            .IsUnicode(false);
 
         builder.Property(x => x.DtExclusao)
             .HasColumnName("DT_EXCLUSAO")
@@ -42,6 +45,11 @@ public class ValidacaoConfig : IEntityTypeConfiguration<Validacao>
         builder.Property(x => x.Desativado)
             .HasColumnName("DESATIVADO")
             .IsRequired();
+
+        builder.Property(x => x.Origem)
+            .HasColumnName("ORIGEM")
+            .IsRequired()
+            .HasConversion<int>();
 
         builder.HasMany(x => x.ValidacaoControleDesembolso)
             .WithOne(x => x.Validacao)

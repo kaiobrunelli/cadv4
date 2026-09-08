@@ -118,6 +118,15 @@ namespace ControleAnaliseDesembolso.Application
 
             var fpd = desembolso.Desembolso;
 
+            // Itens de conferência (ConferenciaSiapf, e ConferenciaLocal no histórico
+            // anterior a essa remoção) podem ter mais de uma linha (histórico) —
+            // "atual" é sempre a mais recente por item.
+            // Itens de checklist (Manual/AutomaticaCampo) só têm uma linha mesmo.
+            var itensAtuais = desembolso.ValidacaoControleDesembolso
+                .GroupBy(v => v.CoValidacao)
+                .Select(g => g.OrderByDescending(v => v.DtValidacao).First())
+                .ToList();
+
             return new DesembolsoDetalheResponse
             {
                 CoControleDesembolso = desembolso.CoControleDesembolso,
@@ -193,17 +202,22 @@ namespace ControleAnaliseDesembolso.Application
                 CrfAt = desembolso.CrfAt,
                 MensagemCefga = fpd.MensagemCefga,
                 DtUltimaConferencia = desembolso.DtUltimaConferencia,
-                ConferenciaCampos = desembolso.Conferencias
-                    .OrderBy(c => c.CoCampo)
-                    .Select(c => new ConferenciaCampoResponse
+                ConferenciaCampos = itensAtuais
+                    // "is not Manual/AutomaticaCampo" (em vez de "is ConferenciaSiapf") de propósito:
+                    // linhas antigas com ORIGEM=2 (ConferenciaLocal, removida do enum) continuam existindo
+                    // no histórico e precisam aparecer aqui como conferência, não como checklist.
+                    .Where(v => v.Origem is not (TipoOrigemValidacao.Manual or TipoOrigemValidacao.AutomaticaCampo))
+                    .OrderBy(v => v.CoValidacao)
+                    .Select(v => new ConferenciaCampoResponse
                     {
-                        CoCampo = c.CoCampo,
-                        DeCampo = c.DeCampo,
-                        Situacao = c.Situacao.ToString(),
-                        Mensagem = c.Mensagem,
+                        CoCampo = v.CoValidacao,
+                        DeCampo = v.DeValidacao ?? string.Empty,
+                        Situacao = v.Situacao.ToString(),
+                        Mensagem = v.Mensagem,
                     })
                     .ToList(),
-                Checklist = desembolso.ValidacaoControleDesembolso
+                Checklist = itensAtuais
+                    .Where(v => v.Origem is TipoOrigemValidacao.Manual or TipoOrigemValidacao.AutomaticaCampo)
                     .OrderBy(v => v.CoValidacao)
                     .Select(v => new ChecklistItemResponse
                     {
@@ -221,8 +235,10 @@ namespace ControleAnaliseDesembolso.Application
 
 
 
-        public async Task CriarFichaPedidoDesembolso(PedidoDesembolsoRequest request, CancellationToken cancellationToken = default)
+        public async Task CriarFichaPedidoDesembolso(PedidoDesembolsoRequest request, PedidoDeAutomacao pedidoAutomacao, CancellationToken cancellationToken = default)
         {
+            ValidarDadosObrigatoriosFpd(request);
+
             await using var transaction =
                 await _context.Database.BeginTransactionAsync(cancellationToken);
 
@@ -273,8 +289,10 @@ namespace ControleAnaliseDesembolso.Application
                         CoValidacao = modelo.CoValidacao,
                         CoControleDesembolso = coControleDesembolso,
                         DeValidacao = modelo.DeValidacao,
-                        CampoVinculado = null,
+                        CampoVinculado = modelo.CampoVinculado,
+                        Origem = modelo.Origem,
                         Situacao = temParecer ? TipoSituacaoValidacao.APROVADO : TipoSituacaoValidacao.ANALISAR,
+                        DtValidacao = DateTime.Now,
                     };
 
                     await _repositorioValidacaoControle.AdicionarSemSalvar(validacaoDesembolso, cancellationToken);
@@ -299,7 +317,7 @@ namespace ControleAnaliseDesembolso.Application
                     }
                 }
 
-                RegistrarAuditoria(request.MatriculaSolicitante, "Criar FPD",
+                RegistrarAuditoria(pedidoAutomacao.Usuario?.Matricula, "Criar FPD",
                     $"Solicitou novo desembolso pro contrato {request.CoContratoAf}-{request.CoContratoAfDv}");
 
                 await _context.SaveChangesAsync(cancellationToken);
@@ -323,8 +341,10 @@ namespace ControleAnaliseDesembolso.Application
                 cancellationToken: cancellationToken);
         }
 
-        public async Task ReenviarFichaPedidoDesembolso(int coFpd, PedidoDesembolsoRequest request, CancellationToken cancellationToken = default)
+        public async Task ReenviarFichaPedidoDesembolso(int coFpd, PedidoDesembolsoRequest request, PedidoDeAutomacao pedidoAutomacao, CancellationToken cancellationToken = default)
         {
+            ValidarDadosObrigatoriosFpd(request);
+
             await using var transaction =
                 await _context.Database.BeginTransactionAsync(cancellationToken);
 
@@ -344,7 +364,10 @@ namespace ControleAnaliseDesembolso.Application
 
                 fpd.ControleDesembolso.DtPrazo = AdicionarDiasUteis(DateTime.Today);
 
-                foreach (var validacao in fpd.ControleDesembolso.ValidacaoControleDesembolso)
+                // Só reseta o checklist manual/automático — histórico de conferência
+                // (ConferenciaLocal/ConferenciaSiapf) não é tocado no reenvio.
+                foreach (var validacao in fpd.ControleDesembolso.ValidacaoControleDesembolso
+                    .Where(v => v.Origem is TipoOrigemValidacao.Manual or TipoOrigemValidacao.AutomaticaCampo))
                 {
                     validacao.Situacao = TipoSituacaoValidacao.ANALISAR;
                 }
@@ -354,7 +377,9 @@ namespace ControleAnaliseDesembolso.Application
                     .ToHashSet();
 
                 var novosModelos = await _context.Validacao
-                    .Where(x => !x.Desativado && !coValidacaoJaExistentes.Contains(x.CoValidacao))
+                    .Where(x => !x.Desativado
+                        && (x.Origem == TipoOrigemValidacao.Manual || x.Origem == TipoOrigemValidacao.AutomaticaCampo)
+                        && !coValidacaoJaExistentes.Contains(x.CoValidacao))
                     .ToListAsync(cancellationToken);
 
                 foreach (var modelo in novosModelos)
@@ -364,7 +389,10 @@ namespace ControleAnaliseDesembolso.Application
                         CoValidacao = modelo.CoValidacao,
                         CoControleDesembolso = fpd.ControleDesembolso.CoControleDesembolso,
                         DeValidacao = modelo.DeValidacao,
+                        CampoVinculado = modelo.CampoVinculado,
+                        Origem = modelo.Origem,
                         Situacao = TipoSituacaoValidacao.ANALISAR,
+                        DtValidacao = DateTime.Now,
                     }, cancellationToken);
                 }
 
@@ -398,7 +426,7 @@ namespace ControleAnaliseDesembolso.Application
                     }
                 }
 
-                RegistrarAuditoria(request.MatriculaSolicitante, "Reenviar FPD",
+                RegistrarAuditoria(pedidoAutomacao.Usuario?.Matricula, "Reenviar FPD",
                     $"Reenviou a FPD {coFpd} pra nova análise");
 
                 await _context.SaveChangesAsync(cancellationToken);
@@ -481,7 +509,7 @@ namespace ControleAnaliseDesembolso.Application
             fpd.ControleDesembolso.CrfAt = request.CrfAt;
         }
 
-        public async Task AdicionarComentario(ValidacaoDesembolsoRequest request, CancellationToken cancellationToken = default)
+        public async Task AdicionarComentario(ValidacaoDesembolsoRequest request, PedidoDeAutomacao pedidoAutomacao, CancellationToken cancellationToken = default)
         {
             if (request is null)
                 throw new ArgumentNullException(nameof(request));
@@ -518,7 +546,7 @@ namespace ControleAnaliseDesembolso.Application
 
             await _repositorioMensagem.AdicionarSemSalvar(registro, cancellationToken);
 
-            RegistrarAuditoria(request.ValidacaoRegistro.MatriculaAutor, "Adicionar comentário",
+            RegistrarAuditoria(pedidoAutomacao.Usuario?.Matricula, "Adicionar comentário",
                 $"Comentou a validação {request.CoValidacao} do desembolso {request.CoControleDesembolso}");
 
             await _context.SaveChangesAsync(cancellationToken);
@@ -594,7 +622,7 @@ namespace ControleAnaliseDesembolso.Application
             }
         }
 
-        public async Task ValidarDesembolso(int coControleDesembolso, ValidarDesembolsoRequest request, CancellationToken cancellationToken = default)
+        public async Task ValidarDesembolso(int coControleDesembolso, PedidoDeAutomacao pedidoAutomacao, CancellationToken cancellationToken = default)
         {
             await using var transaction =
                 await _context.Database.BeginTransactionAsync(cancellationToken);
@@ -604,7 +632,6 @@ namespace ControleAnaliseDesembolso.Application
                 var desembolso = await _context.ControleDesembolso
                     .Include(x => x.Desembolso)
                     .Include(x => x.ValidacaoControleDesembolso)
-                    .Include(x => x.Conferencias)
                     .FirstOrDefaultAsync(x => x.CoControleDesembolso == coControleDesembolso, cancellationToken);
 
                 if (desembolso is null)
@@ -612,9 +639,9 @@ namespace ControleAnaliseDesembolso.Application
 
                 await ExecutarValidacaoDesembolso(desembolso, cancellationToken);
 
-                await ExecutarConferenciaCamposInterno(desembolso, request.MatriculaUsuario, request.Senha, cancellationToken);
+                await ExecutarConferenciaCamposInterno(desembolso, pedidoAutomacao.Usuario?.Matricula, pedidoAutomacao.Usuario?.Senha, cancellationToken);
 
-                RegistrarAuditoria(request.MatriculaUsuario, "Validar", $"Validou o desembolso {coControleDesembolso}");
+                RegistrarAuditoria(pedidoAutomacao.Usuario?.Matricula, "Validar", $"Validou o desembolso {coControleDesembolso}");
 
                 await _context.SaveChangesAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
@@ -626,12 +653,11 @@ namespace ControleAnaliseDesembolso.Application
             }
         }
 
-        public async Task ValidarTodosPendentes(ValidarDesembolsoRequest request, CancellationToken cancellationToken = default)
+        public async Task ValidarTodosPendentes(PedidoDeAutomacao pedidoAutomacao, CancellationToken cancellationToken = default)
         {
             var desembolsos = await _context.ControleDesembolso
                 .Include(x => x.Desembolso)
                 .Include(x => x.ValidacaoControleDesembolso)
-                .Include(x => x.Conferencias)
                 .Where(x => x.StatusDesembolso == TipoStatusDesembolso.PENDENTE)
                 .ToListAsync(cancellationToken);
 
@@ -647,10 +673,10 @@ namespace ControleAnaliseDesembolso.Application
                 {
                     await ExecutarValidacaoDesembolso(desembolso, cancellationToken);
 
-                    await ExecutarConferenciaCamposInterno(desembolso, request.MatriculaUsuario, request.Senha, cancellationToken);
+                    await ExecutarConferenciaCamposInterno(desembolso, pedidoAutomacao.Usuario?.Matricula, pedidoAutomacao.Usuario?.Senha, cancellationToken);
                 }
 
-                RegistrarAuditoria(request.MatriculaUsuario, "Validar todos pendentes",
+                RegistrarAuditoria(pedidoAutomacao.Usuario?.Matricula, "Validar todos pendentes",
                     $"Validou em lote {desembolsos.Count} desembolso(s) pendente(s): {string.Join(", ", desembolsos.Select(d => d.CoControleDesembolso))}");
 
                 await _context.SaveChangesAsync(cancellationToken);
@@ -678,8 +704,15 @@ namespace ControleAnaliseDesembolso.Application
                 validacao.Situacao = TipoSituacaoValidacao.APROVADO;
             }
 
-            var todosAprovados = desembolso.ValidacaoControleDesembolso.Count > 0
-                && desembolso.ValidacaoControleDesembolso.All(v => v.Situacao == TipoSituacaoValidacao.APROVADO);
+            // Só o checklist (Manual/AutomaticaCampo) entra nessa conta — itens de
+            // conferência (ConferenciaLocal/ConferenciaSiapf) usam OK/ERRO/PENDENTE,
+            // que nunca bate com APROVADO, e não devem travar o desembolso em ANALISAR.
+            var itensChecklist = desembolso.ValidacaoControleDesembolso
+                .Where(v => v.Origem is TipoOrigemValidacao.Manual or TipoOrigemValidacao.AutomaticaCampo)
+                .ToList();
+
+            var todosAprovados = itensChecklist.Count > 0
+                && itensChecklist.All(v => v.Situacao == TipoSituacaoValidacao.APROVADO);
 
             if (todosAprovados)
             {
@@ -701,8 +734,14 @@ namespace ControleAnaliseDesembolso.Application
 
             return desembolsos.Select(d =>
             {
-                var totalValidacoes = d.ValidacaoControleDesembolso.Count;
-                var totalAprovadas = d.ValidacaoControleDesembolso.Count(v => v.Situacao == TipoSituacaoValidacao.APROVADO);
+                // Mesmo motivo do filtro em ExecutarValidacaoDesembolso: itens de
+                // conferência (OK/ERRO/PENDENTE) não contam nesse indicador de checklist.
+                var itensChecklist = d.ValidacaoControleDesembolso
+                    .Where(v => v.Origem is TipoOrigemValidacao.Manual or TipoOrigemValidacao.AutomaticaCampo)
+                    .ToList();
+
+                var totalValidacoes = itensChecklist.Count;
+                var totalAprovadas = itensChecklist.Count(v => v.Situacao == TipoSituacaoValidacao.APROVADO);
 
                 return new DesembolsoResponse
                 {
@@ -737,7 +776,7 @@ namespace ControleAnaliseDesembolso.Application
 
         #region TESTADO E FUNCIONANDO
 
-        public async Task EditarComentario(EditarComentarioRequest request, CancellationToken cancellationToken = default)
+        public async Task EditarComentario(EditarComentarioRequest request, PedidoDeAutomacao pedidoAutomacao, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(request.DeMensagem))
                 throw new Exception("O comentário não pode ser vazio.");
@@ -753,13 +792,13 @@ namespace ControleAnaliseDesembolso.Application
 
             registro.DeMensagem = request.DeMensagem.Trim();
 
-            RegistrarAuditoria(request.MatriculaSolicitante, "Editar comentário",
+            RegistrarAuditoria(pedidoAutomacao.Usuario?.Matricula, "Editar comentário",
                 $"Editou o comentário {request.CoMensagem}");
 
             await _context.SaveChangesAsync(cancellationToken);
         }
 
-        public async Task RemoverComentario(int coRegistroValidacao, string matriculaSolicitante, CancellationToken cancellationToken = default)
+        public async Task RemoverComentario(int coRegistroValidacao, string matriculaSolicitante, PedidoDeAutomacao pedidoAutomacao, CancellationToken cancellationToken = default)
         {
             var registro = await _context.Mensagem
                 .FirstOrDefaultAsync(x => x.CoMensagem == coRegistroValidacao, cancellationToken);
@@ -794,19 +833,21 @@ namespace ControleAnaliseDesembolso.Application
                 }
             }
 
-            RegistrarAuditoria(matriculaSolicitante, "Remover comentário",
+            RegistrarAuditoria(pedidoAutomacao.Usuario?.Matricula, "Remover comentário",
                 $"Removeu o comentário {coRegistroValidacao}");
 
             await _context.SaveChangesAsync(cancellationToken);
         }
 
-        public async Task VincularResponsavel(int coControleDesembolso, string? matriculaResponsavel, CancellationToken cancellationToken = default)
+        public async Task VincularResponsavel(int coControleDesembolso, string? matriculaResponsavel, PedidoDeAutomacao pedidoAutomacao, CancellationToken cancellationToken = default)
         {
             var desembolso = await _context.ControleDesembolso
                 .FirstOrDefaultAsync(x => x.CoControleDesembolso == coControleDesembolso, cancellationToken);
 
             if (desembolso is null)
                 throw new Exception($"Desembolso {coControleDesembolso} não encontrado.");
+
+            await ValidarAutorizacaoVincularResponsavel(desembolso, matriculaResponsavel, pedidoAutomacao.Usuario?.Matricula, cancellationToken);
 
             if (!string.IsNullOrWhiteSpace(matriculaResponsavel))
             {
@@ -817,12 +858,40 @@ namespace ControleAnaliseDesembolso.Application
 
             desembolso.ResponsavelAnalise = matriculaResponsavel;
 
-            RegistrarAuditoria(matriculaResponsavel, string.IsNullOrWhiteSpace(matriculaResponsavel) ? "Remover responsável" : "Vincular responsável",
+            RegistrarAuditoria(pedidoAutomacao.Usuario?.Matricula, string.IsNullOrWhiteSpace(matriculaResponsavel) ? "Remover responsável" : "Vincular responsável",
                 string.IsNullOrWhiteSpace(matriculaResponsavel)
                     ? $"Removeu o responsável pela análise do desembolso {coControleDesembolso}"
                     : $"Vinculou {matriculaResponsavel} como responsável pela análise do desembolso {coControleDesembolso}");
 
             await _context.SaveChangesAsync(cancellationToken);
+        }
+
+        // Autorização de VincularResponsavel: quem está em CAD_TB013_AUTORIZADO_RESPONSAVEL_ANALISE
+        // (hoje: gestor, supervisor e o sênior João) pode vincular/remover QUALQUER
+        // responsável. Fora dessa lista, cada analista só mexe na própria
+        // atribuição — se atribuir a si mesmo, ou se remover quando é ele o atual.
+        private async Task ValidarAutorizacaoVincularResponsavel(
+            ControleDesembolso desembolso, string? matriculaResponsavel, string? matriculaUsuario, CancellationToken cancellationToken)
+        {
+            if (!string.IsNullOrWhiteSpace(matriculaUsuario))
+            {
+                var autorizadoTotal = await _context.AutorizadoResponsavelAnalise
+                    .AnyAsync(x => x.Matricula == matriculaUsuario, cancellationToken);
+
+                if (autorizadoTotal)
+                    return;
+            }
+
+            var autoAtribuir = !string.IsNullOrWhiteSpace(matriculaResponsavel)
+                && string.Equals(matriculaResponsavel, matriculaUsuario, StringComparison.OrdinalIgnoreCase);
+
+            var autoRemover = string.IsNullOrWhiteSpace(matriculaResponsavel)
+                && !string.IsNullOrWhiteSpace(matriculaUsuario)
+                && string.Equals(desembolso.ResponsavelAnalise, matriculaUsuario, StringComparison.OrdinalIgnoreCase);
+
+            if (!autoAtribuir && !autoRemover)
+                throw new UnauthorizedAccessException(
+                    "Você só pode se atribuir ou se remover como responsável pela análise deste desembolso.");
         }
 
         public async Task<List<ValidacaoTemplateResponse>> ObterValidacoesTemplate(CancellationToken cancellationToken = default)
@@ -839,7 +908,7 @@ namespace ControleAnaliseDesembolso.Application
         }
         #endregion
 
-        public async Task AprovarDesembolso(int coControleDesembolso, AprovarDesembolsoRequest request, CancellationToken cancellationToken = default)
+        public async Task AprovarDesembolso(int coControleDesembolso, AprovarDesembolsoRequest request, PedidoDeAutomacao pedidoAutomacao, CancellationToken cancellationToken = default)
         {
             var desembolso = await _context.ControleDesembolso
                 .Include(x => x.ValidacaoControleDesembolso)
@@ -859,9 +928,9 @@ namespace ControleAnaliseDesembolso.Application
 
             desembolso.StatusDesembolso = TipoStatusDesembolso.DESEMBOLSAR;
             desembolso.DtConclusao = DateTime.Now;
-            desembolso.ResponsavelBaixa = request.MatriculaUsuario;
+            desembolso.ResponsavelBaixa = pedidoAutomacao.Usuario?.Matricula ?? request.MatriculaUsuario;
 
-            RegistrarAuditoria(request.MatriculaUsuario, "Aprovar desembolso",
+            RegistrarAuditoria(pedidoAutomacao.Usuario?.Matricula, "Aprovar desembolso",
                 $"Aprovou o desembolso {coControleDesembolso}, aguardando baixa da DRP");
 
             await _context.SaveChangesAsync(cancellationToken);
@@ -875,7 +944,7 @@ namespace ControleAnaliseDesembolso.Application
                 cancellationToken: cancellationToken);
         }
 
-        public async Task BaixarDRP(int coControleDesembolso, CancellationToken cancellationToken = default)
+        public async Task BaixarDRP(int coControleDesembolso, PedidoDeAutomacao pedidoAutomacao, CancellationToken cancellationToken = default)
         {
             var desembolso = await _context.ControleDesembolso
                 .Include(x => x.Desembolso)
@@ -886,7 +955,7 @@ namespace ControleAnaliseDesembolso.Application
 
             desembolso.StatusDesembolso = TipoStatusDesembolso.FINALIZADO;
 
-            RegistrarAuditoria(null, "Baixar DRP", $"Baixou a DRP do desembolso {coControleDesembolso}");
+            RegistrarAuditoria(pedidoAutomacao.Usuario?.Matricula, "Baixar DRP", $"Baixou a DRP do desembolso {coControleDesembolso}");
 
             await _context.SaveChangesAsync(cancellationToken);
 
@@ -917,12 +986,14 @@ namespace ControleAnaliseDesembolso.Application
             }).ToList();
         }
 
-        public async Task BaixarDrpEmLote(BaixarDrpRequest request, CancellationToken cancellationToken = default)
+        public async Task BaixarDrpEmLote(BaixarDrpRequest request, PedidoDeAutomacao pedidoAutomacao, CancellationToken cancellationToken = default)
         {
             if (request.Ids.Count == 0)
                 throw new Exception("Nenhum registro selecionado para baixa.");
 
-            if (string.IsNullOrWhiteSpace(request.MatriculaUsuario))
+            var matriculaUsuario = pedidoAutomacao.Usuario?.Matricula ?? request.MatriculaUsuario;
+
+            if (string.IsNullOrWhiteSpace(matriculaUsuario))
                 throw new Exception("Matrícula do usuário é obrigatória para confirmar a baixa.");
 
             var desembolsos = await _context.ControleDesembolso
@@ -934,17 +1005,17 @@ namespace ControleAnaliseDesembolso.Application
             foreach (var desembolso in desembolsos)
             {
                 desembolso.StatusDesembolso = TipoStatusDesembolso.FINALIZADO;
-                desembolso.ResponsavelDesembolso = request.MatriculaUsuario;
+                desembolso.ResponsavelDesembolso = matriculaUsuario;
             }
 
-            RegistrarAuditoria(request.MatriculaUsuario, "Baixar DRP em lote",
+            RegistrarAuditoria(matriculaUsuario, "Baixar DRP em lote",
                 $"Baixou a DRP de {desembolsos.Count} desembolso(s): {string.Join(", ", desembolsos.Select(d => d.CoControleDesembolso))}");
 
             await _context.SaveChangesAsync(cancellationToken);
 
         }
 
-        public async Task RejeitarDesembolso(int coControleDesembolso, RejeitarDesembolsoRequest request, CancellationToken cancellationToken = default)
+        public async Task RejeitarDesembolso(int coControleDesembolso, RejeitarDesembolsoRequest request, PedidoDeAutomacao pedidoAutomacao, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(request.CodigoCoordenacao))
                 throw new Exception("Código da coordenação é obrigatório para rejeitar.");
@@ -961,10 +1032,10 @@ namespace ControleAnaliseDesembolso.Application
 
             desembolso.StatusDesembolso = TipoStatusDesembolso.REJEITADO;
             desembolso.DtConclusao = DateTime.Now;
-            desembolso.ResponsavelBaixa = request.MatriculaUsuario;
+            desembolso.ResponsavelBaixa = pedidoAutomacao.Usuario?.Matricula ?? request.MatriculaUsuario;
             desembolso.Desembolso.MotivoRejeicao = request.Justificativa.Trim();
 
-            RegistrarAuditoria(request.MatriculaUsuario, "Rejeitar desembolso",
+            RegistrarAuditoria(pedidoAutomacao.Usuario?.Matricula, "Rejeitar desembolso",
                 $"Rejeitou o desembolso {coControleDesembolso}: {request.Justificativa.Trim()}");
 
             await _context.SaveChangesAsync(cancellationToken);
@@ -978,7 +1049,7 @@ namespace ControleAnaliseDesembolso.Application
                 cancellationToken: cancellationToken);
         }
 
-        public async Task CancelarDesembolso(int coControleDesembolso, CancelarDesembolsoRequest request, CancellationToken cancellationToken = default)
+        public async Task CancelarDesembolso(int coControleDesembolso, CancelarDesembolsoRequest request, PedidoDeAutomacao pedidoAutomacao, CancellationToken cancellationToken = default)
         {
             var desembolso = await _context.ControleDesembolso
                 .Include(x => x.Desembolso)
@@ -994,7 +1065,7 @@ namespace ControleAnaliseDesembolso.Application
             desembolso.DtConclusao = DateTime.Now;
             desembolso.MotivoCancelamento = request.Motivo.Trim();
 
-            RegistrarAuditoria(request.MatriculaUsuario, "Cancelar desembolso",
+            RegistrarAuditoria(pedidoAutomacao.Usuario?.Matricula, "Cancelar desembolso",
                 $"Cancelou o desembolso {coControleDesembolso}: {request.Motivo.Trim()}");
 
             await _context.SaveChangesAsync(cancellationToken);
@@ -1008,7 +1079,7 @@ namespace ControleAnaliseDesembolso.Application
                 cancellationToken: cancellationToken);
         }
 
-        public async Task AtualizarMensagemCefga(int coControleDesembolso, AtualizarMensagemCefgaRequest request, CancellationToken cancellationToken = default)
+        public async Task AtualizarMensagemCefga(int coControleDesembolso, AtualizarMensagemCefgaRequest request, PedidoDeAutomacao pedidoAutomacao, CancellationToken cancellationToken = default)
         {
             var desembolso = await _context.ControleDesembolso
                 .Include(x => x.Desembolso)
@@ -1019,29 +1090,77 @@ namespace ControleAnaliseDesembolso.Application
 
             desembolso.Desembolso.MensagemCefga = request.MensagemCefga.Trim();
 
-            RegistrarAuditoria(request.MatriculaUsuario, "Editar OBS CEFGA",
+            RegistrarAuditoria(pedidoAutomacao.Usuario?.Matricula, "Editar OBS CEFGA",
                 $"Atualizou o OBS CEFGA do desembolso {coControleDesembolso}");
 
             await _context.SaveChangesAsync(cancellationToken);
         }
 
-        private static readonly Dictionary<string, Func<Desembolso, (bool Ok, string? Mensagem)>> _regrasConferencia = new()
-        {
-            ["AgenteFinanceiro"] = d => (!string.IsNullOrWhiteSpace(d.AgenteFinanceiro), "Agente Financeiro não informado."),
-            ["CnpjAgenteFinanceiro"] = d => (SoDigitos(d.CnpjAf).Length == 14, "CNPJ do Agente Financeiro inválido (precisa de 14 dígitos)."),
-            ["MutuarioFinal"] = d => (!string.IsNullOrWhiteSpace(d.MutuarioFinal), "Tomador/Mutuário não informado."),
-            ["CnpjMutuarioFinal"] = d => (SoDigitos(d.CnpjMutuarioFinal).Length == 14, "CNPJ do Tomador/Mutuário inválido (precisa de 14 dígitos)."),
-            ["AgentePromotor"] = d => (!string.IsNullOrWhiteSpace(d.AgentePromotor), "Agente Promotor não informado."),
-            ["CnpjAgentePromotor"] = d => (SoDigitos(d.CnpjAgentePromotor).Length == 14, "CNPJ do Agente Promotor inválido (precisa de 14 dígitos)."),
-            ["Programa"] = d => (Enum.IsDefined(typeof(Domain.Enums.Programa), d.Programa), "Programa inválido."),
-            ["CoGigov"] = d => (SoDigitos(d.CoGigov).Length == 4, "GIGOV inválido (precisa de 4 dígitos)."),
-            ["MatriculaGestor"] = d => (!string.IsNullOrWhiteSpace(d.MatriculaGestor), "Matrícula do Gestor não informada."),
-            ["ContratoAf"] = d => (!string.IsNullOrWhiteSpace(d.CoContratoAf) && !string.IsNullOrWhiteSpace(d.CoContratoAfDv), "Contrato AF incompleto."),
-            ["DtEngenharia"] = d => (d.DtEngenharia != default, "Data de emissão da engenharia não informada."),
-        };
+        // CNPJ novo formato (Receita Federal): 14 caracteres, primeiros 12
+        // alfanuméricos (base + ordem) e os 2 últimos (dígitos verificadores)
+        // sempre numéricos — aceita tanto CNPJ numérico "antigo" quanto o
+        // alfanumérico novo.
+        private static readonly System.Text.RegularExpressions.Regex _regexCnpj =
+            new(@"^[A-Z0-9]{12}\d{2}$", System.Text.RegularExpressions.RegexOptions.Compiled);
 
-        private static string SoDigitos(string? valor) =>
-            new(string.IsNullOrEmpty(valor) ? [] : valor.Where(char.IsDigit).ToArray());
+        // Matrícula do Gestor: letra C + 6 números (ex.: C123456) — 7 caracteres no total.
+        private static readonly System.Text.RegularExpressions.Regex _regexGestor =
+            new(@"^[Cc]\d{6}$", System.Text.RegularExpressions.RegexOptions.Compiled);
+
+        private static string NormalizarCnpj(string? valor) =>
+            new(string.IsNullOrEmpty(valor) ? [] : valor.Where(char.IsLetterOrDigit).ToArray());
+
+        private static bool CnpjValido(string? valor) =>
+            _regexCnpj.IsMatch(NormalizarCnpj(valor).ToUpperInvariant());
+
+        // Validações de input (obrigatoriedade, formato) da FPD — rodam na criação e
+        // no reenvio, ANTES de abrir transação, e devolvem a mensagem que o front já
+        // sabe exibir na snackbar (ver CriarFichaPedidoDesembolso/ReenviarFichaPedidoDesembolso).
+        // Antes viviam como itens de checklist (Origem ConferenciaLocal); agora são
+        // checagem síncrona porque são validação de formulário, não item que precisa
+        // de acompanhamento/comentário da CEFGA.
+        private static void ValidarDadosObrigatoriosFpd(PedidoDesembolsoRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(request.AgenteFinanceiro))
+                throw new Exception("Agente Financeiro é obrigatório.");
+
+            if (!CnpjValido(request.CnpjAf))
+                throw new Exception("CNPJ do Agente Financeiro inválido — informe 14 caracteres (numérico ou alfanumérico).");
+
+            if (string.IsNullOrWhiteSpace(request.MutuarioFinal))
+                throw new Exception("Tomador/Mutuário é obrigatório.");
+
+            if (!CnpjValido(request.CnpjMutuarioFinal))
+                throw new Exception("CNPJ do Tomador/Mutuário inválido — informe 14 caracteres (numérico ou alfanumérico).");
+
+            if (!string.IsNullOrWhiteSpace(request.CnpjAgentePromotor) && !CnpjValido(request.CnpjAgentePromotor))
+                throw new Exception("CNPJ do Agente Promotor inválido — informe 14 caracteres (numérico ou alfanumérico).");
+
+            if (!string.IsNullOrWhiteSpace(request.CnpjAgenteTecnicoOperador) && !CnpjValido(request.CnpjAgenteTecnicoOperador))
+                throw new Exception("CNPJ do Agente Técnico Operador inválido — informe 14 caracteres (numérico ou alfanumérico).");
+
+            if (!_regexGestor.IsMatch(request.MatriculaGestor ?? string.Empty))
+                throw new Exception("Matrícula do Gestor inválida — informe a letra C seguida de 6 números (ex.: C123456).");
+
+            if (!Enum.IsDefined(typeof(Programa), request.Programa))
+                throw new Exception("Programa é obrigatório.");
+
+            // Em sequência: primeiro a contrapartida (não pode ficar abaixo da obra),
+            // depois o valor a desembolsar (não pode passar da obra).
+            var percContrapartidaIntegralizada = request.ContrapartidaAtual > 0
+                ? Math.Round((request.Contrapartida + request.Integralizado) / request.ContrapartidaAtual * 100, 3)
+                : (decimal?)null;
+
+            if (percContrapartidaIntegralizada is not null && percContrapartidaIntegralizada < request.PercentualObra)
+                throw new Exception("O percentual de contrapartida integralizada não pode ser inferior ao percentual de obra.");
+
+            var percExecucaoFinanceira = request.ValorEmprestimo > 0
+                ? Math.Round((request.Desembolsado + request.ParticipacaoFgts) / request.ValorEmprestimo * 100, 3)
+                : (decimal?)null;
+
+            if (percExecucaoFinanceira is not null && percExecucaoFinanceira > request.PercentualObra)
+                throw new Exception("O percentual do valor a desembolsar não pode ser superior ao percentual de obra.");
+        }
 
         private static string NormalizarTexto(string? valor) =>
             string.IsNullOrWhiteSpace(valor)
@@ -1076,23 +1195,24 @@ namespace ControleAnaliseDesembolso.Application
                 $"Objetivo do contrato no SIAPF (\"{s.DadosGerais.DeObjetivo}\") não bate com o Programa do FPD (\"{d.Programa.ParaExibicao()}\")."),
         };
 
-        private async Task<List<ConferenciaControleDesembolso>> ExecutarConferenciaCamposInterno(
+        private async Task<List<ValidacaoControleDesembolso>> ExecutarConferenciaCamposInterno(
             ControleDesembolso desembolso,
             string? matriculaUsuario = null,
             string? senha = null,
             CancellationToken cancellationToken = default)
         {
-            var camposAtivos = await _context.CampoConferencia
-                .Where(x => !x.Desativado)
-                .OrderBy(x => x.CoCampo)
+            var camposAtivos = await _context.Validacao
+                .Where(x => !x.Desativado && x.Origem == TipoOrigemValidacao.ConferenciaSiapf)
+                .OrderBy(x => x.CoValidacao)
                 .ToListAsync(cancellationToken);
 
-            _context.ConferenciaControleDesembolso.RemoveRange(desembolso.Conferencias);
+            // Sem RemoveRange aqui: cada execução INSERE uma linha nova por campo,
+            // preservando o histórico das rodadas anteriores.
 
             CadastroGeralSiapf? cadastroSiapf = null;
             string? erroConsultaSiapf = null;
 
-            var precisaConsultarSiapf = camposAtivos.Any(c => _regrasConferenciaSiapf.ContainsKey(c.Chave));
+            var precisaConsultarSiapf = camposAtivos.Any(c => _regrasConferenciaSiapf.ContainsKey(c.CampoVinculado ?? string.Empty));
 
             if (precisaConsultarSiapf)
             {
@@ -1111,69 +1231,66 @@ namespace ControleAnaliseDesembolso.Application
                 }
             }
 
-            var novasConferencias = new List<ConferenciaControleDesembolso>();
+            var novasConferencias = new List<ValidacaoControleDesembolso>();
 
             foreach (var campo in camposAtivos)
             {
-                TipoSituacaoConferencia situacao;
+                var chave = campo.CampoVinculado ?? string.Empty;
+                TipoSituacaoValidacao situacao;
                 string? mensagem;
 
-                if (_regrasConferenciaSiapf.TryGetValue(campo.Chave, out var regraSiapf))
+                if (_regrasConferenciaSiapf.TryGetValue(chave, out var regraSiapf))
                 {
                     if (cadastroSiapf is not null)
                     {
                         var (ok, msgFalha) = regraSiapf(desembolso.Desembolso, cadastroSiapf);
-                        situacao = ok ? TipoSituacaoConferencia.OK : TipoSituacaoConferencia.ERRO;
+                        situacao = ok ? TipoSituacaoValidacao.OK : TipoSituacaoValidacao.ERRO;
                         mensagem = ok ? null : msgFalha;
                     }
                     else
                     {
-                        situacao = TipoSituacaoConferencia.PENDENTE;
+                        situacao = TipoSituacaoValidacao.PENDENTE;
                         mensagem = erroConsultaSiapf ?? "Consulta ao SIAPF não realizada.";
                     }
                 }
-                else if (_regrasConferencia.TryGetValue(campo.Chave, out var regra))
-                {
-                    var (ok, msgFalha) = regra(desembolso.Desembolso);
-                    situacao = ok ? TipoSituacaoConferencia.OK : TipoSituacaoConferencia.ERRO;
-                    mensagem = ok ? null : msgFalha;
-                }
                 else
                 {
-                    situacao = TipoSituacaoConferencia.PENDENTE;
+                    situacao = TipoSituacaoValidacao.PENDENTE;
                     mensagem = "Verificação ainda não implementada pro sistema.";
                 }
 
-                novasConferencias.Add(new ConferenciaControleDesembolso
+                novasConferencias.Add(new ValidacaoControleDesembolso
                 {
                     CoControleDesembolso = desembolso.CoControleDesembolso,
-                    CoCampo = campo.CoCampo,
-                    DeCampo = campo.DeCampo,
+                    CoValidacao = campo.CoValidacao,
+                    DeValidacao = campo.DeValidacao,
+                    CampoVinculado = campo.CampoVinculado,
+                    Origem = campo.Origem,
                     Situacao = situacao,
                     Mensagem = mensagem,
-                    DtConferencia = DateTime.Now,
+                    DtValidacao = DateTime.Now,
                 });
             }
 
-            _context.ConferenciaControleDesembolso.AddRange(novasConferencias);
+            _context.ValidacaoControleDesembolso.AddRange(novasConferencias);
             desembolso.DtUltimaConferencia = DateTime.Now;
 
             return novasConferencias;
         }
 
-        public async Task<List<ConferenciaCampoResponse>> ExecutarConferenciaCampos(int coControleDesembolso, CancellationToken cancellationToken = default)
+        public async Task<List<ConferenciaCampoResponse>> ExecutarConferenciaCampos(int coControleDesembolso, PedidoDeAutomacao pedidoAutomacao, CancellationToken cancellationToken = default)
         {
             var desembolso = await _context.ControleDesembolso
                 .Include(x => x.Desembolso)
-                .Include(x => x.Conferencias)
                 .FirstOrDefaultAsync(x => x.CoControleDesembolso == coControleDesembolso, cancellationToken);
 
             if (desembolso is null)
                 throw new Exception($"Desembolso {coControleDesembolso} não encontrado.");
 
-            var novasConferencias = await ExecutarConferenciaCamposInterno(desembolso, cancellationToken: cancellationToken);
+            var novasConferencias = await ExecutarConferenciaCamposInterno(
+                desembolso, pedidoAutomacao.Usuario?.Matricula, pedidoAutomacao.Usuario?.Senha, cancellationToken);
 
-            RegistrarAuditoria(null, "Executar conferência de campos",
+            RegistrarAuditoria(pedidoAutomacao.Usuario?.Matricula, "Executar conferência de campos",
                 $"Rodou a conferência de campos do desembolso {coControleDesembolso}: {novasConferencias.Count} item(ns).");
 
             await _context.SaveChangesAsync(cancellationToken);
@@ -1181,8 +1298,8 @@ namespace ControleAnaliseDesembolso.Application
             return novasConferencias
                 .Select(c => new ConferenciaCampoResponse
                 {
-                    CoCampo = c.CoCampo,
-                    DeCampo = c.DeCampo,
+                    CoCampo = c.CoValidacao,
+                    DeCampo = c.DeValidacao ?? string.Empty,
                     Situacao = c.Situacao.ToString(),
                     Mensagem = c.Mensagem,
                 })

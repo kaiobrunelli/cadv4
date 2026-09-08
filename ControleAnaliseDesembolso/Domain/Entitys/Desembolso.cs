@@ -16,8 +16,10 @@ namespace ControleAnaliseDesembolso.Domain.Entitys
         public string CoContratoAf { get; set; } = string.Empty;
         public string CoContratoAfDv { get; set; } = string.Empty;
 
-        public string ContratoAo { get; set; } = string.Empty;
-        public string ContratoAoDv { get; set; } = string.Empty;
+        // Nulo até a CEFGA validar e preencher — não confundir com Contrato AF
+        // (esse sim sempre presente desde a criação da FPD).
+        public string? ContratoAo { get; set; }
+        public string? ContratoAoDv { get; set; }
 
         public bool PrimeiroDesembolso { get; set; }
         public bool Recorrente { get; set; }

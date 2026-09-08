@@ -24,19 +24,23 @@ public class ControleDesembolsoConfig : IEntityTypeConfiguration<ControleDesembo
 
         builder.Property(x => x.ResponsavelAnalise)
             .HasColumnName("RESPONSAVEL_ANALISE")
-            .HasMaxLength(7);
+            .HasMaxLength(7)
+            .IsUnicode(false);
 
         builder.Property(x => x.ResponsavelBaixa)
             .HasColumnName("RESPONSAVEL_BAIXA")
-            .HasMaxLength(7);
+            .HasMaxLength(7)
+            .IsUnicode(false);
 
         builder.Property(x => x.ResponsavelDesembolso)
             .HasColumnName("RESPONSAVEL_DESEMBOLSO")
-            .HasMaxLength(7);
+            .HasMaxLength(7)
+            .IsUnicode(false);
 
         builder.Property(x => x.Gestor)
             .HasColumnName("GESTOR")
-            .HasMaxLength(7);
+            .HasMaxLength(7)
+            .IsUnicode(false);
 
         builder.Property(x => x.DtPrazo)
             .HasColumnName("DT_PRAZO")
@@ -48,18 +52,23 @@ public class ControleDesembolsoConfig : IEntityTypeConfiguration<ControleDesembo
             .IsRequired()
             .HasConversion<int>();
 
+        // Banco real: DATETIME — não DATE (precisa preservar a hora de DateTime.Now).
         builder.Property(x => x.DtConclusao)
             .HasColumnName("DT_CONCLUSAO")
-            .HasColumnType("date");
+            .HasColumnType("datetime");
 
         builder.Property(x => x.MotivoCancelamento)
             .HasColumnName("MOTIVO_CANCELAMENTO")
-            .HasMaxLength(3000);
+            .HasMaxLength(3000)
+            .IsUnicode(false);
 
         builder.Property(x => x.DtUltimaConferencia)
             .HasColumnName("DT_ULTIMA_CONFERENCIA")
             .HasColumnType("datetime");
 
+        // NUMERO_DRP/DV_DRP/SENHA_DRP/CRF_* não existem no script original — são
+        // colunas adicionadas por nós (ver ajustes-v5-mover-drp-crf-para-tb002.sql),
+        // por isso continuam NVARCHAR (não seguem a convenção VARCHAR do resto da tabela).
         builder.Property(x => x.NumeroDrp)
             .HasColumnName("NUMERO_DRP")
             .HasMaxLength(20);
