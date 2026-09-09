@@ -119,7 +119,7 @@
                             }
                             @if (_podeAgirCefga)
                             {
-                                <button class="btn-validar-macro @(macroJaRodou && !_validandoMacro ? "ja-validado" : "")" @onclick="() => _dialogSenhaValidarAberto = true" disabled="@(_validandoMacro || macroJaRodou)"
+                                <button class="btn-validar-macro @(macroJaRodou && !_validandoMacro ? "ja-validado" : "")" @onclick="() => PedirSenha(ValidarComSenha)" disabled="@(_validandoMacro || macroJaRodou)"
                                         title="@(macroJaRodou ? "Já validado — só roda de novo se a FPD for editada e reenviada" : "Roda a validação automática só pra este desembolso")">
                                     @if (_validandoMacro)
                                     {
@@ -326,9 +326,9 @@
                                         <FioComentario Comentarios="@v.Comentarios" ApenasLeitura="@(_apenasLeitura || _bloqueadoPorResponsavel || (!ServicoUsuario.EhGigov && !macroJaRodou))"
                                                        ApenasInformativo="@ServicoUsuario.EhGigov"
                                                        OcultarJustificativa="@(!ServicoUsuario.EhGigov)"
-                                                       AoAdicionarComentario="@(c => AdicionarComentario(v.CoValidacao, c))"
-                                                       AoEditarComentario="@(c => EditarComentario(v.CoValidacao, c))"
-                                                       AoRemoverComentario="@(c => RemoverComentario(v.CoValidacao, c))" />
+                                                       AoAdicionarComentario="@(c => PedirSenha(senha => AdicionarComentarioComSenha(v.CoValidacao, c, senha)))"
+                                                       AoEditarComentario="@(c => PedirSenha(senha => EditarComentarioComSenha(v.CoValidacao, c, senha)))"
+                                                       AoRemoverComentario="@(c => PedirSenha(senha => RemoverComentarioComSenha(v.CoValidacao, c, senha)))" />
                                     </div>
                                 </div>
                             </div>
@@ -374,7 +374,7 @@
                                             <span></span>
                                             <div class="form-acoes-dir">
                                                 <button class="btn-cancelar" @onclick="CancelarEdicaoMensagemCefga" disabled="@_salvandoMensagemCefga">Cancelar</button>
-                                                <button class="btn-salvar-tratativa" @onclick="SalvarMensagemCefga" disabled="@(_salvandoMensagemCefga || string.IsNullOrWhiteSpace(_mensagemCefgaEdicao))">
+                                                <button class="btn-salvar-tratativa" @onclick="() => PedirSenha(SalvarMensagemCefgaComSenha)" disabled="@(_salvandoMensagemCefga || string.IsNullOrWhiteSpace(_mensagemCefgaEdicao))">
                                                     @if (_salvandoMensagemCefga) { <i class="bi bi-arrow-repeat spin"></i> } else { <i class="bi bi-check2"></i> }
                                                     <span>Salvar</span>
                                                 </button>
@@ -391,7 +391,7 @@
                                             <button class="btn-editar-comentario" @onclick="IniciarEdicaoMensagemCefga" title="Editar">
                                                 <i class="bi bi-pencil"></i>
                                             </button>
-                                            <button class="btn-editar-comentario" @onclick="RemoverMensagemCefga" title="Remover">
+                                            <button class="btn-editar-comentario" @onclick="() => PedirSenha(RemoverMensagemCefgaComSenha)" title="Remover">
                                                 <i class="bi bi-trash3"></i>
                                             </button>
                                         </div>
@@ -469,7 +469,7 @@
                                   @bind="_motivoCancelamento" @bind:event="oninput"></textarea>
                     </div>
                     <button class="btn-recusar-cancelar" @onclick="CancelarModoCancelamento">Voltar</button>
-                    <button class="btn-recusar" @onclick="ConfirmarCancelamento"
+                    <button class="btn-recusar" @onclick="() => PedirSenha(ConfirmarCancelamentoComSenha)"
                             disabled="@(string.IsNullOrWhiteSpace(_motivoCancelamento) || _processandoAcao)">
                         <i class="bi bi-slash-circle"></i> Confirmar cancelamento
                     </button>
@@ -481,7 +481,7 @@
                                   @bind="_justificativaRejeicao" @bind:event="oninput"></textarea>
                     </div>
                     <button class="btn-recusar-cancelar" @onclick="CancelarRejeicao">Cancelar</button>
-                    <button class="btn-recusar" @onclick="RejeitarDesembolso"
+                    <button class="btn-recusar" @onclick="() => PedirSenha(RejeitarDesembolsoComSenha)"
                             disabled="@(string.IsNullOrWhiteSpace(_justificativaRejeicao) || _processandoAcao)">
                         <i class="bi bi-x-circle"></i> Confirmar rejeição
                     </button>
@@ -527,7 +527,7 @@
                         <button class="btn-recusar" @onclick="() => _modoRejeicao = true" disabled="@_processandoAcao">
                             <i class="bi bi-x-circle"></i> Recusar desembolso
                         </button>
-                        <button class="btn-aprovar" disabled="@(!podeAprovar || _processandoAcao)" @onclick="AprovarDesembolso">
+                        <button class="btn-aprovar" disabled="@(!podeAprovar || _processandoAcao)" @onclick="() => PedirSenha(AprovarDesembolsoComSenha)">
                             @if (_processandoAcao)
                             {
                                 <i class="bi bi-arrow-repeat spinner"></i>
@@ -580,11 +580,11 @@
                       AoSalvar="AoSalvarEdicaoFpd" />
 }
 
-@if (_dialogSenhaValidarAberto)
+@if (_dialogSenhaAcaoAberto)
 {
     <DialogSenhaBaixa SenhaParaDrp="false"
-                      AoCancelar="() => _dialogSenhaValidarAberto = false"
-                      AoConfirmar="ConfirmarValidacaoComSenha" />
+                      AoCancelar="() => _dialogSenhaAcaoAberto = false"
+                      AoConfirmar="ConfirmarAcaoComSenha" />
 }
 
 @code {
@@ -652,10 +652,30 @@
     private bool _modoCancelamento;
     private bool _processandoAcao;
     private bool _validandoMacro;
-    private bool _dialogSenhaValidarAberto;
+    private bool _dialogSenhaAcaoAberto;
+    private Func<string, Task>? _acaoPendenteComSenha;
     private string _justificativaRejeicao = "";
     private string _motivoCancelamento = "";
     private bool _editarFpdAberto;
+
+    // Toda ação que muda dado (aprovar, rejeitar, comentar, vincular, etc.)
+    // agora exige senha — a matrícula de quem age é identificada pela
+    // plataforma a partir dela, não é mais enviada daqui. Um só dialog
+    // reaproveitado pra todas, guardando a ação a rodar quando confirmar.
+    private void PedirSenha(Func<string, Task> acao)
+    {
+        _acaoPendenteComSenha = acao;
+        _dialogSenhaAcaoAberto = true;
+    }
+
+    private async Task ConfirmarAcaoComSenha(string senha)
+    {
+        _dialogSenhaAcaoAberto = false;
+        var acao = _acaoPendenteComSenha;
+        _acaoPendenteComSenha = null;
+        if (acao is not null)
+            await acao(senha);
+    }
 
     private void CancelarModoCancelamento()
     {
@@ -663,7 +683,7 @@
         _motivoCancelamento = "";
     }
 
-    private async Task ConfirmarCancelamento()
+    private async Task ConfirmarCancelamentoComSenha(string senha)
     {
         if (string.IsNullOrWhiteSpace(_motivoCancelamento))
         {
@@ -674,7 +694,7 @@
         StateHasChanged();
         try
         {
-            var ok = await Service.CancelarAsync(Desembolso.Id, ServicoUsuario.Matricula, ServicoUsuario.Nome, _motivoCancelamento);
+            var ok = await Service.CancelarAsync(Desembolso.Id, ServicoUsuario.Nome, _motivoCancelamento, senha);
             Snackbar.Add(ok ? "Desembolso cancelado com sucesso." : "Não foi possível cancelar o desembolso.",
                 ok ? Severity.Success : Severity.Error);
         }
@@ -735,14 +755,14 @@
         _mensagemCefgaEdicao = _detalhe?.MensagemCefga ?? "";
     }
 
-    private async Task SalvarMensagemCefga()
+    private async Task SalvarMensagemCefgaComSenha(string senha)
     {
         if (_detalhe is null || string.IsNullOrWhiteSpace(_mensagemCefgaEdicao)) return;
         _salvandoMensagemCefga = true;
         StateHasChanged();
         try
         {
-            var ok = await Service.AtualizarMensagemCefgaAsync(Desembolso.Id, _mensagemCefgaEdicao, ServicoUsuario.Matricula);
+            var ok = await Service.AtualizarMensagemCefgaAsync(Desembolso.Id, _mensagemCefgaEdicao, senha);
             Snackbar.Add(ok ? "OBS CEFGA salvo com sucesso." : "Não foi possível salvar o OBS CEFGA.",
                 ok ? Severity.Success : Severity.Error);
         }
@@ -759,14 +779,14 @@
         await CarregarDetalheAsync();
     }
 
-    private async Task RemoverMensagemCefga()
+    private async Task RemoverMensagemCefgaComSenha(string senha)
     {
         if (_detalhe is null) return;
         _salvandoMensagemCefga = true;
         StateHasChanged();
         try
         {
-            var ok = await Service.AtualizarMensagemCefgaAsync(Desembolso.Id, "", ServicoUsuario.Matricula);
+            var ok = await Service.AtualizarMensagemCefgaAsync(Desembolso.Id, "", senha);
             Snackbar.Add(ok ? "OBS CEFGA removido." : "Não foi possível remover o OBS CEFGA.",
                 ok ? Severity.Success : Severity.Error);
         }
@@ -913,15 +933,14 @@
         return eventos;
     }
 
-    private async Task ConfirmarValidacaoComSenha(string senha)
+    private async Task ValidarComSenha(string senha)
     {
-        _dialogSenhaValidarAberto = false;
         if (_validandoMacro) return;
         _validandoMacro = true;
         StateHasChanged();
         try
         {
-            await Service.ValidarAsync(Desembolso.Id, ServicoUsuario.Matricula, senha);
+            await Service.ValidarAsync(Desembolso.Id, senha);
             await CarregarDetalheAsync();
         }
         catch (Exception ex) { Console.WriteLine($"[DialogFPD] Validar automaticamente: {ex.Message}"); }
@@ -941,12 +960,12 @@
     private async Task FecharDialog() => await AoFechar.InvokeAsync();
 
 
-    private async Task AdicionarComentario(int coValidacao, Comentario c)
+    private async Task AdicionarComentarioComSenha(int coValidacao, Comentario c, string senha)
     {
         try
         {
             var resposta = await Service.AdicionarComentarioAsync(Desembolso.Id, coValidacao, c.Texto,
-                c.Tipo, ServicoUsuario.Matricula, ServicoUsuario.Nome, ServicoUsuario.UnidadeUsuario);
+                c.Tipo, ServicoUsuario.Matricula, ServicoUsuario.Nome, ServicoUsuario.UnidadeUsuario, senha);
             if (resposta.IsSuccessStatusCode)
                 Snackbar.Add("Comentário adicionado com sucesso.", Severity.Success);
             else
@@ -965,11 +984,11 @@
     }
 
 
-    private async Task EditarComentario(int coValidacao, Comentario editado)
+    private async Task EditarComentarioComSenha(int coValidacao, Comentario editado, string senha)
     {
         try
         {
-            var resposta = await Service.EditarComentarioAsync(Desembolso.Id, coValidacao, editado.Id, editado.Texto, ServicoUsuario.Matricula);
+            var resposta = await Service.EditarComentarioAsync(Desembolso.Id, coValidacao, editado.Id, editado.Texto, ServicoUsuario.Matricula, senha);
             if (resposta.IsSuccessStatusCode)
                 Snackbar.Add("Comentário editado com sucesso.", Severity.Success);
             else
@@ -983,11 +1002,11 @@
         finally { await CarregarDetalheAsync(); }
     }
 
-    private async Task RemoverComentario(int coValidacao, Comentario c)
+    private async Task RemoverComentarioComSenha(int coValidacao, Comentario c, string senha)
     {
         try
         {
-            var resposta = await Service.RemoverComentarioAsync(Desembolso.Id, coValidacao, c.Id, ServicoUsuario.Matricula);
+            var resposta = await Service.RemoverComentarioAsync(Desembolso.Id, coValidacao, c.Id, ServicoUsuario.Matricula, senha);
             if (resposta.IsSuccessStatusCode)
                 Snackbar.Add("Comentário removido com sucesso.", Severity.Success);
             else
@@ -1005,13 +1024,13 @@
         finally { await CarregarDetalheAsync(); }
     }
 
-    private async Task AprovarDesembolso()
+    private async Task AprovarDesembolsoComSenha(string senha)
     {
         _processandoAcao = true;
         StateHasChanged();
         try
         {
-            var resposta = await Service.AprovarAsync(Desembolso.Id, ServicoUsuario.Matricula, ServicoUsuario.Nome);
+            var resposta = await Service.AprovarAsync(Desembolso.Id, ServicoUsuario.Nome, senha);
             var ok = resposta.IsSuccessStatusCode;
             Snackbar.Add(ok ? "Desembolso aprovado com sucesso." : await ControleAnaliseDesembolsoService.ExtrairMensagemDeErroAsync(resposta),
                 ok ? Severity.Success : Severity.Error);
@@ -1031,7 +1050,7 @@
         _justificativaRejeicao = "";
     }
 
-    private async Task RejeitarDesembolso()
+    private async Task RejeitarDesembolsoComSenha(string senha)
     {
         if (string.IsNullOrWhiteSpace(_justificativaRejeicao))
         {
@@ -1042,7 +1061,7 @@
         StateHasChanged();
         try
         {
-            var ok = await Service.RejeitarAsync(Desembolso.Id, ServicoUsuario.Matricula, ServicoUsuario.Nome, "CEFGA06", _justificativaRejeicao);
+            var ok = await Service.RejeitarAsync(Desembolso.Id, ServicoUsuario.Nome, "CEFGA06", senha, _justificativaRejeicao);
             Snackbar.Add(ok ? "Desembolso rejeitado com sucesso." : "Não foi possível rejeitar o desembolso.",
                 ok ? Severity.Success : Severity.Error);
         }

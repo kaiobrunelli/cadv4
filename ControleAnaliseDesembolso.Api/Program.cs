@@ -44,6 +44,10 @@ builder.Services.AddScoped<IRepositorioValidacaoControle, RepositorioValidacaoCo
 
 builder.Services.AddScoped<ISiapfService, SiapfServiceMock>();
 
+// TODO: trocar pela implementação real da plataforma assim que existir —
+// ver comentário em PlataformaOperacionalServiceTemporario.
+builder.Services.AddScoped<IPlataformaOperacionalService, PlataformaOperacionalServiceTemporario>();
+
 builder.Services.AddScoped<IAplicacaoService, AplicacaoService>();
 
 builder.Services.AddScoped<INotificacaoService>(provider =>

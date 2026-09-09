@@ -15,18 +15,23 @@ namespace ControleAnaliseDesembolso.Interface
         Task RemoverComentario(int coRegistroValidacao, string matriculaSolicitante, PedidoDeAutomacao pedidoAutomacao, CancellationToken cancellationToken = default);
         Task ValidarDesembolso(int coControleDesembolso, PedidoDeAutomacao pedidoAutomacao, CancellationToken cancellationToken = default);
         Task ValidarTodosPendentes(PedidoDeAutomacao pedidoAutomacao, CancellationToken cancellationToken = default);
-        Task<List<DesembolsoResponse>> ObterTodosDesembolsos(CancellationToken cancellationToken = default);
+
+        // Sem PedidoDeAutomacao (não são ações/automação) — o usuário vem de
+        // Usuario, identificado pela plataforma (ver AplicacaoService._usuario),
+        // só pra trilha de auditoria de quem consultou.
+        Task<List<DesembolsoResponse>> ObterTodosDesembolsos(Usuario usuario, CancellationToken cancellationToken = default);
+        Task<List<ValidacaoTemplateResponse>> ObterValidacoesTemplate(Usuario usuario, CancellationToken cancellationToken = default);
+        Task<List<ComentarioValidacaoResponse>> ObterComentarios(int coControleDesembolso, Usuario usuario, CancellationToken cancellationToken = default);
+        Task<DesembolsoDetalheResponse> ObterDetalheDesembolso(int coControleDesembolso, Usuario usuario, CancellationToken cancellationToken = default);
+        Task<List<RegistroDrpResponse>> ObterRegistrosDrp(Usuario usuario, CancellationToken cancellationToken = default);
+
         Task VincularResponsavel(int coControleDesembolso, string? matriculaResponsavel, PedidoDeAutomacao pedidoAutomacao, CancellationToken cancellationToken = default);
-        Task<List<ValidacaoTemplateResponse>> ObterValidacoesTemplate(CancellationToken cancellationToken = default);
-        Task<List<ComentarioValidacaoResponse>> ObterComentarios(int coControleDesembolso, CancellationToken cancellationToken = default);
-        Task<DesembolsoDetalheResponse> ObterDetalheDesembolso(int coControleDesembolso, CancellationToken cancellationToken = default);
         Task AprovarDesembolso(int coControleDesembolso, AprovarDesembolsoRequest request, PedidoDeAutomacao pedidoAutomacao, CancellationToken cancellationToken = default);
         Task BaixarDRP(int coControleDesembolso, PedidoDeAutomacao pedidoAutomacao, CancellationToken cancellationToken = default);
         Task RejeitarDesembolso(int coControleDesembolso, RejeitarDesembolsoRequest request, PedidoDeAutomacao pedidoAutomacao, CancellationToken cancellationToken = default);
         Task CancelarDesembolso(int coControleDesembolso, CancelarDesembolsoRequest request, PedidoDeAutomacao pedidoAutomacao, CancellationToken cancellationToken = default);
         Task AtualizarMensagemCefga(int coControleDesembolso, AtualizarMensagemCefgaRequest request, PedidoDeAutomacao pedidoAutomacao, CancellationToken cancellationToken = default);
         Task<List<ConferenciaCampoResponse>> ExecutarConferenciaCampos(int coControleDesembolso, PedidoDeAutomacao pedidoAutomacao, CancellationToken cancellationToken = default);
-        Task<List<RegistroDrpResponse>> ObterRegistrosDrp(CancellationToken cancellationToken = default);
         Task BaixarDrpEmLote(BaixarDrpRequest request, PedidoDeAutomacao pedidoAutomacao, CancellationToken cancellationToken = default);
     }
 }

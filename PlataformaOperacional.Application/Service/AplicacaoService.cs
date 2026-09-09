@@ -4,6 +4,7 @@ using ControleAnaliseDesembolso.Application.Interface;
 using ControleAnaliseDesembolso.Domain.Entitys;
 using ControleAnaliseDesembolso.Interface;
 using PlataformaOperacional.Application.Service.Interface;
+using RedeCaixaUtilitario.Application.Interface;
 using RedeCaixaUtilitario.Domain.Model;
 
 namespace PlataformaOperacional.Application.Service
@@ -13,25 +14,32 @@ namespace PlataformaOperacional.Application.Service
         private readonly IControleAnaliseDesembolsoService _controleAnaliseDesembolso;
         private readonly IFichaPedidoDesembolsoService _fichaPedidoDesembolso;
         private readonly IEmpregadoCADService _empregados;
+        private readonly IPlataformaOperacionalService _plataformaService;
+
+        private Usuario _usuario => _plataformaService.IdentificarUsuario();
 
         public AplicacaoService(
             IControleAnaliseDesembolsoService controleAnaliseDesembolso,
             IFichaPedidoDesembolsoService fichaPedidoDesembolso,
-            IEmpregadoCADService empregados)
+            IEmpregadoCADService empregados,
+            IPlataformaOperacionalService plataformaService)
         {
             _controleAnaliseDesembolso = controleAnaliseDesembolso;
             _fichaPedidoDesembolso = fichaPedidoDesembolso;
             _empregados = empregados;
+            _plataformaService = plataformaService;
         }
 
         #region Controle Análise Desembolso
 
+        // Endpoints sem PedidoDeAutomacao: o usuário vem direto de _usuario
+        // (identificado pela plataforma), não de argumento do controller.
         public async Task<List<DesembolsoResponse>> ObterTodosDesembolsos(CancellationToken cancellationToken = default)
-            => await _controleAnaliseDesembolso.ObterTodosDesembolsos(cancellationToken);
+            => await _controleAnaliseDesembolso.ObterTodosDesembolsos(_usuario, cancellationToken);
         public async Task<DesembolsoDetalheResponse> ObterDetalheDesembolso(int coControleDesembolso, CancellationToken cancellationToken = default)
-            => await _controleAnaliseDesembolso.ObterDetalheDesembolso(coControleDesembolso, cancellationToken);
+            => await _controleAnaliseDesembolso.ObterDetalheDesembolso(coControleDesembolso, _usuario, cancellationToken);
         public async Task<List<ComentarioValidacaoResponse>> ObterComentarios(int coControleDesembolso, CancellationToken cancellationToken = default)
-            => await _controleAnaliseDesembolso.ObterComentarios(coControleDesembolso, cancellationToken);
+            => await _controleAnaliseDesembolso.ObterComentarios(coControleDesembolso, _usuario, cancellationToken);
         public async Task AdicionarComentario(ValidacaoDesembolsoRequest request, PedidoDeAutomacao pedidoAutomacao, CancellationToken cancellationToken = default)
             => await _controleAnaliseDesembolso.AdicionarComentario(request, pedidoAutomacao, cancellationToken);
         public async Task EditarComentario(EditarComentarioRequest request, PedidoDeAutomacao pedidoAutomacao, CancellationToken cancellationToken = default)
@@ -60,7 +68,7 @@ namespace PlataformaOperacional.Application.Service
         public async Task ValidarTodosPendentes(PedidoDeAutomacao pedidoAutomacao, CancellationToken cancellationToken = default)
             => await _controleAnaliseDesembolso.ValidarTodosPendentes(pedidoAutomacao, cancellationToken);
         public async Task<List<ValidacaoTemplateResponse>> ObterValidacoesTemplate(CancellationToken cancellationToken = default)
-            => await _controleAnaliseDesembolso.ObterValidacoesTemplate(cancellationToken);
+            => await _controleAnaliseDesembolso.ObterValidacoesTemplate(_usuario, cancellationToken);
         public async Task<PedidoConsultaContratoAfResponse> SolicitarDadosFPD(PedidoConsultaContratoAfRequest pedido, CancellationToken cancellationToken = default)
             => await _fichaPedidoDesembolso.SolicitarDadosFPD(pedido, cancellationToken);
         public async Task CriarFichaPedidoDesembolso(PedidoDesembolsoRequest request, PedidoDeAutomacao pedidoAutomacao, CancellationToken cancellationToken = default)
@@ -68,7 +76,7 @@ namespace PlataformaOperacional.Application.Service
         public async Task ReenviarFichaPedidoDesembolso(int coFpd, PedidoDesembolsoRequest request, PedidoDeAutomacao pedidoAutomacao, CancellationToken cancellationToken = default)
             => await _controleAnaliseDesembolso.ReenviarFichaPedidoDesembolso(coFpd, request, pedidoAutomacao, cancellationToken);
         public async Task<List<RegistroDrpResponse>> ObterRegistrosDrp(CancellationToken cancellationToken = default)
-            => await _controleAnaliseDesembolso.ObterRegistrosDrp(cancellationToken);
+            => await _controleAnaliseDesembolso.ObterRegistrosDrp(_usuario, cancellationToken);
         public async Task BaixarDrpEmLote(BaixarDrpRequest request, PedidoDeAutomacao pedidoAutomacao, CancellationToken cancellationToken = default)
             => await _controleAnaliseDesembolso.BaixarDrpEmLote(request, pedidoAutomacao, cancellationToken);
 

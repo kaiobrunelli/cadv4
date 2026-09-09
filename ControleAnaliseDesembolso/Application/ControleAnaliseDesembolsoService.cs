@@ -90,7 +90,7 @@ namespace ControleAnaliseDesembolso.Application
             return fpd.ControleDesembolso.ResponsavelAnalise;
         }
 
-        public async Task<List<ComentarioValidacaoResponse>> ObterComentarios(int coControleDesembolso, CancellationToken cancellationToken = default)
+        public async Task<List<ComentarioValidacaoResponse>> ObterComentarios(int coControleDesembolso, Usuario usuario, CancellationToken cancellationToken = default)
         {
             var existe = await _repositorioControle.ExisteControleDesembolso(coControleDesembolso, cancellationToken);
             if (!existe)
@@ -99,7 +99,7 @@ namespace ControleAnaliseDesembolso.Application
             return await _repositorioMensagem.ObterComentario(coControleDesembolso, cancellationToken);
         }
 
-        public async Task<DesembolsoDetalheResponse> ObterDetalheDesembolso(int coControleDesembolso, CancellationToken cancellationToken = default)
+        public async Task<DesembolsoDetalheResponse> ObterDetalheDesembolso(int coControleDesembolso, Usuario usuario, CancellationToken cancellationToken = default)
         {
             var desembolso = await _repositorioControle.ObterControleDesembolsoCompleto(coControleDesembolso, cancellationToken);
 
@@ -725,12 +725,15 @@ namespace ControleAnaliseDesembolso.Application
             }
         }
 
-        public async Task<List<DesembolsoResponse>> ObterTodosDesembolsos(CancellationToken cancellationToken = default)
+        public async Task<List<DesembolsoResponse>> ObterTodosDesembolsos(Usuario usuario, CancellationToken cancellationToken = default)
         {
             var desembolsos = await _context.ControleDesembolso
                 .Include(x => x.Desembolso)
                 .Include(x => x.ValidacaoControleDesembolso)
                 .ToListAsync(cancellationToken);
+
+            RegistrarAuditoria(usuario?.Matricula, "Consultar", "Consultou a lista de desembolsos");
+            await _context.SaveChangesAsync(cancellationToken);
 
             return desembolsos.Select(d =>
             {
@@ -894,7 +897,7 @@ namespace ControleAnaliseDesembolso.Application
                     "Você só pode se atribuir ou se remover como responsável pela análise deste desembolso.");
         }
 
-        public async Task<List<ValidacaoTemplateResponse>> ObterValidacoesTemplate(CancellationToken cancellationToken = default)
+        public async Task<List<ValidacaoTemplateResponse>> ObterValidacoesTemplate(Usuario usuario, CancellationToken cancellationToken = default)
         {
             return await _context.Validacao
                 .Where(x => !x.Desativado)
@@ -928,7 +931,7 @@ namespace ControleAnaliseDesembolso.Application
 
             desembolso.StatusDesembolso = TipoStatusDesembolso.DESEMBOLSAR;
             desembolso.DtConclusao = DateTime.Now;
-            desembolso.ResponsavelBaixa = pedidoAutomacao.Usuario?.Matricula ?? request.MatriculaUsuario;
+            desembolso.ResponsavelBaixa = pedidoAutomacao.Usuario?.Matricula;
 
             RegistrarAuditoria(pedidoAutomacao.Usuario?.Matricula, "Aprovar desembolso",
                 $"Aprovou o desembolso {coControleDesembolso}, aguardando baixa da DRP");
@@ -961,7 +964,7 @@ namespace ControleAnaliseDesembolso.Application
 
         }
 
-        public async Task<List<RegistroDrpResponse>> ObterRegistrosDrp(CancellationToken cancellationToken = default)
+        public async Task<List<RegistroDrpResponse>> ObterRegistrosDrp(Usuario usuario, CancellationToken cancellationToken = default)
         {
             var desembolsos = await _context.ControleDesembolso
                 .Include(x => x.Desembolso)
@@ -991,7 +994,7 @@ namespace ControleAnaliseDesembolso.Application
             if (request.Ids.Count == 0)
                 throw new Exception("Nenhum registro selecionado para baixa.");
 
-            var matriculaUsuario = pedidoAutomacao.Usuario?.Matricula ?? request.MatriculaUsuario;
+            var matriculaUsuario = pedidoAutomacao.Usuario?.Matricula;
 
             if (string.IsNullOrWhiteSpace(matriculaUsuario))
                 throw new Exception("Matrícula do usuário é obrigatória para confirmar a baixa.");
@@ -1032,7 +1035,7 @@ namespace ControleAnaliseDesembolso.Application
 
             desembolso.StatusDesembolso = TipoStatusDesembolso.REJEITADO;
             desembolso.DtConclusao = DateTime.Now;
-            desembolso.ResponsavelBaixa = pedidoAutomacao.Usuario?.Matricula ?? request.MatriculaUsuario;
+            desembolso.ResponsavelBaixa = pedidoAutomacao.Usuario?.Matricula;
             desembolso.Desembolso.MotivoRejeicao = request.Justificativa.Trim();
 
             RegistrarAuditoria(pedidoAutomacao.Usuario?.Matricula, "Rejeitar desembolso",

@@ -103,49 +103,54 @@ public class ControleAnaliseDesembolsoService(IHttpClientFactory httpClientFacto
         }
     }
 
-    public async Task<HttpResponseMessage> AprovarAsync(string id, string matriculaUsuario, string usuarioNome)
+    // A partir daqui: a matrícula de quem está agindo não é mais enviada pelo
+    // client — quem identifica é a plataforma (IPlataformaOperacionalService,
+    // no backend), a partir da senha informada aqui. "senha" sempre vai como
+    // query string (?senha=...), nunca no corpo.
+
+    public async Task<HttpResponseMessage> AprovarAsync(string id, string usuarioNome, string senha)
     {
-        var req = new { MatriculaUsuario = matriculaUsuario, UsuarioNome = usuarioNome };
-        return await _httpClient.PutAsJsonAsync($"api/Aprovar/{id}", req);
+        var req = new { UsuarioNome = usuarioNome };
+        return await _httpClient.PutAsJsonAsync($"api/Aprovar/{id}?senha={Uri.EscapeDataString(senha)}", req);
     }
 
-    public async Task<bool> RejeitarAsync(string id, string matriculaUsuario, string usuarioNome, string codigoCoordenacao, string justificativa = "")
+    public async Task<bool> RejeitarAsync(string id, string usuarioNome, string codigoCoordenacao, string senha, string justificativa = "")
     {
-        var req = new { MatriculaUsuario = matriculaUsuario, UsuarioNome = usuarioNome, CodigoCoordenacao = codigoCoordenacao, Justificativa = justificativa };
-        var resposta = await _httpClient.PutAsJsonAsync($"api/Rejeitar/{id}", req);
+        var req = new { UsuarioNome = usuarioNome, CodigoCoordenacao = codigoCoordenacao, Justificativa = justificativa };
+        var resposta = await _httpClient.PutAsJsonAsync($"api/Rejeitar/{id}?senha={Uri.EscapeDataString(senha)}", req);
         return resposta.IsSuccessStatusCode;
     }
 
-    public async Task<bool> CancelarAsync(string id, string matriculaUsuario, string usuarioNome, string motivo)
+    public async Task<bool> CancelarAsync(string id, string usuarioNome, string motivo, string senha)
     {
-        var req = new { MatriculaUsuario = matriculaUsuario, UsuarioNome = usuarioNome, Motivo = motivo };
-        var resposta = await _httpClient.PutAsJsonAsync($"api/Cancelar/{id}", req);
+        var req = new { UsuarioNome = usuarioNome, Motivo = motivo };
+        var resposta = await _httpClient.PutAsJsonAsync($"api/Cancelar/{id}?senha={Uri.EscapeDataString(senha)}", req);
         return resposta.IsSuccessStatusCode;
     }
 
-    public async Task<bool> AtualizarMensagemCefgaAsync(string id, string mensagemCefga, string matriculaUsuario)
+    public async Task<bool> AtualizarMensagemCefgaAsync(string id, string mensagemCefga, string senha)
     {
-        var req = new { MensagemCefga = mensagemCefga, MatriculaUsuario = matriculaUsuario };
-        var resposta = await _httpClient.PutAsJsonAsync($"api/AtualizarMensagemCefga/{id}", req);
+        var req = new { MensagemCefga = mensagemCefga };
+        var resposta = await _httpClient.PutAsJsonAsync($"api/AtualizarMensagemCefga/{id}?senha={Uri.EscapeDataString(senha)}", req);
         return resposta.IsSuccessStatusCode;
     }
 
-    public async Task<List<ConferenciaCampoDto>> ExecutarConferenciaCamposAsync(string id)
+    public async Task<List<ConferenciaCampoDto>> ExecutarConferenciaCamposAsync(string id, string senha)
     {
-        var resposta = await _httpClient.PostAsync($"api/ExecutarConferenciaCampos/{id}", null);
+        var resposta = await _httpClient.PostAsync($"api/ExecutarConferenciaCampos/{id}?senha={Uri.EscapeDataString(senha)}", null);
         if (!resposta.IsSuccessStatusCode) return [];
         return await resposta.Content.ReadFromJsonAsync<List<ConferenciaCampoDto>>() ?? [];
     }
 
-    public async Task<bool> VincularAnalistaAsync(string id, string? matriculaAnalista)
+    public async Task<bool> VincularAnalistaAsync(string id, string? matriculaAnalista, string senha)
     {
-        var resposta = await _httpClient.PutAsJsonAsync($"api/VincularResponsavel/{id}", matriculaAnalista);
+        var resposta = await _httpClient.PutAsJsonAsync($"api/VincularResponsavel/{id}?senha={Uri.EscapeDataString(senha)}", matriculaAnalista);
         return resposta.IsSuccessStatusCode;
     }
 
-    public async Task<bool> RemoverVinculoAsync(string id)
+    public async Task<bool> RemoverVinculoAsync(string id, string senha)
     {
-        var resposta = await _httpClient.PutAsync($"api/RemoverResponsavel/{id}", null);
+        var resposta = await _httpClient.PutAsync($"api/RemoverResponsavel/{id}?senha={Uri.EscapeDataString(senha)}", null);
         return resposta.IsSuccessStatusCode;
     }
 
@@ -156,17 +161,15 @@ public class ControleAnaliseDesembolsoService(IHttpClientFactory httpClientFacto
         return lista ?? [];
     }
 
-    public async Task<bool> ValidarAsync(string id, string matriculaUsuario, string senha)
+    public async Task<bool> ValidarAsync(string id, string senha)
     {
-        var req = new { MatriculaUsuario = matriculaUsuario, Senha = senha };
-        var resposta = await _httpClient.PostAsJsonAsync($"api/Validar/{id}", req);
+        var resposta = await _httpClient.PostAsync($"api/Validar/{id}?senha={Uri.EscapeDataString(senha)}", null);
         return resposta.IsSuccessStatusCode;
     }
 
-    public async Task<bool> ValidarTodosPendentesAsync(string matriculaUsuario, string senha)
+    public async Task<bool> ValidarTodosPendentesAsync(string senha)
     {
-        var req = new { MatriculaUsuario = matriculaUsuario, Senha = senha };
-        var resposta = await _httpClient.PostAsJsonAsync("api/ValidarTodosPendentes", req);
+        var resposta = await _httpClient.PostAsync($"api/ValidarTodosPendentes?senha={Uri.EscapeDataString(senha)}", null);
         return resposta.IsSuccessStatusCode;
     }
 
@@ -176,30 +179,34 @@ public class ControleAnaliseDesembolsoService(IHttpClientFactory httpClientFacto
         return lista ?? [];
     }
 
-    public async Task<HttpResponseMessage> AdicionarComentarioAsync(string coDesembolso, int coValidacao, string texto, string tipoRegistro, string matriculaAutor, string nomeAutor, int unidadeAutor)
+    public async Task<HttpResponseMessage> AdicionarComentarioAsync(
+        string coDesembolso, int coValidacao, string texto, string tipoRegistro, string matriculaAutor, string nomeAutor, int unidadeAutor, string senha)
     {
         var req = new { DeMensagem = texto, TipoMensagem = tipoRegistro, MatriculaAutor = matriculaAutor, NomeAutor = nomeAutor, UnidadeAutor = unidadeAutor };
-        return await _httpClient.PostAsJsonAsync($"api/AdicionarComentario?coControleDesembolso={coDesembolso}&coValidacao={coValidacao}", req);
+        return await _httpClient.PostAsJsonAsync(
+            $"api/AdicionarComentario?coControleDesembolso={coDesembolso}&coValidacao={coValidacao}&senha={Uri.EscapeDataString(senha)}", req);
     }
 
-
-    public async Task<HttpResponseMessage> EditarComentarioAsync(string coDesembolso, int coValidacao, int comentarioId, string novoTexto, string matriculaSolicitante)
+    public async Task<HttpResponseMessage> EditarComentarioAsync(
+        string coDesembolso, int coValidacao, int comentarioId, string novoTexto, string matriculaSolicitante, string senha)
     {
         var req = new { DeMensagem = novoTexto, MatriculaSolicitante = matriculaSolicitante };
-        return await _httpClient.PutAsJsonAsync($"api/EditarComentario/{comentarioId}", req);
+        return await _httpClient.PutAsJsonAsync($"api/EditarComentario/{comentarioId}?senha={Uri.EscapeDataString(senha)}", req);
     }
 
-    public async Task<HttpResponseMessage> RemoverComentarioAsync(string coDesembolso, int coValidacao, int coComentario, string matriculaSolicitante)
+    public async Task<HttpResponseMessage> RemoverComentarioAsync(
+        string coDesembolso, int coValidacao, int coComentario, string matriculaSolicitante, string senha)
     {
-        var req = new { CoValidacao = coValidacao, CoControleDesembolso = coDesembolso, MatriculaSolicitante = matriculaSolicitante };
-        return await _httpClient.PutAsJsonAsync($"api/RemoverComentario/{coComentario}?matriculaSolicitante={Uri.EscapeDataString(matriculaSolicitante)}", req);
+        return await _httpClient.PutAsync(
+            $"api/RemoverComentario/{coComentario}?matriculaSolicitante={Uri.EscapeDataString(matriculaSolicitante)}&senha={Uri.EscapeDataString(senha)}",
+            null);
     }
 
-    public async Task<HttpResponseMessage> CriarFichaPedidoDesembolsoAsync(object request) =>
-        await _httpClient.PostAsJsonAsync("api/CriarFichaPedidoDesembolso", request);
+    public async Task<HttpResponseMessage> CriarFichaPedidoDesembolsoAsync(object request, string senha) =>
+        await _httpClient.PostAsJsonAsync($"api/CriarFichaPedidoDesembolso?senha={Uri.EscapeDataString(senha)}", request);
 
-    public async Task<HttpResponseMessage> ReenviarFichaAsync(int coFpd, object request) =>
-        await _httpClient.PutAsJsonAsync($"api/ReenviarFicha/{coFpd}", request);
+    public async Task<HttpResponseMessage> ReenviarFichaAsync(int coFpd, object request, string senha) =>
+        await _httpClient.PutAsJsonAsync($"api/ReenviarFicha/{coFpd}?senha={Uri.EscapeDataString(senha)}", request);
 
     public async Task<bool> ExecutarProcessamentoAsync()
     {
@@ -216,10 +223,10 @@ public class ControleAnaliseDesembolsoService(IHttpClientFactory httpClientFacto
         return lista ?? [];
     }
 
-    public async Task<bool> BaixarDrpAsync(List<int> ids, string matriculaUsuario, string senha)
+    public async Task<bool> BaixarDrpAsync(List<int> ids, string senha)
     {
-        var req = new { Ids = ids, MatriculaUsuario = matriculaUsuario, Senha = senha };
-        var resposta = await _httpClient.PutAsJsonAsync("api/BaixarDrp", req);
+        var req = new { Ids = ids };
+        var resposta = await _httpClient.PutAsJsonAsync($"api/BaixarDrp?senha={Uri.EscapeDataString(senha)}", req);
         return resposta.IsSuccessStatusCode;
     }
 

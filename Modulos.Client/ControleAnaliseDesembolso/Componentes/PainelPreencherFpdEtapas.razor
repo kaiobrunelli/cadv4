@@ -288,6 +288,13 @@
     </div>
 </div>
 
+@if (_dialogSenhaAcaoAberto)
+{
+    <DialogSenhaBaixa SenhaParaDrp="false"
+                      AoCancelar="() => _dialogSenhaAcaoAberto = false"
+                      AoConfirmar="ConfirmarAcaoComSenha" />
+}
+
 @code {
 
     [Parameter, EditorRequired] public EventCallback AoVoltar { get; set; }
@@ -432,38 +439,47 @@
         StateHasChanged();
     }
 
-    private async Task AdicionarComentario(string titulo, Comentario c)
+    private Task AdicionarComentario(string titulo, Comentario c)
     {
         var coValidacao = ResolverCoValidacao(titulo);
         if (coValidacao is null)
         {
             Snackbar.Add("Não foi possível identificar essa validação — o catálogo pode não ter carregado ainda. Tente de novo.", Severity.Error);
-            return;
+            return Task.CompletedTask;
         }
 
-        if (ModoEdicao && _detalheAtual is not null)
-        {
-            try
-            {
-                var resposta = await ControleAnaliseDesembolsoService.AdicionarComentarioAsync(_detalheAtual.CoControleDesembolso.ToString(), coValidacao.Value,
-                    c.Texto, c.Tipo, ServicoUsuario.Matricula, ServicoUsuario.Nome, ServicoUsuario.UnidadeUsuario);
-                if (!resposta.IsSuccessStatusCode)
-                    Snackbar.Add(await ControleAnaliseDesembolsoService.ExtrairMensagemDeErroAsync(resposta), Severity.Error);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[FPD] Adicionar comentário: {ex.Message}");
-                Snackbar.Add("Falha ao salvar o comentário. Tente novamente.", Severity.Error);
-            }
-            await RecarregarDetalheAtual();
-        }
-        else
+        // Ainda criando a FPD (sem ModoEdicao/_detalheAtual): comentário fica só
+        // em memória, vai junto quando a FPD for enviada — não bate na API
+        // agora, então não precisa de senha.
+        if (!ModoEdicao || _detalheAtual is null)
         {
             ObterComentarios(titulo).Add(c);
+            return Task.CompletedTask;
         }
+
+        PedirSenha(senha => AdicionarComentarioComSenha(coValidacao.Value, c, senha));
+        return Task.CompletedTask;
     }
 
-    private async Task EditarComentario(string titulo, Comentario editado)
+    private async Task AdicionarComentarioComSenha(int coValidacao, Comentario c, string senha)
+    {
+        if (_detalheAtual is null) return;
+        try
+        {
+            var resposta = await ControleAnaliseDesembolsoService.AdicionarComentarioAsync(_detalheAtual.CoControleDesembolso.ToString(), coValidacao,
+                c.Texto, c.Tipo, ServicoUsuario.Matricula, ServicoUsuario.Nome, ServicoUsuario.UnidadeUsuario, senha);
+            if (!resposta.IsSuccessStatusCode)
+                Snackbar.Add(await ControleAnaliseDesembolsoService.ExtrairMensagemDeErroAsync(resposta), Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[FPD] Adicionar comentário: {ex.Message}");
+            Snackbar.Add("Falha ao salvar o comentário. Tente novamente.", Severity.Error);
+        }
+        await RecarregarDetalheAtual();
+    }
+
+    private async Task EditarComentarioComSenha(string titulo, Comentario editado, string senha)
     {
         if (!ModoEdicao || _detalheAtual is null) return;
 
@@ -476,7 +492,7 @@
 
         try
         {
-            var resposta = await ControleAnaliseDesembolsoService.EditarComentarioAsync(_detalheAtual.CoControleDesembolso.ToString(), coValidacao.Value, editado.Id, editado.Texto, ServicoUsuario.Matricula);
+            var resposta = await ControleAnaliseDesembolsoService.EditarComentarioAsync(_detalheAtual.CoControleDesembolso.ToString(), coValidacao.Value, editado.Id, editado.Texto, ServicoUsuario.Matricula, senha);
             if (!resposta.IsSuccessStatusCode)
                 Snackbar.Add(await ControleAnaliseDesembolsoService.ExtrairMensagemDeErroAsync(resposta), Severity.Error);
         }
@@ -488,34 +504,42 @@
         await RecarregarDetalheAtual();
     }
 
-    private async Task RemoverComentarioValidacao(string titulo, Comentario c)
+    private Task RemoverComentarioValidacao(string titulo, Comentario c)
     {
         var coValidacao = ResolverCoValidacao(titulo);
         if (coValidacao is null)
         {
             Snackbar.Add("Não foi possível identificar essa validação — o catálogo pode não ter carregado ainda. Tente de novo.", Severity.Error);
-            return;
+            return Task.CompletedTask;
         }
 
-        if (ModoEdicao && _detalheAtual is not null)
-        {
-            try
-            {
-                var resposta = await ControleAnaliseDesembolsoService.RemoverComentarioAsync(_detalheAtual.CoControleDesembolso.ToString(), coValidacao.Value, c.Id, ServicoUsuario.Matricula);
-                if (!resposta.IsSuccessStatusCode)
-                    Snackbar.Add(await ControleAnaliseDesembolsoService.ExtrairMensagemDeErroAsync(resposta), Severity.Error);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[FPD] Remover comentário: {ex.Message}");
-                Snackbar.Add("Falha ao remover o comentário. Tente novamente.", Severity.Error);
-            }
-            await RecarregarDetalheAtual();
-        }
-        else
+        // Mesmo raciocínio do AdicionarComentario: sem FPD criada ainda, é só
+        // memória local, não precisa de senha.
+        if (!ModoEdicao || _detalheAtual is null)
         {
             ObterComentarios(titulo).Remove(c);
+            return Task.CompletedTask;
         }
+
+        PedirSenha(senha => RemoverComentarioValidacaoComSenha(coValidacao.Value, c, senha));
+        return Task.CompletedTask;
+    }
+
+    private async Task RemoverComentarioValidacaoComSenha(int coValidacao, Comentario c, string senha)
+    {
+        if (_detalheAtual is null) return;
+        try
+        {
+            var resposta = await ControleAnaliseDesembolsoService.RemoverComentarioAsync(_detalheAtual.CoControleDesembolso.ToString(), coValidacao, c.Id, ServicoUsuario.Matricula, senha);
+            if (!resposta.IsSuccessStatusCode)
+                Snackbar.Add(await ControleAnaliseDesembolsoService.ExtrairMensagemDeErroAsync(resposta), Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[FPD] Remover comentário: {ex.Message}");
+            Snackbar.Add("Falha ao remover o comentário. Tente novamente.", Severity.Error);
+        }
+        await RecarregarDetalheAtual();
     }
 
     private void PreencherParaEdicao(DesembolsoDetalheDto d)
@@ -683,7 +707,7 @@
                         @extra
                         <FioComentario Comentarios="ObterComentarios(titulo)" ApenasInformativo="true" LimitarUmComentario="true"
                                        AoAdicionarComentario="c => AdicionarComentario(titulo, c)"
-                                       AoEditarComentario="c => EditarComentario(titulo, c)"
+                                       AoEditarComentario="c => PedirSenha(senha => EditarComentarioComSenha(titulo, c, senha))"
                                        AoRemoverComentario="c => RemoverComentarioValidacao(titulo, c)" />
                     </div>
                 </div>
@@ -974,6 +998,28 @@
         return pendentes;
     }
 
+    // Toda ação que muda dado (enviar FPD, comentar) agora exige senha — a
+    // matrícula de quem age é identificada pela plataforma a partir dela, não
+    // é mais montada aqui. Um só dialog reaproveitado, guardando a ação a
+    // rodar quando confirmar.
+    private bool _dialogSenhaAcaoAberto;
+    private Func<string, Task>? _acaoPendenteComSenha;
+
+    private void PedirSenha(Func<string, Task> acao)
+    {
+        _acaoPendenteComSenha = acao;
+        _dialogSenhaAcaoAberto = true;
+    }
+
+    private async Task ConfirmarAcaoComSenha(string senha)
+    {
+        _dialogSenhaAcaoAberto = false;
+        var acao = _acaoPendenteComSenha;
+        _acaoPendenteComSenha = null;
+        if (acao is not null)
+            await acao(senha);
+    }
+
     private async Task Enviar()
     {
         if (_enviando) return;
@@ -995,13 +1041,20 @@
             return;
         }
 
+        PedirSenha(EnviarComSenha);
+    }
+
+    private async Task EnviarComSenha(string senha)
+    {
+        if (_enviando) return;
+
         _enviando = true; _msgErroEnvio = null; StateHasChanged();
         try
         {
             var req = MontarPedidoDesembolso();
             var resposta = ModoEdicao && CoFpd is not null
-                ? await ControleAnaliseDesembolsoService.ReenviarFichaAsync(CoFpd.Value, req)
-                : await ControleAnaliseDesembolsoService.CriarFichaPedidoDesembolsoAsync(req);
+                ? await ControleAnaliseDesembolsoService.ReenviarFichaAsync(CoFpd.Value, req, senha)
+                : await ControleAnaliseDesembolsoService.CriarFichaPedidoDesembolsoAsync(req, senha);
 
             if (!resposta.IsSuccessStatusCode)
             {

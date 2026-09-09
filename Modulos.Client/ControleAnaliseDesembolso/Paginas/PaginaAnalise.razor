@@ -1048,7 +1048,7 @@
                 var ativo = ObterAnalista(_idAtribuicao)?.Matricula == f.Matricula;
                 var fLocal = f;
                 <button class="popover-atrib-item @(ativo ? "popover-atrib-item-ativo" : "")"
-                        @onclick="async () => { await AtribuirAnalista(_idAtribuicao, fLocal); _idAtribuicao = null; }"
+                        @onclick="() => { var idLocal = _idAtribuicao; _idAtribuicao = null; PedirSenha(senha => AtribuirAnalistaComSenha(idLocal!, fLocal, senha)); }"
                         title="@fLocal.Nome">
                     <span class="popover-atrib-avatar" style="background:@fLocal.Cor">@fLocal.Iniciais</span>
                     <span class="popover-atrib-nome">@fLocal.Nome</span>
@@ -1059,7 +1059,7 @@
         @if (ObterAnalista(_idAtribuicao) is not null)
         {
             <button class="popover-atrib-remover"
-                    @onclick="async () => { await AtribuirAnalista(_idAtribuicao, null); _idAtribuicao = null; }">
+                    @onclick="() => { var idLocal = _idAtribuicao; _idAtribuicao = null; PedirSenha(senha => AtribuirAnalistaComSenha(idLocal!, null, senha)); }">
                 Remover atribuição
             </button>
         }
@@ -1073,11 +1073,11 @@
     <PainelPreencherFpdEtapas AoVoltar="() => _fpdEtapasAberto = false" AoSolicitar="SolicitarDesembolso" />
 }
 
-@if (_dialogSenhaValidarPendentesAberto)
+@if (_dialogSenhaAcaoAberto)
 {
     <DialogSenhaBaixa SenhaParaDrp="false"
-                      AoCancelar="() => _dialogSenhaValidarPendentesAberto = false"
-                      AoConfirmar="ExecutarMacro" />
+                      AoCancelar="() => _dialogSenhaAcaoAberto = false"
+                      AoConfirmar="ConfirmarAcaoComSenha" />
 }
 
 @if (_idDialogAberto is not null)
@@ -1091,7 +1091,7 @@
                         Analistas="@_analistas"
                         AoFechar="@FecharDialog"
                         AoNavegar="@AbrirDialog"
-                        AoAtribuir="@(f => AtribuirAnalista(_idDialogAberto, f))" />
+                        AoAtribuir="@(f => PedirSenha(senha => AtribuirAnalistaComSenha(_idDialogAberto!, f, senha)))" />
     }
 }
 
@@ -1110,7 +1110,8 @@
     private bool    _carregando            = true;
     private bool    _processando           = false;
     private bool    _fpdEtapasAberto       = false;
-    private bool    _dialogSenhaValidarPendentesAberto = false;
+    private bool    _dialogSenhaAcaoAberto = false;
+    private Func<string, Task>? _acaoPendenteComSenha;
     private List<DesembolsoCAD> _todos     = [];
 
     private const int ItensPorPaginaGrupo = 10;
@@ -1252,15 +1253,33 @@
 
         StateHasChanged();
     }
+    // Toda ação que muda dado agora exige senha — a matrícula de quem age é
+    // identificada pela plataforma a partir dela, não é mais enviada daqui.
+    // Um só dialog reaproveitado (validar em lote, vincular/remover analista),
+    // guardando a ação a rodar quando confirmar.
+    private void PedirSenha(Func<string, Task> acao)
+    {
+        _acaoPendenteComSenha = acao;
+        _dialogSenhaAcaoAberto = true;
+    }
+
+    private async Task ConfirmarAcaoComSenha(string senha)
+    {
+        _dialogSenhaAcaoAberto = false;
+        var acao = _acaoPendenteComSenha;
+        _acaoPendenteComSenha = null;
+        if (acao is not null)
+            await acao(senha);
+    }
+
     private void AbrirValidarPendentes()
     {
         if (_processando) return;
-        _dialogSenhaValidarPendentesAberto = true;
+        PedirSenha(ExecutarMacroComSenha);
     }
 
-    private async Task ExecutarMacro(string senha)
+    private async Task ExecutarMacroComSenha(string senha)
     {
-        _dialogSenhaValidarPendentesAberto = false;
         if (_processando) return;
         _processando = true;
         StateHasChanged();
@@ -1273,7 +1292,7 @@
                 return;
             }
 
-            var ok = await Service.ValidarTodosPendentesAsync(ServicoUsuario.Matricula, senha);
+            var ok = await Service.ValidarTodosPendentesAsync(senha);
             if (!ok)
             {
                 Snackbar.Add("Falha ao validar os desembolsos pendentes. Tente novamente.", Severity.Error);
@@ -1302,11 +1321,11 @@
         StateHasChanged();
     }
 
-    private async Task AtribuirAnalista(string id, Funcionario? funcionario)
+    private async Task AtribuirAnalistaComSenha(string id, Funcionario? funcionario, string senha)
     {
         var ok = funcionario is null
-            ? await Service.RemoverVinculoAsync(id)
-            : await Service.VincularAnalistaAsync(id, funcionario.Matricula);
+            ? await Service.RemoverVinculoAsync(id, senha)
+            : await Service.VincularAnalistaAsync(id, funcionario.Matricula, senha);
 
         if (!ok) return;
 
